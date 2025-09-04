@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/bash
 
 crc8() {
     local -n bytes=$1
@@ -44,7 +44,7 @@ if [[ "$ver" == "1" ]]; then
         $(( (kvarg >> 16) & 0xFF ))
         $(( (kvarg >> 24) & 0xFF ))
     )
-    for _ in $(seq 1 32); do
+    for _ in 1 2 3 4 5 6 a b c d e f g h i j k l m n o p q r s t u v w x y z; do
         buffer+=(0x00)
     done
     crc_input=("${buffer[@]:3}")

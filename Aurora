@@ -109,7 +109,11 @@ mkdir -p "$auroraboot"
 
 shimdev=$(losetup -Pf --show "$shim")
 dev=$(losetup -Pf --show "$aurorashim")
-
+copyfromcros() {
+  for path in $@; do
+    cp -a ${tempmount}${path} $rootfs/.crosenv/usr/bin/
+  done
+}
 chromeos=$(cgpt find -l ROOT-A "$shimdev" | head -n 1)
 tempmount=$(mktemp -d)
 echo_c "Done. Rootfs: $(du -sh $rootfs | awk '{print $1}')\n\n${BLUE_B}Copying Modules..." GEEN_B
@@ -118,12 +122,13 @@ if [ -d "$tempmount/lib/modules" ]; then
   cp -ar "$tempmount/lib/modules" $rootfs/lib/
   cp -ar "$tempmount/etc/lsb-release" $rootfs/etc/lsb-release
   export boardname=$(lsbval CHROMEOS_RELEASE_BOARD)
-  mkdir -p $rootfs/.kvsenv/usr/bin $rootfs/.kvsenv/lib64
-  cp -r "$tempmount/lib64"/* $rootfs/.kvsenv/lib64 2>/dev/null
-  cp "$tempmount/usr/bin/tpmc" $rootfs/.kvsenv/usr/bin/tpmc
-  cp "$tempmount/bin/sh" $rootfs/.kvsenv/usr/bin/sh
-  cp "$tempmount/bin/cat" $rootfs/.kvsenv/usr/bin/cat
-  cp "./kvg" $rootfs/.kvsenv/usr/bin/kvg
+  
+  mkdir -p $rootfs/.crosenv/usr/bin $rootfs/.crosenv/lib64
+  cp -r "$tempmount/lib64"/* $rootfs/.crosenv/lib64 2>/dev/null
+  copyfromcros /usr/bin/tpmc /bin/bash /bin/cat /bin/ls /usr/bin/coreutils
+  cp "./lib/noarch/kvg" $rootfs/.crosenv/usr/bin/kvg
+  cp "./lib/$arch/frecon-lite" $rootfs/.crosenv/usr/bin/frecon-lite
+  chmod +x $rootfs/.crosenv/usr/bin/*
   umount "$tempmount"
 else
   echo_c "Please run on a raw shim." RED_B

@@ -668,7 +668,7 @@ chromium() {
     rm ~/.xinitrc
     cat <<EOF > ~/.xinitrc
 openbox &
-hsetroot -cover /usr/share/aurora/aurora.png &
+hsetroot -cover /usr/share/aurora/bg.png &
 while true; do
     chromium --start-maximized --no-first-run --disable-infobars --disable-session-crashed-bubble --restore-last-session --no-sandbox
 done

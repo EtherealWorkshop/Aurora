@@ -4,3 +4,4 @@ build/rootfs
 build/auroraboot
 build/alpine-minirootfs*
 *yamlmaker.sh
+testdir

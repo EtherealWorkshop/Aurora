@@ -13,7 +13,7 @@ app.permanent_session_lifetime = timedelta(minutes=30)
 skidproofing = [
     "/usr/share/aurora/aurora.sh",
     "/sbin/init",
-    "/.kvsenv",
+    "/.crosenv",
 ]
 
 def is_protected_path(path):

@@ -1,13 +1,13 @@
 #!/bin/bash
 
 getkv() {
-    mount --bind /.kvsenv /.kvsenv
+    mount --bind /.crosenv /.crosenv
     for mnt in /dev /proc /sys; do
-        mkdir -p /.kvsenv$mnt
-        mount --bind "$mnt" "/.kvsenv$mnt"
+        mkdir -p /.crosenv$mnt
+        mount --bind "$mnt" "/.crosenv$mnt"
     done
     local cmd_output
-    cmd_output=$(chroot /.kvsenv tpmc read 0x1008 9 2>/dev/null)
+    cmd_output=$(chroot /.crosenv tpmc read 0x1008 9 2>/dev/null)
 
     if [[ -z "$cmd_output" ]]; then
         echo "Please boot Aurora in recovery [Esc+Ref+Pwr] to see kernver."
@@ -33,8 +33,8 @@ getkv() {
 
     printf "0x%08x\n" "$kernver"
     for mnt in /dev /proc /sys; do
-        umount "/.kvsenv$mnt" 2>/dev/null
+        umount "/.crosenv$mnt" 2>/dev/null
     done
-    umount /.kvsenv 2>/dev/null
+    umount /.crosenv 2>/dev/null
 }
 getkv

@@ -5,12 +5,12 @@ export TERM=xterm-direct
 kvs() {
     while true; do
         read_center -d "Enter Kernver[Max 8 characters after 0x]: 0x" kernver
-        mount --bind /.kvsenv /.kvsenv
+        mount --bind /.crosenv /.crosenv
         for mnt in /dev /proc /sys; do
-            mkdir -p /.kvsenv$mnt
-            mount --bind "$mnt" "/.kvsenv$mnt"
+            mkdir -p /.crosenv$mnt
+            mount --bind "$mnt" "/.crosenv$mnt"
         done
-        vercheck=$(chroot /.kvsenv tpmc read 0x1008 1 | tr -d '\r\n[:space:]')
+        vercheck=$(chroot /.crosenv tpmc read 0x1008 1 | tr -d '\r\n[:space:]')
         if [[ "$vercheck" == *2 ]]; then
             ver=0
         elif [ "$vercheck" = "10" ]; then
@@ -26,26 +26,26 @@ kvs() {
             echo "Invalid Kernver. Maximum 8 characters after 0x [e.g: 0x00000001]" | center
             break=0
             for mnt in /dev /proc /sys; do
-                umount "/.kvsenv$mnt"
+                umount "/.crosenv$mnt"
             done
             continue
         fi
-        chroot /.kvsenv sh -c 'tpmc write 0x1008 $(kvg 0x'"$kernver"' --ver='"$ver"')' >/dev/null || {
+        chroot /.crosenv sh -c 'tpmc write 0x1008 $(kvg 0x'"$kernver"' --ver='"$ver"')' >/dev/null || {
             echo "Invalid Kernver. Maximum 8 characters after 0x [e.g: 0x00000001]" | center
             break=0
             for mnt in /dev /proc /sys; do
-                umount "/.kvsenv$mnt"
+                umount "/.crosenv$mnt"
             done
             continue
         }
         for mnt in /dev /proc /sys; do
-            umount "/.kvsenv$mnt"
+            umount "/.crosenv$mnt"
         done
         kernver=$(printf "%08s" "$kernver" | tr ' ' '0')
         echo "0x$kernver" > /etc/kernverpending
         if [ "$break" = "1" ]; then break; fi
     done
-    umount /.kvsenv
+    umount /.crosenv
     sync
 }
 if [ "$(crossystem mainfw_type)" = "recovery" ]; then
