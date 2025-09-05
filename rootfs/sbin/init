@@ -10,5 +10,16 @@ export TTY1="/dev/tty1"
 export TTY2="/dev/tty2"
 export TTY3="/dev/tty4"
 [ -e /dev/pts/0 ] && export TTY1="/dev/pts/0" && export TTY2="/dev/pts/1" && export TTY3="/dev/pts/3"
+exec </dev/null >/dev/null 2>&1
+pkill -9 frecon || :
+rm -rf /run/frecon
+frecon-lite --enable-vt1 --daemon --no-login --enable-vts --pre-create-vts --num-vts=8 --enable-gfx
+until [ -e /run/frecon/vt0 ]; do
+	sleep 0.1
+done
+exec </run/frecon/vt0 >/run/frecon/vt0 2>&1
+disable_input
+printf "\033]input:on\a\033]switchvt:0\a"
+printf "\033]image:file=/usr/share/aurora/assets/Aurora.png;scale=1\a"
 setsid -c test
 exec bash /usr/share/aurora/aurora.sh <${TTY1} >>${TTY1} 2>&1
