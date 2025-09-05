@@ -12,7 +12,8 @@ export TTY3="/dev/tty4"
 [ -e /dev/pts/0 ] && export TTY1="/dev/pts/0" && export TTY2="/dev/pts/1" && export TTY3="/dev/pts/3"
 startfrecon() {
     export TERM=xterm-256color
-    mkdir -p /.crosenv/tmp
+    mkdir -p /.crosenv/tmp /.crosenv/run/frecon /run/frecon
+    mount --bind /run/frecon /.crosenv/run/frecon || true
     mount --bind /.crosenv /.crosenv
     for mnt in /dev /proc /sys; do
         mount --move $mnt /.crosenv$mnt
@@ -31,9 +32,11 @@ startfrecon() {
     for mnt in /dev /proc /sys; do
         mount --move $mnt /tmp$mnt
     done
-    mount -t devpts devpts /tmp/dev/pts
+    mkdir -p /run/frecon.keep
+    mount --bind /run/frecon /run/frecon.keep
     pivot_root /tmp /tmp/tmp
+    mount --move /tmp/run/frecon.keep /run/frecon
 }
 startfrecon
 setsid -c test
-exec bash /usr/share/aurora/aurora.sh <${TTY1} >>${TTY1} 2>&1
+exec bash /usr/share/aurora/aurora.sh
