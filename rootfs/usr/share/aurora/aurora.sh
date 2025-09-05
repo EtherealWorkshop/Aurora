@@ -27,7 +27,6 @@ stty intr ''
 stty -echo
 export stty=$(stty -g)
 stty echo
-export TTY1="/dev/tty1" && export TTY2="/dev/tty2" && export LOGTTY="/dev/tty3" && export TTY3="/dev/tty4"
 [ -e /dev/pts/0 ] && export TTY1="/dev/pts/0" && export TTY2="/dev/pts/1" && export TTY3="/dev/pts/3" && export LOGTTY="/dev/pts/2"
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
