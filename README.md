@@ -45,21 +45,22 @@ sudo bash Aurora <board> --auto
 ```
 If you don't want to build a shim yourself (or aren't able to), prebuilts are available on the [latest release](https://github.com/EtherealWorkshop/Aurora/releases/latest).
 ## Flashing
-### Linux:
-Assuming you're still cd'd into `Aurora/` and have just built it.
+### Linux/FreeBSD:
+Assuming you're still in the `Aurora/` directory and have just built it:<br></br>
 First run `lsblk` and look for the usb's identifier (the letter after sd), replace "X" with it.
 ```bash
 sudo dd if=<board>-aurora.bin of=/dev/sdX bs=1M status=progress
 ```
-Otherwise, do `if=/path/to/<board>-aurora.bin` if you aren't working in the same directory as the prebuilt.
+Otherwise, do `if=/path/to/<board>-aurora.bin` if you aren't working in the same directory as the prebuilt.<br></br>
+Replace sudo with your privilege escalation tool of choice.
 ### Windows:
-Download Rufus, select your usb, select board-aurora.bin (download from prebuilts, or try to build with WSL). 
+Download Rufus, select your USB, select board-aurora.bin (download from prebuilts, or try to build with WSL). 
 
-### MacOS:
-Download Balena Etcher, select your usb, select board-aurora.bin. 
+### macOS:
+Download Balena Etcher, select your USB, select board-aurora.bin. 
 
-### ChromeOS (sh1tty00be'd or otherwise unenrolled)
-Download a prebuilt, get the [chromebook recovery utility](https://chromewebstore.google.com/detail/chromebook-recovery-utili/pocpnlppkickgojjlmhdmidojbmbodfm). Start CRU and click the gear icon in the top right, press "use local image" and navigate to the prebuilt. Select your usb, and let it do its thing. 
+### ChromeOS (personal/unenrolled device)
+Download a prebuilt, get the [Chromebook Recovery Utility](https://chromewebstore.google.com/detail/chromebook-recovery-utili/pocpnlppkickgojjlmhdmidojbmbodfm). Start CRU and click the gear icon in the top right, press "use local image" and navigate to the prebuilt. Select your USB, and let it do its thing. 
 Fun fact, you can also do this for stuff like badbr0ker, meaning you don't need a pc to unenroll now if you're willing to use prebuilts, just a chromebook!<br>
 # Booting
 After flashing, do the normal steps to boot sh1mmer, then plug it into your chromebook. It will automatically extend the rootfs to fill the rest of the drive. On future boots if you're connected to the internet it will automatically update itself. 
@@ -78,7 +79,8 @@ You can then either download recovery images or shims in Aurora itself, or put t
 
 # Uploading Files via another computer
 1. Use AFT on page 2 (reccomended)
-2. Use a linux computer with **ROOT ACCESS** ChromeOS Files will NOT WORK! Use VT2 if you only have a chromebook.
+2. Use a linux computer with **ROOT ACCESS**<br></br>
+ChromeOS Files will NOT WORK! Use VT2 or Crostini USB passthrough if you only have a chromebook.
 
 # Credits
 - [Sophia](https://github.com/soap-phia) - Lead developer of Aurora, Got Wifi
