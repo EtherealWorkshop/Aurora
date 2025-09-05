@@ -101,6 +101,7 @@ chroot "$rootfs" /bin/sh -c "export PATH=/sbin:/bin:/usr/sbin:/usr/bin && chmod 
 echo_c "Done. Rootfs: $(du -sh $rootfs | awk '{print $1}')\n\n${BLUE_B}Downloading firmware..." GEEN_B
 git clone --depth=1 https://chromium.googlesource.com/chromiumos/third_party/linux-firmware $rootfs/lib/firmware/
 find "$rootfs/lib/firmware" -type f -not \( -path "*wifi*" -o -path "*rt*" -o -path "*ath*" -o -path "*mediatek*" \) -exec rm -rf {} + >/dev/null 2>&1
+cp "./lib/$arch/frecon-lite" $rootfs/usr/bin/frecon-lite
 
 trap - EXIT
 echo_c "Done. Rootfs: $(du -sh $rootfs | awk '{print $1}')\n\n${BLUE_B}Building shim..." GEEN_B
@@ -129,10 +130,8 @@ if [ -d "$tempmount/lib/modules" ]; then
   cp -r "$tempmount/lib64"/* $rootfs/.crosenv/lib64 2>/dev/null
   copyfromcros /usr/bin/tpmc /bin/bash
   cp "./lib/noarch/kvg" $rootfs/.crosenv/usr/bin/kvg
-  cp "./lib/$arch/frecon-lite" $rootfs/.crosenv/usr/bin/frecon-lite
   cp "./lib/$arch/busybox" $rootfs/.crosenv/usr/bin/busybox
   chmod +x $rootfs/.crosenv/usr/bin/*
-  find $tempmount -iname "*pcre*"
   umount "$tempmount"
 else
   echo_c "Please run on a raw shim." RED_B

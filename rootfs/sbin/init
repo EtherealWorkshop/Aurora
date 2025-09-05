@@ -10,17 +10,9 @@ export TTY1="/dev/tty1"
 export TTY2="/dev/tty2"
 export TTY3="/dev/tty4"
 [ -e /dev/pts/0 ] && export TTY1="/dev/pts/0" && export TTY2="/dev/pts/1" && export TTY3="/dev/pts/3"
+chmod +x /usr/bin/frecon-lite
 startfrecon() {
     export TERM=xterm-256color
-#    mkdir -p /.crosenv/tmp /.crosenv/run/frecon /run/frecon /.crosenv/run/frecon.keep
-#    mount --bind /run/frecon /.crosenv/run/frecon || true
-#    mount --bind /.crosenv /.crosenv
-#    for mnt in /dev /proc /sys; do
-#        mkdir -p /.crosenv$mnt
-#        mount --move $mnt /.crosenv$mnt
-#    done
-#    mount -t devpts devpts /.crosenv/dev/pts
-#    pivot_root /.crosenv /.crosenv/tmp
     export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
     busybox pkill -9 frecon || :
     busybox rm -rf /run/frecon
@@ -28,14 +20,6 @@ startfrecon() {
     until [ -e /run/frecon/vt0 ]; do busybox sleep 0.1; done
     exec </run/frecon/vt0 >/run/frecon/vt0 2>&1
     busybox printf "\033]input:on\a\033]switchvt:0\a"
-#    busybox mount --bind /tmp /tmp
-#    for mnt in /dev /proc /sys; do
-#        busybox mount --move $mnt /tmp$mnt
-#    done
-#    busybox mount --bind /run/frecon /run/frecon.keep
-#    busybox pivot_root /tmp /tmp/tmp
-#    export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-#    mount --move /tmp/run/frecon.keep /run/frecon
 }
 startfrecon
 setsid -c test
