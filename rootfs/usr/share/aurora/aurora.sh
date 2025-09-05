@@ -27,7 +27,7 @@ stty intr ''
 stty -echo
 export stty=$(stty -g)
 stty echo
-[ -e /dev/pts/0 ] && export TTY1="/dev/pts/0" && export TTY2="/dev/pts/1" && export TTY3="/dev/pts/3" && export LOGTTY="/dev/pts/2"
+export TTY1="/run/frecon/vt0" && export TTY2="/run/frecon/vt1" && export TTY3="/run/frecon/vt2" && export TTY4="/run/frecon/vt3"
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
 #################
@@ -224,7 +224,7 @@ get_largest_cros_blockdev() {
 		tmp_size=$(cat "$blockdev"/size)
 		remo=$(cat "$blockdev"/removable)
 		if [ "$tmp_size" -gt "$size" ] && [ "${remo:-0}" -eq 0 ]; then
-			case "$(sfdisk -d "/dev/$dev_name" 2>/dev/null)" in
+			case "$(sfdisk -d "/dev/$dev_name" 2>$LOGTTY)" in
 				*'name="STATE"'*'name="KERN-A"'*'name="ROOT-A"'*)
 					largest="/dev/$dev_name"
 					size="$tmp_size"
@@ -241,7 +241,7 @@ splash() {
         tput cup 0 0
         clear
     fi
-    if cat /sys/devices/virtual/dmi/id/product_name 2>/dev/null | grep -Eqi 'treeya|barla' 2>/dev/null; then
+    if cat /sys/devices/virtual/dmi/id/product_name 2>$LOGTTY | grep -Eqi 'treeya|barla' 2>$LOGTTY; then
         echo -e "${RED_B}Barla/Treeya wifi unsupported. Please contact @kxtzownsu on discord${COLOR_RESET}"
     else
         signal=$(iw dev $wifidevice link | grep signal | awk '{print $2}' | sed 's/.00//' | head -1)
@@ -249,7 +249,7 @@ splash() {
         elif (( signal >= -60 )); then color=$'\e[1;38;5;226m'; strength=$'▃▅\e[1;38;5;236m▇'
         elif (( signal >= -70 )); then color=$'\e[1;38;5;208m'; strength=$'▃\e[1;38;5;236m▅▇'
         else color=$'\e[1;38;5;196m'; strength=$'▃\e[1;38;5;236m▅▇'; fi
-        ssid="$(iw dev "$wifidevice" link 2>/dev/null | awk -F ': ' '/SSID/ {print $2}')"
+        ssid="$(iw dev "$wifidevice" link 2>$LOGTTY | awk -F ': ' '/SSID/ {print $2}')"
         if [ -f /etc/aftggp ]; then
             ssid="$ssid | ${CYAN_B}AFT running at: $(ip a | grep wlan0 | grep inet | awk '{print $2}' | sed 's|/.*||'):42069${COLOR_RESET}"
         fi
@@ -320,7 +320,7 @@ lsbval() {
 
 versions() {
     echo ""
-    local release_board=$(lsbval CHROMEOS_RELEASE_BOARD 2>/dev/null)
+    local release_board=$(lsbval CHROMEOS_RELEASE_BOARD 2>$LOGTTY)
     export board_name=${release_board%%-*}
     echo "What ChromeOS version do you want to download?" | center
 	options_install=(
@@ -434,7 +434,7 @@ pv_dircopy() {
 installcros() {
     chmod +x /usr/bin/bigtext
     bigtext installcros
-	if [[ -z "$(ls -A $aroot/images/recovery 2>/dev/null)" ]]; then
+	if [[ -z "$(ls -A $aroot/images/recovery 2>$LOGTTY)" ]]; then
         echo -ne "${YELLOW_B}"
 		echo "You have no recovery images downloaded! Please download a few images" | center
 		echo "Alternatively, these are available on websites such as chrome100.dev or cros.tech. Put them into /usr/share/aurora/images/recovery" | center
@@ -563,7 +563,7 @@ shimboot() {
 
             for dev in "$loop"*; do
                 [[ -b "$dev" ]] || continue
-                parttype=$(udevadm info --query=property --name="$dev" 2>/dev/null | grep '^ID_PART_ENTRY_TYPE=' | cut -d= -f2)
+                parttype=$(udevadm info --query=property --name="$dev" 2>$LOGTTY | grep '^ID_PART_ENTRY_TYPE=' | cut -d= -f2)
                 if [ "$parttype" = "0fc63daf-8483-4772-8e79-3d69d8477de4" ]; then
                     stateful="$dev"
                     break
@@ -681,7 +681,7 @@ EOF
 ##################
 
 payloads() {
-    mapfile -t payloadchoose < <(find "$aroot/payloads" -maxdepth 1 -type f 2>/dev/null)
+    mapfile -t payloadchoose < <(find "$aroot/payloads" -maxdepth 1 -type f 2>$LOGTTY)
     options_payload=()
     for f in "${payloadchoose[@]}"; do
         options_payload+=("$(basename "$f")")
@@ -719,7 +719,7 @@ setupuser() {
     read_center -d "Password: " password
     stty echo 
     adduser -D "$username"
-    echo "$username:$password" | chpasswd 2>/dev/null
+    echo "$username:$password" | chpasswd 2>$LOGTTY
     echo "$username ALL=(ALL:ALL) ALL" >> /etc/sudoers
     mkdir -p /run/user/$(id -u $username)
     chown $username:$username /run/user/$(id -u $username)
@@ -832,7 +832,7 @@ downloadreco() {
 downloadshim() {
     chmod +x /usr/bin/bigtext
     bigtext download
-    local release_board=$(lsbval CHROMEOS_RELEASE_BOARD 2>/dev/null)
+    local release_board=$(lsbval CHROMEOS_RELEASE_BOARD 2>$LOGTTY)
     export board_name=${release_board%%-*}
     	options_download=(
 	    "Sh1mmer Legacy - EtherealWorkshop/Sh1mmer/releases"
@@ -859,7 +859,7 @@ downloadshim() {
     fi
     shimfile=$(echo $FINALSHIM_URL | awk -F/ '{print $NF}')
     shimname=$(echo $shimfile | sed "s/.${shimtype}//")
-    if curl --head --silent --fail "$FINALSHIM_URL" >/dev/null; then
+    if curl --head --silent --fail "$FINALSHIM_URL" >$LOGTTY; then
         wget -q --show-progress "$FINALSHIM_URL" -O "$aroot/images/shims/$shimfile" || {
             fail "Failed to download shim."
         }
@@ -887,7 +887,7 @@ updateshim() {
     sync
     arch=$(uname -m)
     echo ""
-    apk add git github-cli >/dev/null 2>&1
+    apk add git github-cli >$LOGTTY 2>&1
     if [ -d "/root/Aurora/.git" ]; then		
 		if ! git -C "/root/Aurora" pull origin "$(cat /etc/aurora | grep origin | sed 's/origin=//')" 2>&1 | center; then
 		    echo "git pull failed, recloning" | center
@@ -900,7 +900,7 @@ updateshim() {
     fi
     echo "Copying files to root..." | center
     updated=0
-    if ! cmp -s /usr/share/aurora/aurora.sh /root/Aurora/rootfs/usr/share/aurora/aurora.sh 2>/dev/null; then
+    if ! cmp -s /usr/share/aurora/aurora.sh /root/Aurora/rootfs/usr/share/aurora/aurora.sh 2>$LOGTTY; then
         updated=1
     fi
     cp -Lar /root/Aurora/rootfs/. /
@@ -925,8 +925,8 @@ updateshim() {
 
 aftggp() {
     tput cnorm
-    apk add python3 py3-flask py3-bcrypt >/dev/null
-    kill $(ps aux | grep "python3 /usr/share/ggp/" | grep -v grep | awk '{print $1}') 2>/dev/null
+    apk add python3 py3-flask py3-bcrypt >$LOGTTY
+    kill $(ps aux | grep "python3 /usr/share/ggp/" | grep -v grep | awk '{print $1}') 2>$LOGTTY
     rm -f /etc/aftggp
     read_center -d "Enter Password for AFT: " readpassword
     export readpassword
@@ -937,8 +937,8 @@ aftggp() {
 connect() {
     ifconfig "$wifidevice" down
     pkill -12 udhcpc
-    pkill udhcpc 2>/dev/null
-    killall wpa_supplicant 2>/dev/null
+    pkill udhcpc 2>$LOGTTY
+    killall wpa_supplicant 2>$LOGTTY
     rm -rf /etc/wpa_supplicant* /etc/*dhcpc*
     ifconfig "$wifidevice" up
     [ -n "$DIS" ] && return
@@ -1000,7 +1000,7 @@ connect() {
     read_center -d "Enter password for $ssid: " psk
     conf="/etc/wpa_supplicant.conf"
 
-    if grep -q "ssid=\"$ssid\"" "$conf" 2>/dev/null; then
+    if grep -q "ssid=\"$ssid\"" "$conf" 2>$LOGTTY; then
         echo "Network (${ssid}) already configured." | center
     else
         if [ -z "$psk" ]; then
@@ -1018,7 +1018,7 @@ EOF
     ip link set "$wifidevice" down
     ip link set "$wifidevice" up
 
-    wpa_supplicant -B -i "$wifidevice" -c "$conf" >/dev/null
+    wpa_supplicant -B -i "$wifidevice" -c "$conf" >$LOGTTY
 
     for i in {1..15}; do
         if iw dev "$wifidevice" link | grep -q 'Connected'; then
@@ -1029,12 +1029,12 @@ EOF
     done
 
     if ! iw dev "$wifidevice" link | grep -q 'Connected'; then
-        killall wpa_supplicant 2>/dev/null
+        killall wpa_supplicant 2>$LOGTTY
         rm /etc/wpa_supplicant.conf
         return 1
     fi
 
-    udhcpc -i "$wifidevice" 2>/dev/null || {
+    udhcpc -i "$wifidevice" 2>$LOGTTY || {
         return 1
     }
 }
@@ -1044,10 +1044,10 @@ wifi() {
     bigtext wifi
     stty echo
     export wifidevice=$(ip link | grep -E "^[0-9]+: " | grep -oE '^[0-9]+: [^:]+' | awk '{print $2}' | grep -E '^wl' | head -n1)
-    if cat /sys/devices/virtual/dmi/id/product_name 2>/dev/null | grep -Eqi 'treeya|barla' 2>/dev/null; then
+    if cat /sys/devices/virtual/dmi/id/product_name 2>$LOGTTY | grep -Eqi 'treeya|barla' 2>$LOGTTY; then
         fail "Barla/Treeya wifi unsupported. Please contact @kxtzownsu on discord"
     fi
-    if iw dev "$wifidevice" link 2>/dev/null | grep -q 'Connected'; then
+    if iw dev "$wifidevice" link 2>$LOGTTY | grep -q 'Connected'; then
         echo "Currently connected to a network." | center
         read_center -d "Disconnect from this network? (y/N): " connectornah
         case $connectornah in
@@ -1126,6 +1126,8 @@ menu3_actions=(
 ## STARTUP ##
 #############
 
+echo "Logging" >>$LOGTTY
+
 if $pid; then
     clear
     tput civis
@@ -1165,7 +1167,7 @@ for wifi in iwlwifi iwlmvm ccm 8021q rtw88 rtwpci ath10k_sdio mt7921e mt7921s mt
     modprobe -r "$wifi" 2>$LOGTTY || true
     modprobe "$wifi" 2>$LOGTTY
 done
-modprobe -a iwlwifi iwlmvm ccm 8021q rtw88 rtwpci ath10k_sdio mt7921e mt7921s mt76 rtw88_8822ce rtw8821ce rtw89pci 2>/dev/null
+modprobe -a iwlwifi iwlmvm ccm 8021q rtw88 rtwpci ath10k_sdio mt7921e mt7921s mt76 rtw88_8822ce rtw8821ce rtw89pci 2>$LOGTTY
 sleep 2
 if [ -e "/etc/wpa_supplicant.conf" ]; then
     ls /etc/wpa_supplicant.conf >$LOGTTY 2>&1
@@ -1173,8 +1175,8 @@ if [ -e "/etc/wpa_supplicant.conf" ]; then
     export wifidevice=$(ip link | grep -E "^[0-9]+: " | grep -oE '^[0-9]+: [^:]+' | awk '{print $2}' | grep -E '^wl' | head -n1)
     ifconfig "$wifidevice" down
     pkill -12 udhcpc
-    pkill udhcpc 2>/dev/null
-    killall wpa_supplicant 2>/dev/null
+    pkill udhcpc 2>$LOGTTY
+    killall wpa_supplicant 2>$LOGTTY
     rm -rf /etc/*dhcpc*
     ifconfig "$wifidevice" up
 	sleep 3
@@ -1206,7 +1208,7 @@ if [ -e "/etc/wpa_supplicant.conf" ]; then
 fi
 
 
-release_board=$(lsbval CHROMEOS_RELEASE_BOARD 2>/dev/null)
+release_board=$(lsbval CHROMEOS_RELEASE_BOARD 2>$LOGTTY)
 export board_name=${release_board%%-*}
 for chmod in /usr/bin/aurorabuildenv; do
     chmod +x $chmod
@@ -1224,7 +1226,7 @@ while true; do
     eval "setup"
     clear
     hostname $(cat /etc/hostname)
-    export wifidevice=$(ip link 2>/dev/null | grep -E "^[0-9]+: " | grep -oE '^[0-9]+: [^:]+' | awk '{print $2}' | grep -E '^wl' | head -n1)
+    export wifidevice=$(ip link 2>$LOGTTY | grep -E "^[0-9]+: " | grep -oE '^[0-9]+: [^:]+' | awk '{print $2}' | grep -E '^wl' | head -n1)
     splash
     errormessage
     export errormsg=""
