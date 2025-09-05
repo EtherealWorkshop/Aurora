@@ -882,7 +882,8 @@ downloadshim() {
 }
 
 updateshim() {
-    export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"update-ca-certificates
+    export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+    update-ca-certificates
     ntpd -q -p pool.ntp.org
     sync
     arch=$(uname -m)
