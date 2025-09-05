@@ -132,7 +132,6 @@ mount -t tmpfs tmpfs "$NEWROOT_MNT" -o "size=$TMPFS_SIZE" || fail "Failed to mou
 determine_rootfs || fail "Could not determine rootfs"
 mount -o ro "$ROOTFS_DEV" "$ROOTFS_MNT" || fail "Failed to mount rootfs $ROOTFS_DEV"
 
-cat <<EOF > /bin/startfrecon
 exec </dev/null >/dev/null 2>&1
 pkill -9 frecon || :
 rm -rf /run/frecon
@@ -144,10 +143,7 @@ exec </run/frecon/vt0 >/run/frecon/vt0 2>&1
 disable_input
 printf "\033]input:on\a\033]switchvt:0\a"
 printf "\033]image:file=/bin/startingUp.png;scale=1\a"
-EOF
-chmod +x /bin/startfrecon
 exec /bin/busybox sh
-exec /bin/startfrecon
 
 printf "\033[H"
 clear_line
