@@ -34,6 +34,7 @@ amixer sset Master 80% 2>/dev/null || true
 openbox &
 hsetroot -cover /usr/share/aurora/assets/bg.png &
 gzdoom -iwad ~/.config/gzdoom/doom1.wad -fullscreen
+killall openbox hsetroot || true
 EOF
 
     killall frecon-lite
