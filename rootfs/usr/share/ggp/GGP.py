@@ -74,19 +74,24 @@ def getlang(path):
 def validpass(pw):
     return bcrypt.checkpw(pw.encode(), passhash)
 
-def passprompt(message="Please enter the password"):
+def passprompt():
     return f'''
     <!DOCTYPE html>
     <html>
     <head>
-        <title>Aurora File Transfer - Login</title>
+        <title>Aurora File Transfer - Grug Gateway Protocol</title>
         <link rel="stylesheet" href="/static/style.css">
+    	<link rel="icon" type="image/png" href="/static/Aurora.png">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     </head>
     <body>
-        <h2>{message}</h2>
+        <img src="/static/Aurora.png" width="16%">
+        <h1>Aurora File Transfer - Grug Gateway Protocol</h1>
         <form method="post">
-            <input type="password" name="password" placeholder="Password" required autofocus>
-            <input type="submit" value="Submit">
+            <input class="file " type="password" name="password" placeholder="Password" required autofocus>
         </form>
     </body>
     </html>
@@ -136,7 +141,6 @@ def browse(path, password=None):
         return send_from_directory(os.path.dirname(fullpath), os.path.basename(fullpath))
 
     items = []
-    items.append({"name": "./", "path": path, "is_dir": True})
     parentpath = os.path.normpath(os.path.join(path, ".."))
     if parentpath == ".":
         parentpath = ""
@@ -147,6 +151,16 @@ def browse(path, password=None):
     except PermissionError:
         entries = []
 
+    def humanreadable(size_bytes):
+        if size_bytes == 0:
+            return "0 B"
+        units = ["B", "KB", "MB", "GB", "TB"]
+        i = 0
+        while size_bytes >= 1024 and i < len(units) - 1:
+            size_bytes /= 1024.0
+            i += 1
+        return f"{size_bytes:.2f} {units[i]}"
+
     for entry in sorted(entries):
         if entry in (".", ".."):
             continue
@@ -154,48 +168,79 @@ def browse(path, password=None):
         entrypathfull = os.path.join(fullpath, entry)
         is_dir = os.path.isdir(entrypathfull)
         is_binary = False
+        size = "-"
+        mtime = "-"
         if not is_dir:
+            try:
+                size = humanreadable(os.path.getsize(entrypathfull))
+                mtime = datetime.fromtimestamp(os.path.getmtime(entrypathfull)).strftime("%Y-%m-%d %H:%M")
+            except Exception:
+                pass
             is_binary = binarycheck(entrypathfull)
         items.append({
             "name": entry,
             "path": entrypath,
             "is_dir": is_dir,
-            "is_binary": is_binary
-        })
+            "is_binary": is_binary,
+            "size": size,
+            "mtime": mtime
+    })
 
     return render_template_string('''
     <!DOCTYPE html>
     <html>
     <head>
-        <title>Aurora File Transfer - GGP</title>
+    <head>
+        <title>Aurora File Transfer - Grug Gateway Protocol</title>
         <link rel="stylesheet" href="/static/style.css">
+    	<link rel="icon" type="image/png" href="/static/Aurora.png">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     </head>
     <body>
 
-        <h1>Aurora File Transfer - GGP</h1>
-        <form id="upload-form" enctype="multipart/form-data" method="post" action="/upload/{{path}}">
-            <ul>
-                <li>
-                    <input type="file" name="file" id="file-input" required>
-                    <label for="file-input">Upload a File</label>
-                </li>
-            </ul>
+        <h1>Aurora File Transfer - Grug Gateway Protocol</h1>
+        <form class="upload" id="upload-form" action="/upload/{{path}}" method="post" enctype="multipart/form-data">
+            <input type="file" id="file-input" hidden>
+            <label for="file-input" id="file-label" class="file file-label" style="text-align: center;">Upload File</label>
         </form>
+                                        
+        <pre class="file">Aurora <span class="time">{{current_time}}</span>
+        {% set parts = path.strip('/').split('/') if path else [] %}
+        <a href="/browse/" class="path">/</a>
+        {% set cum = [] %}
+        {% for part in parts %}
+        {% set _ = cum.append(part) %}
+        <a href="/browse/{{ '/'.join(cum) }}" class="path">{{ part }}/</a>
+        {% endfor %}
+        </pre>
 
-        <pre class="ps1">Aurora <span class="time">{{current_time}}</span> <span class="path">{% set parts = path.strip('/').split('/') if path else [] %}<a href="/browse/">/</a>{% set cum=[] %}{% for part in parts %}{% set _ = cum.append(part) %}<a href="/browse/{{ '/'.join(cum) }}">{{ part }}</a>/ {% endfor %}</span><span class="white">ls -a</span></pre>
 
+                                  
         <div class="file-list" role="list">
         {% for item in items %}
-        <a href="{% if item.is_dir %}/browse/{{item.path}}{% elif not item.is_binary %}/edit/{{item.path}}{% else %}/browse/{{item.path}}{% endif %}" role="listitem" class="{% if item.is_dir %}dir{% elif not item.is_binary %}file{% endif %}">{{ item.name }}{{ '/' if item.is_dir and not item.name.endswith('/') else '' }}</a>
+        <div class="file">
+            <a class="filename" href="{% if item.is_dir %}/browse/{{item.path}}{% elif not item.is_binary %}/edit/{{item.path}}{% else %}/browse/{{item.path}}{% endif %}">
+                {{ item.name }}{{ '/' if item.is_dir and not item.name.endswith('/') else '' }}
+            </a>
+            <a class="date" href="{% if item.is_dir %}/browse/{{item.path}}{% elif not item.is_binary %}/edit/{{item.path}}{% else %}/browse/{{item.path}}{% endif %}">
+                {% if not item.is_dir %} {{ item.mtime }} {% endif %}
+            </a>
+            <a class="size" href="{% if item.is_dir %}/browse/{{item.path}}{% elif not item.is_binary %}/edit/{{item.path}}{% else %}/browse/{{item.path}}{% endif %}">
+                {% if not item.is_dir %} {{ item.size }} {% endif %}
+            </a>
+        </div>
         {% endfor %}
         </div>
-        <pre class="ps1">Aurora <span class="time">{{current_time}}</span> <span class="path">{% set parts = path.strip('/').split('/') if path else [] %}<a href="/browse/">/</a>{% set cum=[] %}{% for part in parts %}{% set _ = cum.append(part) %}<a href="/browse/{{ '/'.join(cum) }}">{{ part }}</a>/ {% endfor %}</span></pre>
         <pre id="upload-status"></pre>
 
         <script>
         const form = document.getElementById('upload-form');
         const status = document.getElementById('upload-status');
         const fileInput = document.getElementById('file-input');
+        const fileLabel = document.getElementById('file-label');
 
         function uploadFile() {
             status.textContent = '';
@@ -205,6 +250,7 @@ def browse(path, password=None):
             }
 
             const file = fileInput.files[0];
+            fileLabel.textContent = `${file.name}`;
 
             const xhr = new XMLHttpRequest();
             xhr.open('POST', form.action);

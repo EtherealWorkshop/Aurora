@@ -1,239 +1,105 @@
 @font-face {
     font-family: 'Terminus';
-    src: url('./Terminus.ttf');
+    src: url('../Terminus.ttf');
 }
-
-html, body {
-    height: 100%;
-    margin: 0;
-    font-family: "Terminus", monospace;
-    font-size: 1.25rem;
-    color: #FFFFFF;
-    background-color: #000000;
-    white-space: normal;
-}
-
 body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: flex-start;
+    justify-content: center;
+    font-family: "Terminus", monospace;
+    text-align: center;
+    font-size: 1em;
+    color: #FFFFFF;
+    background-color: #000000;
 }
-
-h1 {
-    color: #5C5CFF;
-}
-
-a, p {
+a {
     text-decoration: none;
     color: #FFFFFF;
-    margin: 1px;
+    margin: 0.25em;
+}
+.file {
+    cursor: pointer;
+    background-color: #111111;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 1.5vh;
+    width: 90%;
+    height: 3%;
+    padding: 0.5% 1.5%;
+    margin: 0.5%;
+    font-size: 3vh;
+    font-family: "Terminus", monospace;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+}
+.file:hover {
+    background-color: #222222;
 }
 
-#main, #members, #projects {
-    min-height: 100vh;
-    min-width: 100vw;
+.main {
+    width: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
-    text-align: center;
-}
-
-#main {
-    padding: 2.5%;
-    justify-content: flex-start;
-}
-
-#members, #projects {
     justify-content: center;
 }
 
-pre.ps1 {
-    color: #5C5CFF;
-    font-family: monospace;
-    user-select: none;
-    margin-bottom: 1rem;
+.filename {
+    width: 30vw;
     text-align: left;
-    width: 100%;
+    text-wrap: none;
 }
 
-pre.ps1 .time {
-    color: #FFD700;
+.date {
+    width: 20vw;
+    text-align: left;
+    text-wrap: none;
 }
 
-pre.ps1 .path, pre.ps1 .path a {
-    color: #00FF00;
-    text-decoration: none;
+.size {
+    width: 30vw;
+    text-align: right;
+    text-wrap: none;
 }
 
-pre.ps1 .path a:hover {
-    text-decoration: underline;
+.path {
+  margin: 0;
 }
 
-#main pre {
-    font-size: 0.75rem;
-    color: #00FFFF;
-    user-select: none;
+
+
+.path:hover, .filename:hover, .date:hover, .size:hover {
+  text-decoration: underline;
 }
 
-@keyframes blink {
-    0%, 50% { visibility: visible; }
-    51%, 100% { visibility: hidden; }
-}
-
-.cursor {
-    color: white;
-    animation: blink 1s steps(1, start) infinite;
-    user-select: none;
-}
-
-.white { 
-    color: #ffffff; 
-}
-.file-list a.file {
-    color: #00ff00; 
+form {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .file-list {
-    font-family: monospace;
-    white-space: normal;
-    user-select: none;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-.file-list a {
-    color: inherit;
-    margin-right: 1rem;
-    cursor: pointer;
-    text-decoration: none;
+.upload {
+  width: 80%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
 }
 
-.file-list a:hover {
-    text-decoration: underline;
+pre.file {
+  margin-bottom: 5vh;
 }
 
-.file-list a.dir {
-    color: #5C5CFF;
-}
-
-ul {
-    list-style: none;
-    padding-left: 0;
-    text-align: center;
-    width: 100%;
-    max-width: 600px;
-    margin: 0 auto;
-}
-
-ul li {
-    font-family: monospace;
-    display: inline-block;
-    width: 100%;
-    text-align: center;
-    position: relative;
-}
-
-ul li::before, ul li::after {
-    content: '';
-    display: inline;
-    margin: 0 0.25em;
-    transition: all 0.2s ease-in-out;
-}
-
-ul li:hover::before { 
-    content: '> '; 
-}
-ul li:hover::after  { 
-    content: ' <'; 
-}
-
-form ul li {
-    margin-bottom: 0.5rem;
-    cursor: pointer;
-    color: inherit;
-}
-
-input[type="file"] {
-    display: none;
-}
-
-label[for="file-input"] {
-    cursor: pointer;
-    text-decoration: none;
-}
-
-label[for="file-input"]:hover {
-    text-decoration: underline;
-}
-
-button, input[type="submit"], input[type="button"] {
-    all: unset;
-    cursor: pointer;
-    color: inherit;
-    font-family: monospace;
-    text-decoration: none;
-}
-
-input[type="password"] {
-    background: transparent;
-    border: 1px solid white;
-    color: white;
-    font-family: monospace;
-    padding: 0.25rem 0.5rem;
-    outline: none;
-}
-
-input[type="password"]::placeholder {
-    color: #aaaaaa;
-}
-
-button:hover, input[type="submit"]:hover, input[type="button"]:hover {
-    text-decoration: underline;
-}
-
-#status {
-    display: block;
-    width: 100vw;
-    max-width: 100%;
-    padding: 0 10px;
-    box-sizing: border-box;
-    font-family: monospace;
-    white-space: pre;
-    overflow-x: auto;
-    overflow-wrap: break-word;
-}
-
-#upload-status {
-    margin-top: 1rem;
-    font-family: monospace;
-    user-select: none;
-}
-
-#editor {
-    position: absolute;
-    top: 40px;
-    bottom: 0;
-    left: 0;
-    right: 0;
-}
-
-.topbar {
-    width: 100%;
-    height: 40px;
-    background-color: #1e1e1e;
-    display: flex;
-    align-items: center;
-    font-family: "Terminus", monospace;
-    color: white;
-}
-
-.topbar button, .topbar span {
-    all: unset;
-    color: inherit;
-    padding: 0 10px;
-    text-decoration: none;
-}
-
-.topbar button:hover {
-    cursor: pointer;
-    text-decoration: underline;
+#file-label {
+  justify-content: center;
 }
