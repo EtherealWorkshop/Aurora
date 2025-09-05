@@ -359,6 +359,7 @@ if [ "$defaultboot" != "0" ]; then
         esac
         sleep 5
     fi
+    sync
 fi
 
 while true; do
