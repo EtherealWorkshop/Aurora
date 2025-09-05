@@ -124,6 +124,7 @@ if [ -d "$tempmount/lib/modules" ]; then
   export boardname=$(lsbval CHROMEOS_RELEASE_BOARD)
   
   mkdir -p $rootfs/.crosenv/usr/bin $rootfs/.crosenv/lib64
+  cp "$tempmount/usr/lib64/libreadline.so"* $rootfs/.crosenv/lib64 2>/dev/null
   cp -r "$tempmount/lib64"/* $rootfs/.crosenv/lib64 2>/dev/null
   copyfromcros /usr/bin/tpmc /bin/bash /bin/cat /bin/ls /usr/bin/coreutils
   cp "./lib/noarch/kvg" $rootfs/.crosenv/usr/bin/kvg
