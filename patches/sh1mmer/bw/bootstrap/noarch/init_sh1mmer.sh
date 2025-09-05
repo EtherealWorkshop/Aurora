@@ -143,7 +143,6 @@ exec </run/frecon/vt0 >/run/frecon/vt0 2>&1
 disable_input
 printf "\033]input:on\a\033]switchvt:0\a"
 printf "\033]image:file=/bin/startingUp.png;scale=1\a"
-exec /bin/busybox sh
 
 printf "\033[H"
 clear_line
