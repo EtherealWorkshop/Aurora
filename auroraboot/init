@@ -1,6 +1,6 @@
 #!/bin/busybox sh
 
-export TERM=xterm-direct
+export TERM=xterm-256color
 export COLOR_RESET="\033[0m"
 export BLACK_B="\033[1;30m"
 export RED_B="\033[1;31m"

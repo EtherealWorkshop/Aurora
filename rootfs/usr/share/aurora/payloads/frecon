@@ -16,8 +16,8 @@ stty echo
 printf "\033]input:on\a\033]switchvt:0\a"
 printf "\033]image:file=/tmp/usr/share/aurora/assets/Aurora.png;scale=1\a"
 
+mount --bind /tmp /tmp
 for mnt in /dev /proc /sys; do
     mount --move $mnt /tmp$mnt
 done
-pivot_root /mnt/tmp /tmp/mnt/tmp
-export TERM=xterm-direct
+pivot_root /tmp /tmp/tmp

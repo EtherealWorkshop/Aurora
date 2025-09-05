@@ -1,7 +1,7 @@
 #!/bin/bash
 
 source /usr/share/aurora/functions
-export TERM=xterm-direct
+export TERM=xterm-256color
 kvs() {
     while true; do
         read_center -d "Enter Kernver[Max 8 characters after 0x]: 0x" kernver

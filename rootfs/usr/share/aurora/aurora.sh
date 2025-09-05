@@ -1219,7 +1219,7 @@ while true; do
 	elif ((page >= 4)); then
 		export page=1
 	fi
-    export TERM=xterm-direct
+    export TERM=xterm-256color
     stty $stty
     eval "setup"
     clear
