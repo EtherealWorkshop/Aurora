@@ -12,7 +12,7 @@ export TTY3="/dev/tty4"
 [ -e /dev/pts/0 ] && export TTY1="/dev/pts/0" && export TTY2="/dev/pts/1" && export TTY3="/dev/pts/3"
 startfrecon() {
     export TERM=xterm-256color
-    mkdir -p /.crosenv/tmp /.crosenv/run/frecon /run/frecon
+    mkdir -p /.crosenv/tmp /.crosenv/run/frecon /run/frecon /.crosenv/run/frecon.keep
     mount --bind /run/frecon /.crosenv/run/frecon || true
     mount --bind /.crosenv /.crosenv
     for mnt in /dev /proc /sys; do
@@ -27,12 +27,10 @@ startfrecon() {
     until [ -e /run/frecon/vt0 ]; do sleep 0.1; done
     exec </run/frecon/vt0 >/run/frecon/vt0 2>&1
     printf "\033]input:on\a\033]switchvt:0\a"
-    printf "\033]image:file=/tmp/usr/share/aurora/assets/Aurora.png;scale=1\a" #remove later
     mount --bind /tmp /tmp
     for mnt in /dev /proc /sys; do
         mount --move $mnt /tmp$mnt
     done
-    mkdir -p /run/frecon.keep
     mount --bind /run/frecon /run/frecon.keep
     pivot_root /tmp /tmp/tmp
     mount --move /tmp/run/frecon.keep /run/frecon
