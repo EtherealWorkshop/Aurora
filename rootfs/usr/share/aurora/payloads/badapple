@@ -6,7 +6,7 @@ cd /
 canwifi apk add mpv yt-dlp
 (
     killall frecon-lite
-    mpv --vo=drm --loop --volume=100 https://www.youtube.com/watch?v=9lNZ_Rnr7Jc ytdl-raw-options='ignore-config=,sub-langs="^en.*",write-subs=,write-auto-subs='
+    mpv --vo=drm --volume=100 https://www.youtube.com/watch?v=9lNZ_Rnr7Jc ytdl-raw-options='ignore-config=,sub-langs="^en.*",write-subs=,write-auto-subs='
 )
 export TERM=xterm-256color
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
