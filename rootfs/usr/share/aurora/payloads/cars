@@ -1,8 +1,0 @@
-#!/bin/bash
-
-source /usr/share/aurora/functions
-cd /
-
-canwifi apk add mpv
-
-mpv --loop-playlist --image-display-duration=5 /car/*
