@@ -10,28 +10,5 @@ export TTY1="/dev/tty1"
 export TTY2="/dev/tty2"
 export TTY3="/dev/tty4"
 [ -e /dev/pts/0 ] && export TTY1="/dev/pts/0" && export TTY2="/dev/pts/1" && export TTY3="/dev/pts/3"
-
-mount --move /dev /mnt/tmp/dev
-mount --move /proc /mnt/tmp/proc
-mount --move /sys /mnt/tmp/sys
-mkdir -p /mnt/tmp/old
-pivot_root /mnt/tmp /mnt/tmp/old
-pkill -9 frecon || :
-rm -rf /run/frecon
-frecon-lite --enable-vt1 --no-login --enable-vts --pre-create-vts --num-vts=8 --enable-gfx &
-echo "$!"
-until [ -e /run/frecon/vt0 ]; do
-    sleep 0.1
-done
-exec </run/frecon/vt0 >/run/frecon/vt0 2>&1
-stty -echo
-printf "\033]input:on\a\033]switchvt:0\a"
-printf "\033]image:file=/usr/share/aurora/assets/Aurora.png;scale=1\a"
-
-mount --move /dev /old/dev
-mount --move /proc /old/proc
-mount --move /sys /old/sys
-mkdir -p /old/mnt/tmp
-pivot_root /old /old/mnt/tmp
 setsid -c test
 exec bash /usr/share/aurora/aurora.sh <${TTY1} >>${TTY1} 2>&1
