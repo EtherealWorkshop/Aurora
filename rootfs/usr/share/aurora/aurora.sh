@@ -919,14 +919,14 @@ updateshim() {
     if ! cmp -s /usr/share/aurora/aurora.sh /root/Aurora/rootfs/usr/share/aurora/aurora.sh 2>$TTY4; then
         updated=1
     fi
-    cp -Lar /root/Aurora/rootfs/. /
-    rm -rf /usr/share/patches/*
-    mkdir -p /usr/share/patches/sh1mmer/
     mv /etc/aurora /etc/aurora.bak
     sync
-    cp -Lar /root/Aurora/patches/sh1mmer/. /usr/share/patches/sh1mmer/
-    rm /etc/aurora
+    cp -Lar /root/Aurora/rootfs/. /
+    rm -f /etc/aurora
     mv /etc/aurora.bak /etc/aurora
+    rm -rf /usr/share/patches/*
+    mkdir -p /usr/share/patches/sh1mmer/
+    cp -Lar /root/Aurora/patches/sh1mmer/. /usr/share/patches/sh1mmer/
     sync
     chmod +x /usr/share/aurora/* /usr/bin/* /sbin/init
     aurorabootmnt=$(mktemp -d)
