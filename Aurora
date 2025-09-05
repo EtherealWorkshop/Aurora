@@ -126,7 +126,7 @@ if [ -d "$tempmount/lib/modules" ]; then
   mkdir -p $rootfs/.crosenv/usr/bin $rootfs/.crosenv/lib64
   cp "$tempmount/usr/lib64/libreadline.so"* $rootfs/.crosenv/lib64 2>/dev/null
   cp -r "$tempmount/lib64"/* $rootfs/.crosenv/lib64 2>/dev/null
-  copyfromcros /usr/bin/tpmc /bin/bash /bin/cat /bin/mount /bin/ls /usr/bin/coreutils /usr/bin/pkill /bin/rm
+  copyfromcros /usr/bin/tpmc /bin/bash /bin/cat /bin/mount /bin/ls /usr/bin/coreutils /usr/bin/pkill /bin/rm /bin/sleep
   cp "./lib/noarch/kvg" $rootfs/.crosenv/usr/bin/kvg
   cp "./lib/$arch/frecon-lite" $rootfs/.crosenv/usr/bin/frecon-lite
   chmod +x $rootfs/.crosenv/usr/bin/*
