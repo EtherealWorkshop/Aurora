@@ -24,6 +24,20 @@ stty intr ''
 chmod +x /auroraroot/sbin/init
 chmod +x /auroraroot/usr/share/aurora/aurora.sh
 
+auroraval() {
+    key=$1
+    lsbfile=${2:-/auroraroot/etc/aurora}
+    case "$key" in
+        *[!a-zA-Z0-9_]*|'') return 1 ;;
+    esac
+    sed -n -e "
+        /^[     ]*${key}[     ]*=/{
+            s/^[^=]*=[     ]*//
+            s/[     ]*$//
+            p
+        }" "$lsbfile"
+}
+
 auroraselected() {
     exec switch_root /auroraroot /sbin/init < "$TTY1" >> "$TTY1" 2>&1
 }
@@ -332,9 +346,9 @@ mount $dev_partition /auroraroot || {
     exit 1
 }
 
-defaultboot=$(cat /auroraroot/etc/aurora | grep default | sed 's/default=//')
+defaultboot=$(auroraval default)
 if [ "$defaultboot" != "0" ]; then
-    timeout=$(cat /auroraroot/etc/aurora | grep timeout | sed 's/timeout=//')
+    timeout=$(auroraval timeout)
     echo -e "${YELLOW_B}Booting $defaultboot in $timeout seconds... Press any key to cancel.${COLOR_RESET}"
     read -t $timeout -n1 key && cancel=true
     if [ -z "$cancel" ]; then

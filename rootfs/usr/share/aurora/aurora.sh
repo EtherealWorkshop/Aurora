@@ -318,6 +318,22 @@ lsbval() {
     }" "${lsbfile}"
 }
 
+auroraval() {
+  local key="$1"
+  local lsbfile="${2:-/etc/aurora}"
+
+  if ! echo "${key}" | grep -Eq '^[a-zA-Z0-9_]+$'; then
+    return 1
+  fi
+
+  sed -E -n -e \
+    "/^[[:space:]]*${key}[[:space:]]*=/{
+      s:^[^=]+=[[:space:]]*::
+      s:[[:space:]]+$::
+      p
+    }" "${lsbfile}"
+}
+
 versions() {
     echo ""
     local release_board=$(lsbval CHROMEOS_RELEASE_BOARD 2>$TTY4)
@@ -730,7 +746,7 @@ setupuser() {
 setup() {
     tput cnorm
     stty echo
-    if cat /etc/aurora | grep -q "setup=1"; then
+    if [ "$(auroraval setup)" == "1" ]; then
         clear
         splash
         echo -e "\nSetup Aurora" | center
@@ -889,14 +905,14 @@ updateshim() {
     echo ""
     apk add git github-cli >$TTY4 2>&1
     if [ -d "/root/Aurora/.git" ]; then		
-		if ! git -C "/root/Aurora" pull origin "$(cat /etc/aurora | grep origin | sed 's/origin=//')" 2>&1 | center; then
+		if ! git -C "/root/Aurora" pull origin "$(auroraval origin)" 2>&1 | center; then
 		    echo "git pull failed, recloning" | center
 		    rm -rf /root/Aurora
-        	git clone --branch=$(cat /etc/aurora | grep origin | sed 's/origin=//') https://github.com/EtherealWorkshop/Aurora /root/Aurora 2>&1 | center || return
+        	git clone --branch=$(auroraval origin) https://github.com/EtherealWorkshop/Aurora /root/Aurora 2>&1 | center || return
 		fi
     else
         [ -d "/root/Aurora" ] && rm -rf "/root/Aurora"
-        git clone --branch=$(cat /etc/aurora | grep origin | sed 's/origin=//') https://github.com/EtherealWorkshop/Aurora /root/Aurora 2>&1 | center || return
+        git clone --branch=$(auroraval origin) https://github.com/EtherealWorkshop/Aurora /root/Aurora 2>&1 | center || return
     fi
     echo "Copying files to root..." | center
     updated=0
