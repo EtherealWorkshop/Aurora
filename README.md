@@ -56,7 +56,7 @@ Otherwise, do `if=/path/to/<board>-aurora.bin` if you aren't working in the same
 Download Rufus, select your usb, select board-aurora.bin (download from prebuilts, or try to build with WSL). 
 
 ### MacOS:
-Download Balena Etcher, select your usb, select board-aurora.bin (download from prebuilts, or try to build with WSL). 
+Download Balena Etcher, select your usb, select board-aurora.bin. 
 
 ### ChromeOS (sh1tty00be'd or otherwise unenrolled)
 Download a prebuilt, get the [chromebook recovery utility](https://chromewebstore.google.com/detail/chromebook-recovery-utili/pocpnlppkickgojjlmhdmidojbmbodfm). Start CRU and click the gear icon in the top right, press "use local image" and navigate to the prebuilt. Select your usb, and let it do its thing. 
