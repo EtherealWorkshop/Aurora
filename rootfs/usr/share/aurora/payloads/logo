@@ -1,4 +1,4 @@
 stty -echo
 tput civis
 clear
-printf /usr/share/aurora/assets/Aurora.png
+printf "\033]image:file=/usr/share/aurora/assets/Aurora.png;scale=1\a"
