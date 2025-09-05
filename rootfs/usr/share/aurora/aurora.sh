@@ -1169,6 +1169,13 @@ modprobe -a iwlwifi iwlmvm ccm 8021q rtw88 rtwpci ath10k_sdio mt7921e mt7921s mt
 sleep 2
 if [ -e "/etc/wpa_supplicant.conf" ]; then
     ls /etc/wpa_supplicant.conf >$TTY4 2>&1
+    for i in $(seq 1 60); do
+        if compgen -G "/sys/class/net/wl*" >"$TTY4"; then
+            echo "wifidevice found in $i seconds." >"$TTY4"
+            break
+        fi
+        sleep 1
+    done
     echo -e "[${GEEN_B}+${COLOR_RESET}] Connecting to wifi" | center
     export wifidevice=$(ip link | grep -E "^[0-9]+: " | grep -oE '^[0-9]+: [^:]+' | awk '{print $2}' | grep -E '^wl' | head -n1)
     ifconfig "$wifidevice" down
@@ -1177,12 +1184,11 @@ if [ -e "/etc/wpa_supplicant.conf" ]; then
     killall wpa_supplicant 2>$TTY4
     rm -rf /etc/*dhcpc*
     ifconfig "$wifidevice" up
-	sleep 3
     if [ -n "$wifidevice" ]; then
-				    wpa_supplicant -B -i "$wifidevice" -c /etc/wpa_supplicant.conf >"$TTY4" 2>&1
-				else
-				    echo -e "[${RED_B}-${COLOR_RESET}] Failed to find wifi device. Please connect manually." | center
-				fi
+        wpa_supplicant -B -i "$wifidevice" -c /etc/wpa_supplicant.conf >"$TTY4" 2>&1
+    else
+        echo -e "[${RED_B}-${COLOR_RESET}] Failed to find wifi device. Please connect manually." | center
+    fi
     connected=0
     for i in $(seq 1 30); do
         if iw dev "$wifidevice" link 2>>"$TTY4" | grep -q 'Connected'; then
