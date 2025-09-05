@@ -1160,7 +1160,7 @@ EOF
 fi
 printf '\033c' > $LOGTTY
 echo "Logging" >>$LOGTTY
-while true; do echo "Debug Terminal" >${TTY2}; bash <$TTY2 >>$TTY2 2>&1; done
+while true; do echo -e "Debug Terminal\n\n" | center >${TTY2}; bash <$TTY2 >>$TTY2 2>&1; done
 
 for wifi in iwlwifi iwlmvm ccm 8021q rtw88 rtwpci ath10k_sdio mt7921e mt7921s mt76 rtw88_8822ce rtw8821ce rtw89pci; do
     modprobe -r "$wifi" 2>$LOGTTY || true
