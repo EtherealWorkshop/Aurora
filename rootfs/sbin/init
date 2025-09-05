@@ -16,6 +16,7 @@ startfrecon() {
     mount --bind /run/frecon /.crosenv/run/frecon || true
     mount --bind /.crosenv /.crosenv
     for mnt in /dev /proc /sys; do
+        mkdir -p /.crosenv$mnt
         mount --move $mnt /.crosenv$mnt
     done
     mount -t devpts devpts /.crosenv/dev/pts
