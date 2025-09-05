@@ -1,0 +1,4 @@
+stty -echo
+tput civis
+clear
+printf /usr/share/aurora/assets/Aurora.png
