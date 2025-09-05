@@ -6,6 +6,7 @@ for mnt in /dev /proc /sys; do
     mount --move $mnt /.crosenv$mnt
 done
 pivot_root /.crosenv /.crosenv/tmp
+export PATH="/bin:/sbin:/usr/bin:/usr/sbin"
 pkill -9 frecon || :
 rm -rf /run/frecon
 frecon-lite --enable-vt1 --daemon --no-login --enable-vts --pre-create-vts --num-vts=8 --enable-gfx
@@ -13,7 +14,6 @@ until [ -e /run/frecon/vt0 ]; do
     sleep 0.1
 done
 exec </run/frecon/vt0 >/run/frecon/vt0 2>&1
-stty echo
 printf "\033]input:on\a\033]switchvt:0\a"
 printf "\033]image:file=/tmp/usr/share/aurora/assets/Aurora.png;scale=1\a"
 
