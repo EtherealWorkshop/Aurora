@@ -32,5 +32,6 @@ startfrecon() {
     done
     pivot_root /tmp /tmp/tmp
 }
+startfrecon
 setsid -c test
 exec bash /usr/share/aurora/aurora.sh <${TTY1} >>${TTY1} 2>&1
