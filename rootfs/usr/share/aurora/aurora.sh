@@ -923,8 +923,11 @@ updateshim() {
     rm -rf /usr/share/patches/*
     mkdir -p /usr/share/patches/sh1mmer/
     mv /etc/aurora /etc/aurora.bak
+    sync
     cp -Lar /root/Aurora/patches/sh1mmer/. /usr/share/patches/sh1mmer/
+    rm /etc/aurora
     mv /etc/aurora.bak /etc/aurora
+    sync
     chmod +x /usr/share/aurora/* /usr/bin/* /sbin/init
     aurorabootmnt=$(mktemp -d)
     mount "$(lsblk -pro NAME,PARTLABEL,MOUNTPOINT | grep -i "AuroraBoot" | awk '{print $1}')" $aurorabootmnt
