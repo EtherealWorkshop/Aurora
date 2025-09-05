@@ -33,7 +33,7 @@ startfrecon() {
         busybox mount --move $mnt /tmp$mnt
     done
     busybox mount --bind /run/frecon /run/frecon.keep
-    pivot_root /tmp /tmp/tmp
+    busybox pivot_root /tmp /tmp/tmp
     export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
     mount --move /tmp/run/frecon.keep /run/frecon
 }
