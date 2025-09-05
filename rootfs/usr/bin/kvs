@@ -30,7 +30,7 @@ kvs() {
             done
             continue
         fi
-        chroot /.crosenv sh -c 'tpmc write 0x1008 $(kvg 0x'"$kernver"' --ver='"$ver"')' >/dev/null || {
+        chroot /.crosenv bash -c 'tpmc write 0x1008 $(kvg 0x'"$kernver"' --ver='"$ver"')' >/dev/null || {
             echo "Invalid Kernver. Maximum 8 characters after 0x [e.g: 0x00000001]" | center
             break=0
             for mnt in /dev /proc /sys; do
