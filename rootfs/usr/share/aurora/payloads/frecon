@@ -1,5 +1,5 @@
 #!/bin/bash
-
+export TERM=xterm-256color
 mount --bind /mnt/tmp /mnt/tmp
 for mnt in /dev /proc /sys; do
     mount --move $mnt /mnt/tmp$mnt
@@ -20,3 +20,4 @@ for mnt in /dev /proc /sys; do
     mount --move $mnt /tmp$mnt
 done
 pivot_root /mnt/tmp /tmp/mnt/tmp
+export TERM=xterm-direct
