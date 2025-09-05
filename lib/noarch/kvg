@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/usr/bin/busybox sh
 
 crc8() {
     local -n bytes=$1

@@ -124,12 +124,15 @@ if [ -d "$tempmount/lib/modules" ]; then
   export boardname=$(lsbval CHROMEOS_RELEASE_BOARD)
   
   mkdir -p $rootfs/.crosenv/usr/bin $rootfs/.crosenv/lib64
+  cp "$tempmount/usr/lib64/libpcre2-8.so*" $rootfs/.crosenv/lib64 2>/dev/null
   cp "$tempmount/usr/lib64/libreadline.so"* $rootfs/.crosenv/lib64 2>/dev/null
   cp -r "$tempmount/lib64"/* $rootfs/.crosenv/lib64 2>/dev/null
-  copyfromcros /usr/bin/tpmc /bin/bash /bin/cat /bin/mount /bin/ls /usr/bin/coreutils /usr/bin/pkill /bin/rm /bin/sleep
+  copyfromcros /usr/bin/tpmc /bin/bash
   cp "./lib/noarch/kvg" $rootfs/.crosenv/usr/bin/kvg
   cp "./lib/$arch/frecon-lite" $rootfs/.crosenv/usr/bin/frecon-lite
+  cp "./lib/$arch/busybox" $rootfs/.crosenv/usr/bin/busybox
   chmod +x $rootfs/.crosenv/usr/bin/*
+  find $tempmount -iname "*pcre*"
   umount "$tempmount"
 else
   echo_c "Please run on a raw shim." RED_B

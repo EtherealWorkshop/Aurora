@@ -21,17 +21,17 @@ startfrecon() {
     mount -t devpts devpts /.crosenv/dev/pts
     pivot_root /.crosenv /.crosenv/tmp
     export PATH="/bin:/sbin:/usr/bin:/usr/sbin"
-    pkill -9 frecon || :
-    rm -rf /run/frecon
+    busybox pkill -9 frecon || :
+    busybox rm -rf /run/frecon
     frecon-lite --enable-vt1 --daemon --no-login --enable-vts --pre-create-vts --num-vts=8 --enable-gfx
-    until [ -e /run/frecon/vt0 ]; do sleep 0.1; done
+    until [ -e /run/frecon/vt0 ]; do busybox sleep 0.1; done
     exec </run/frecon/vt0 >/run/frecon/vt0 2>&1
-    printf "\033]input:on\a\033]switchvt:0\a"
-    mount --bind /tmp /tmp
+    busybox printf "\033]input:on\a\033]switchvt:0\a"
+    busybox mount --bind /tmp /tmp
     for mnt in /dev /proc /sys; do
-        mount --move $mnt /tmp$mnt
+        busybox mount --move $mnt /tmp$mnt
     done
-    mount --bind /run/frecon /run/frecon.keep
+    busybox mount --bind /run/frecon /run/frecon.keep
     pivot_root /tmp /tmp/tmp
     export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
     mount --move /tmp/run/frecon.keep /run/frecon
