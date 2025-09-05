@@ -264,6 +264,7 @@ dboot() {
         timeout="5"
     fi
     sed -i "s/timeout=.*/timeout=$timeout/" /auroraroot/etc/aurora
+    sync
 }
 
 manage() {
@@ -359,7 +360,6 @@ if [ "$defaultboot" != "0" ]; then
         esac
         sleep 5
     fi
-    sync
 fi
 
 while true; do
