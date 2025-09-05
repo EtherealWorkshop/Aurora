@@ -17,6 +17,7 @@ startfrecon() {
     for mnt in /dev /proc /sys; do
         mount --move $mnt /.crosenv$mnt
     done
+    mount -t devpts devpts /.crosenv/dev/pts
     pivot_root /.crosenv /.crosenv/tmp
     export PATH="/bin:/sbin:/usr/bin:/usr/sbin"
     pkill -9 frecon || :
@@ -30,6 +31,7 @@ startfrecon() {
     for mnt in /dev /proc /sys; do
         mount --move $mnt /tmp$mnt
     done
+    mount -t devpts devpts /tmp/dev/pts
     pivot_root /tmp /tmp/tmp
 }
 startfrecon
