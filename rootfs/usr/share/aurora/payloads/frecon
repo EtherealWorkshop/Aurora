@@ -1,10 +1,11 @@
 #!/bin/bash
 export TERM=xterm-256color
-mount --bind /mnt/tmp /mnt/tmp
+mkdir -p /.crosenv/tmp
+mount --bind /.crosenv /.crosenv
 for mnt in /dev /proc /sys; do
-    mount --move $mnt /mnt/tmp$mnt
+    mount --move $mnt /.crosenv$mnt
 done
-pivot_root /mnt/tmp /mnt/tmp/tmp
+pivot_root /.crosenv /.crosenv/tmp
 pkill -9 frecon || :
 rm -rf /run/frecon
 frecon-lite --enable-vt1 --daemon --no-login --enable-vts --pre-create-vts --num-vts=8 --enable-gfx
