@@ -1168,14 +1168,6 @@ if $pid; then
 ╘════════════════════════════════════════╛
 EOF
     echo -e "${COLOR_RESET}"
-
-    echo -e "[${GEEN_B}+${COLOR_RESET}] Starting udevd" | center
-    /sbin/udevd --daemon | center || {
-        echo -e "[${RED_B}-${COLOR_RESET}] Error: failed to start udevd" | center
-        :
-    }
-    udevadm trigger | center || :
-    udevadm settle | center || :
 fi
 printf '\033c' > $TTY4
 echo "Logging" >>$TTY4

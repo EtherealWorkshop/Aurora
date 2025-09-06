@@ -11,9 +11,10 @@ doom() {
         sync
     fi
     setup-desktop sway
-    setup-wayland-base gzdoom gvfs font-dejavu openbox hsetroot alsa-utils xterm
-    rc-update add dbus sysinit
-    rc-update add alsa sysinit
+    setup-wayland-base swaybg foot seatd
+    rc-update del dbus sysinit
+    rc-update del cgroups sysinit
+    rc-update del seatd sysinit
     openrc sysinit
     
     mkdir -p ~/.config/gzdoom
