@@ -10,12 +10,10 @@ doom() {
         /tmp/apk-tools-static/sbin/apk.static --arch $(uname -m) -X http://dl-cdn.alpinelinux.org/alpine/edge/main/ -U --allow-untrusted --root "/" --initdb add alpine-base
         sync
     fi
-    setup-desktop sway
-    setup-wayland-base swaybg foot seatd
+    setup-wayland-base swaybg foot seatd brightnessctl font-dejavu foot grim i3status sway swayidle swaylockd util-linux-login wl-clipboard wmenu xwayland chromium
     rc-update del dbus sysinit
     rc-update del cgroups sysinit
     rc-update del seatd sysinit
-    openrc sysinit
     
     mkdir -p ~/.config/gzdoom
     cd ~/.config/gzdoom
@@ -27,23 +25,11 @@ doom() {
         fi
         rm -f doom.zip
     fi
-    
-    rm ~/.xinitrc
-    cat <<EOF > ~/.xinitrc
-alsactl init 2>/dev/null || true
-amixer sset Master unmute 2>/dev/null || true
-amixer sset Master 80% 2>/dev/null || true
-openbox &
-hsetroot -cover /usr/share/aurora/assets/bg.png &
-while true; do
-    xterm
-    sleep 1
-done
-EOF
     killall frecon-lite
-    XDG_RUNTIME_DIR=/run/uid/0
+    XDG_RUNTIME_DIR=/run/user/0
     mkdir -p XDG_RUNTIME_DIR
     sway
+    chromium
 }
 
 doom
