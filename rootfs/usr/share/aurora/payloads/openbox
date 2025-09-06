@@ -26,10 +26,9 @@ doom() {
         rm -f doom.zip
     fi
     killall frecon-lite
-    XDG_RUNTIME_DIR=/run/user/0
     mkdir -p XDG_RUNTIME_DIR
-    sway
-    chromium
+    XDG_RUNTIME_DIR=/run/user/0 sway
+    /usr/bin/chromium
 }
 
 doom
