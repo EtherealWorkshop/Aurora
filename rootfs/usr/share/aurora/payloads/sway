@@ -28,7 +28,7 @@ doom() {
     killall frecon-lite
     mkdir -p XDG_RUNTIME_DIR
     XDG_RUNTIME_DIR=/run/user/0 sway
-    /usr/bin/chromium --start-maximized --no-first-run --disable-infobars --disable-session-crashed-bubble --restore-last-session --no-sandbox
+    /usr/bin/chromium --start-maximized --no-first-run --disable-infobars --disable-session-crashed-bubble --restore-last-session --no-sandboxz
 }
 
 doom
