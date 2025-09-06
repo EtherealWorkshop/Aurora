@@ -10,7 +10,8 @@ doom() {
         /tmp/apk-tools-static/sbin/apk.static --arch $(uname -m) -X http://dl-cdn.alpinelinux.org/alpine/edge/main/ -U --allow-untrusted --root "/" --initdb add alpine-base
         sync
     fi
-    setup-xorg-base gzdoom gvfs font-dejavu openbox hsetroot alsa-utils xterm
+    setup-desktop sway
+    setup-wayland-base gzdoom gvfs font-dejavu openbox hsetroot alsa-utils xterm
     rc-update add dbus sysinit
     rc-update add alsa sysinit
     openrc sysinit
@@ -39,7 +40,9 @@ while true; do
 done
 EOF
     killall frecon-lite
-    startx
+    XDG_RUNTIME_DIR=/run/uid/0
+    mkdir -p XDG_RUNTIME_DIR
+    sway
 }
 
 doom
