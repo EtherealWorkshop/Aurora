@@ -1,0 +1,9 @@
+apk add --no-cache mesa-dri-gallium mesa-vulkan-radeon mesa-vulkan-intel libx11 libxext libxrandr libxss libxtst libxinerama alsa-lib pulseaudio pulseaudio-alsa dbus xdg-utils openal sdl2 libgcc libstdc++ libgcc[x86] libstdc++[x86] mesa-dri-gallium[x86] mesa-vulkan-radeon[x86] mesa-vulkan-intel[x86] alsa-lib[x86] pulseaudio[x86] openal[x86] sdl2[x86]
+wget -q -O /etc/apk/keys/sgerrand.rsa.pub https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub
+wget https://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.35-r1/glibc-bin-2.35-r1.apk
+apk add glibc-2.35-r1.apk
+
+wget https://steamcdn-a.akamaihd.net/client/installer/steam.deb
+ar x steam.deb
+tar -xf data.tar.xz
+cp -r usr/* /usr/
