@@ -1189,8 +1189,7 @@ sleep 2
 if [ -e "/etc/wpa_supplicant.conf" ]; then
     ls /etc/wpa_supplicant.conf >$TTY4 2>&1
     for i in $(seq 1 60); do
-        if compgen -G "/sys/class/net/wl*" >"$TTY4"; then
-            echo "wifidevice found in $i seconds." >"$TTY4"
+        if compgen -G "/sys/class/net/wl*" >$TTY4; then
             break
         fi
         sleep 1
