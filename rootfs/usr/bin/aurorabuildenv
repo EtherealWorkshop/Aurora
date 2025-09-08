@@ -39,8 +39,8 @@ export board_name=${release_board%%-*}
 downloadrawshim() {
     export basebuildshim="$aroot/build/.$board_name.bin"
     if [ ! -f "$basebuildshim" ]; then
-        echo "Downloading Raw Shim for $board_name [ https://github.com/EtherealWorkshop/sh1mmer/releases/download/v1.0.0/${board_name}.bin ]"
-        wget -q --show-progress "https://github.com/EtherealWorkshop/sh1mmer/releases/download/v1.0.0/${board_name}.bin" -O "$basebuildshim"
+        echo "Downloading Raw Shim for $board_name [ https://github.com/AerialiteLabs/sh1mmer/releases/download/v1.0.0/${board_name}.bin ]"
+        wget -q --show-progress "https://github.com/AerialiteLabs/sh1mmer/releases/download/v1.0.0/${board_name}.bin" -O "$basebuildshim"
     fi
 }
 export alpinebuild="$aroot/build/env/alpine"

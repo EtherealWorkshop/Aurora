@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright 2025 Ethereal Workshop. All rights reserved.
+# Copyright 2025 Aerialite Labs. All rights reserved.
 # Use of this source code is governed by the GNU AGPLv3 license
 # that can be found in the LICENSE.md file.
 
@@ -10,7 +10,7 @@
 # DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE 
 # FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
 # THE COPYRIGHT HOLDERS, SPECIFICALLY SOPHIA, ARE NOT LIABLE FOR BAD CODE
-# BY USING THIS SOFTWARE, YOU ALSO AGREE THAT ETHEREAL WORKSHOP HAS
+# BY USING THIS SOFTWARE, YOU ALSO AGREE THAT Aerialite Labs HAS
 # THE LEGAL RIGHTS TO YOUR FIRSTBORN CHILD, AND MAY STEAL ANY OF
 # YOUR CHILDREN AND THROW THEM ON A ROAD DURING ONCOMING TRAFFIC.
 # DAMAGES INCLUDE, BUT ARE NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
@@ -293,7 +293,7 @@ EOF
     else
         echo -e "$kernelver" | center
     fi
-    echo -e "\nhttps://github.com/EtherealWorkshop/Aurora" | center
+    echo -e "\nhttps://github.com/AerialiteLabs/Aurora" | center
 	echo -e "Page ${page}${COLOR_RESET}" | center
     funText | center
 }
@@ -521,7 +521,7 @@ shimboot() {
     bigtext shimboot
 	if [[ -z "$(ls -A $aroot/images/shims)" ]]; then
         echo -e "${YELLOW_B}You have no shims downloaded!\nPlease download or build a few images." | center
-		echo "Alternatively, shims are available in https://github.com/EtherealWorkshop/[Sh1mmer, KVS, Aurora]/releases. Put them into /usr/share/aurora/images/shims" | center
+		echo "Alternatively, shims are available in https://github.com/AerialiteLabs/[Sh1mmer, KVS, Aurora]/releases. Put them into /usr/share/aurora/images/shims" | center
         read_center "Press Enter to return to the main menu..."
         echo -e "${COLOR_RESET}"
 		return
@@ -851,9 +851,9 @@ downloadshim() {
     local release_board=$(lsbval CHROMEOS_RELEASE_BOARD 2>$TTY4)
     export board_name=${release_board%%-*}
     	options_download=(
-	    "Sh1mmer Legacy - EtherealWorkshop/Sh1mmer/releases"
+	    "Sh1mmer Legacy - AerialiteLabs/Sh1mmer/releases"
 	    "Shimboot - ading2210/shimboot/releases"
-        "Br0ker Sh1mmer - EtherealWorkshop/sh1mmer/actions"
+        "Br0ker Sh1mmer - AerialiteLabs/sh1mmer/actions"
         "Custom Shim from URL"
 	)
 
@@ -861,9 +861,9 @@ downloadshim() {
 	download_choice=$?
 
 	case "$download_choice" in
-	    0) export FINALSHIM_URL="https://github.com/EtherealWorkshop/sh1mmer/releases/download/v2.0.0/${board_name}.bin" ;;
+	    0) export FINALSHIM_URL="https://github.com/AerialiteLabs/sh1mmer/releases/download/v2.0.0/${board_name}.bin" ;;
 	    1) export FINALSHIM_URL="https://github.com/ading2210/shimboot/releases/download/v1.3.0/shimboot_${board_name}.zip" ;;
-        2) export FINALSHIM_URL="https://nightly.link/EtherealWorkshop/sh1mmer/actions/runs/17243134890/Br0ker%20Sh1mmer%20${board_name}.zip" ;;
+        2) export FINALSHIM_URL="https://nightly.link/AerialiteLabs/sh1mmer/actions/runs/17243134890/Br0ker%20Sh1mmer%20${board_name}.zip" ;;
 	    3) tput cnorm
            stty echo
            read_center -d "Enter Shim URL: " FINALSHIM_URL ;;
@@ -908,11 +908,11 @@ updateshim() {
 		if ! git -C "/root/Aurora" pull origin "$(auroraval origin)" 2>&1 | center; then
 		    echo "git pull failed, recloning" | center
 		    rm -rf /root/Aurora
-        	git clone --branch=$(auroraval origin) https://github.com/EtherealWorkshop/Aurora /root/Aurora 2>&1 | center || return
+        	git clone --branch=$(auroraval origin) https://github.com/AerialiteLabs/Aurora /root/Aurora 2>&1 | center || return
 		fi
     else
         [ -d "/root/Aurora" ] && rm -rf "/root/Aurora"
-        git clone --branch=$(auroraval origin) https://github.com/EtherealWorkshop/Aurora /root/Aurora 2>&1 | center || return
+        git clone --branch=$(auroraval origin) https://github.com/AerialiteLabs/Aurora /root/Aurora 2>&1 | center || return
     fi
     echo "Copying files to root..." | center
     updated=0

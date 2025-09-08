@@ -32,7 +32,7 @@ apk add curl wget bash e2fsprogs gptfdisk sgdisk cgpt rsync
 
 ## Building
 ```bash
-git clone --recursive https://github.com/EtherealWorkshop/Aurora.git
+git clone --recursive https://github.com/AerialiteLabs/Aurora.git
 cd Aurora
 ```
 Run the next command with a **raw** shim and the architecture of the chromebook you have.
@@ -43,7 +43,7 @@ Alternatively, you can automatically download a nanoshim and build with it with 
 ```bash
 sudo bash Aurora <board> --auto
 ```
-If you don't want to build a shim yourself (or aren't able to), prebuilts are available on the [latest release](https://github.com/EtherealWorkshop/Aurora/releases/latest).
+If you don't want to build a shim yourself (or aren't able to), prebuilts are available on the [latest release](https://github.com/AerialiteLabs/Aurora/releases/latest).
 ## Flashing
 ### Linux/FreeBSD:
 Assuming you're still in the `Aurora/` directory and have just built it:<br></br>
