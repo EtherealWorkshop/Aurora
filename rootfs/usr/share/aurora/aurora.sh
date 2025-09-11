@@ -89,7 +89,6 @@ funText() {
         "${CYAN_B}Maxington hole 3"
         "${YELLOW_B}what's a nugget?"
         "${YELLOW_B}I'm gonna install a door on your face."
-        "${RED_B}Anne Frank in a Furnace."
         "${CYAN_B}Use protection, Kids"
         "${PURPLE_B}Can Uzi use absolute solver on my dih?"
         "${GEEN}\"hi crazy ant\" - crazy ant"
