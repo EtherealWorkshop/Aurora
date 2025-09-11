@@ -43,7 +43,7 @@ Alternatively, you can automatically download a nanoshim and build with it with 
 ```bash
 sudo bash Aurora <board> --auto
 ```
-If you don't want to build a shim yourself (or aren't able to), prebuilts are available on the [latest release](https://github.com/AerialiteLabs/Aurora/releases/latest).
+If you don't want to build a shim yourself (or aren't able to), prebuilts are available on the [download server](https://dl.mrwork.shop).
 ## Flashing
 ### Linux/FreeBSD:
 Assuming you're still in the `Aurora/` directory and have just built it:<br></br>
