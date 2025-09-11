@@ -5,4 +5,8 @@ export TTY2="/dev/tty2"
 export TTY3="/dev/tty4"
 [ -e /dev/pts/0 ] && export TTY1="/dev/pts/0" && export TTY2="/dev/pts/1" && export TTY3="/dev/pts/3"
 /bin/busybox --install /bin || true
-exec /init < "$TTY1" >> "$TTY1" 2>&1 || sleep 1d; echo "why are you still here?"; sleep 2h; echo "okay bye"; reboot -f
+exec /init < "$TTY1" >> "$TTY1" 2>&1 || { 
+    echo "failed. press enter to reboot"
+    read < "$TTY1" >> "$TTY1" 2>&1
+    reboot -f
+}

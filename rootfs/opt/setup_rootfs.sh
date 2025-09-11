@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# Ran during Aurora's build process to install packages for the Aurora partition
+
 cat <<EOF > /etc/apk/repositories
 http://dl-cdn.alpinelinux.org/alpine/edge/main
 http://dl-cdn.alpinelinux.org/alpine/edge/community

@@ -89,6 +89,7 @@ funText() {
         "${CYAN_B}Maxington hole 3"
         "${YELLOW_B}what's a nugget?"
         "${YELLOW_B}I'm gonna install a door on your face."
+        "${CYAN_B}??? -xmb9"
         "${CYAN_B}Use protection, Kids"
         "${PURPLE_B}Can Uzi use absolute solver on my dih?"
         "${GEEN}\"hi crazy ant\" - crazy ant"
@@ -1230,8 +1231,8 @@ clear
 export page=1 updatedpage=0
 while true; do
 	if ((page <= 0)); then
-		export page=3
-	elif ((page >= 4)); then
+		export page=2
+	elif ((page >= 3)); then
 		export page=1
 	fi
     export TERM=xterm-256color

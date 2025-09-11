@@ -23,16 +23,21 @@ dbus-daemon --system
 seatd -l silent &
 mount -t tmpfs tmpfs /dev/shm
 chmod +x /usr/bin/frecon-lite
-startfrecon() {
-    export TERM=xterm-256color
-    export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-    busybox pkill -9 frecon || :
-    busybox rm -rf /run/frecon
-    frecon-lite --enable-vt1 --daemon --no-login --enable-vts --pre-create-vts --num-vts=8 --enable-gfx
-    until [ -e /run/frecon/vt0 ]; do busybox sleep 0.1; done
-    exec </run/frecon/vt0 >/run/frecon/vt0 2>&1
-    busybox printf "\033]input:on\a\033]switchvt:0\a"
-}
-startfrecon
+cat <<EOF > /sbin/startfrecon
+export TERM=xterm-256color
+export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+busybox pkill -9 frecon || :
+busybox pkill -9 mpv || :
+busybox pkill -9 X || :
+busybox pkill -9 xinit || :
+busybox rm -rf /run/frecon
+frecon-lite --enable-vt1 --daemon --no-login --enable-vts --pre-create-vts --num-vts=8 --enable-gfx
+until [ -e /run/frecon/vt0 ]; do busybox sleep 0.1; done
+exec </run/frecon/vt0 >/run/frecon/vt0 2>&1
+busybox printf "\033]input:on\a\033]switchvt:0\a"
+EOF
+chmod +x /sbin/startfrecon
+
+/sbin/startfrecon
 setsid -c test
 exec bash /usr/share/aurora/aurora.sh

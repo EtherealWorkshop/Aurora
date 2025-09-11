@@ -1,5 +1,11 @@
 #!/bin/bash
 
 source /usr/share/aurora/functions
+tput civis
+stty -echo
 clear
-cat /root/.douglas | center
+printf "\033]image:file=/root/.douglas.png;scale=1\a"
+sleep 5
+clear
+tput cnorm
+stty echo

@@ -93,11 +93,13 @@ cp -r auroraboot/. "$auroraboot/"
 cp -r patches/shimboot/. "$auroraboot/"
 echo_c "Done. Rootfs: $(du -sh $rootfs | awk '{print $1}')\n\n${BLUE_B}Installing Bootloader Packages" GEEN_B
 chroot "$auroraboot" /bin/sh -c "export PATH=/sbin:/bin:/usr/sbin:/usr/bin && chmod +x /opt/setup_auroraboot.sh && /opt/setup_auroraboot.sh $arch"
+rm -f $auroraboot/opt/setup_auroraboot.sh
 echo_c "Done. Auroraboot: $(du -sh $auroraboot | awk '{print $1}')\n\n${BLUE_B}Installing Rootfs Packages" GEEN_B
 cp -r rootfs/. "$rootfs/"
 mkdir -p "$rootfs/usr/share/patches/sh1mmer"
 cp -r patches/sh1mmer/. "$rootfs/usr/share/patches/sh1mmer/"
 chroot "$rootfs" /bin/sh -c "export PATH=/sbin:/bin:/usr/sbin:/usr/bin && chmod +x /opt/setup_rootfs.sh && /opt/setup_rootfs.sh $arch"
+rm -f $rootfs/opt/setup_rootfs.sh
 echo_c "Done. Rootfs: $(du -sh $rootfs | awk '{print $1}')\n\n${BLUE_B}Downloading firmware..." GEEN_B
 git clone --depth=1 https://chromium.googlesource.com/chromiumos/third_party/linux-firmware $rootfs/lib/firmware/
 find "$rootfs/lib/firmware" -type f -not \( -path "*wifi*" -o -path "*rt*" -o -path "*ath*" -o -path "*mediatek*" \) -exec rm -rf {} + >/dev/null 2>&1

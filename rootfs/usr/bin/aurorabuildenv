@@ -34,8 +34,6 @@ lsbval() {
 release_board=$(lsbval CHROMEOS_RELEASE_BOARD 2>/dev/null)
 export board_name=${release_board%%-*}
 
-
-
 downloadrawshim() {
     export basebuildshim="$aroot/build/.$board_name.bin"
     if [ ! -f "$basebuildshim" ]; then
@@ -43,6 +41,7 @@ downloadrawshim() {
         wget -q --show-progress "https://github.com/AerialiteLabs/sh1mmer/releases/download/v1.0.0/${board_name}.bin" -O "$basebuildshim"
     fi
 }
+
 export alpinebuild="$aroot/build/env/alpine"
 export crosbuild="$aroot/build/env/cros"
 export debianbuild="$aroot/build/env/debian"

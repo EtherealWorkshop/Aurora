@@ -1,4 +1,0 @@
-#!/bin/bash
-
-killall frecon-lite
-mpv --vo=drm --volume=100 "$@" --slang=en --ytdl-raw-options='ignore-config=,sub-langs="^en.*",write-subs=,write-auto-subs='
