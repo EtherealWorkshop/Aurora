@@ -47,19 +47,14 @@ fail() {
 }
 
 canwifi() {
-  update-ca-certificates 2>/dev/null
-  ntpd -q -p pool.ntp.org 2>/dev/null
-  ntpd -q -p pool.ntp.org 2>/dev/null
-  if curl -Is https://nebulaservices.org | head -n 1 | grep -q "HTTP/"; then
-    "$@"
-  else
-    echo "Nebula Services is down. Trying example.com..." | center
+    update-ca-certificates 2>/dev/null
+    ntpd -q -p pool.ntp.org 2>/dev/null
+    ntpd -q -p pool.ntp.org 2>/dev/null
     if curl -Is https://example.com | head -n 1 | grep -q "HTTP/"; then
         "$@"
     else
         fail "Not connected to the internet"
     fi
-  fi
 }
 
 echo_c() {
