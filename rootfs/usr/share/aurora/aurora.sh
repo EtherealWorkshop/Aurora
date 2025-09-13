@@ -549,13 +549,14 @@ shimboot() {
         sed -i 's/shimboot=0/shimboot=1/' /auroraroot/etc/aurora
         sync
         stty echo
-        read_center -d "Reboot to boot into shimboot instead of Aurora from auroraboot? (Y/n): " bootshimboot
-        case $bootshimboot in
-            "n*"|"N*") return 0 ;;
-            *) losetup -D
-               
-               reboot -f ;;
-        esac
+        fail "Shimboot not currently available. Fixed shortly."
+#        read_center -d "Reboot to boot into shimboot instead of Aurora from auroraboot? (Y/n): " bootshimboot
+#        case $bootshimboot in
+#            "n*"|"N*") return 0 ;;
+#            *) losetup -D
+#               
+#               reboot -f ;;
+#        esac
     fi
 
     loop_root="$(cgpt find -l ROOT-A "$loop" | head -n1)"
@@ -668,7 +669,7 @@ EOF
 }
 
 chromium() {
-    apk add pcre-tools
+    apk add --no-progress pcre-tools
     if [ ! -f /usr/sbin/setup-xorg-base ] && [ ! -f /usr/sbin/setup-devd ]; then
         mkdir -p "/tmp/apk-tools-static"
         wget -q --show-progress "https://dl-cdn.alpinelinux.org/alpine/latest-stable/main/$(uname -m)/$(echo "$(wget -qO- --show-progress "https://dl-cdn.alpinelinux.org/alpine/latest-stable/main/$(uname -m)/" | grep "apk-tools-static")" | pcregrep -o1 '"(.+?.apk)"')" -O "/tmp/apk-tools-static/pkg.apk"
@@ -853,7 +854,6 @@ downloadshim() {
     	options_download=(
 	    "Sh1mmer Legacy - AerialiteLabs/Sh1mmer/releases"
 	    "Shimboot - ading2210/shimboot/releases"
-        "Br0ker Sh1mmer - AerialiteLabs/sh1mmer/actions"
         "Custom Shim from URL"
 	)
 
@@ -863,8 +863,7 @@ downloadshim() {
 	case "$download_choice" in
 	    0) export FINALSHIM_URL="https://github.com/AerialiteLabs/sh1mmer/releases/download/v2.0.0/${board_name}.bin" ;;
 	    1) export FINALSHIM_URL="https://github.com/ading2210/shimboot/releases/download/v1.3.0/shimboot_${board_name}.zip" ;;
-        2) export FINALSHIM_URL="https://nightly.link/AerialiteLabs/sh1mmer/actions/runs/17243134890/Br0ker%20Sh1mmer%20${board_name}.zip" ;;
-	    3) tput cnorm
+	    2) tput cnorm
            stty echo
            read_center -d "Enter Shim URL: " FINALSHIM_URL ;;
         *) fail "Invalid choice (somehow?????)" ;;
@@ -897,43 +896,57 @@ downloadshim() {
 }
 
 updateshim() {
+    set -euo pipefail
     export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
     update-ca-certificates
-    ntpd -q -p pool.ntp.org
-    sync
-    arch=$(uname -m)
-    echo ""
-    apk add git github-cli >$TTY4 2>&1
-    if [ -d "/root/Aurora/.git" ]; then		
-		if ! git -C "/root/Aurora" pull origin "$(auroraval origin)" 2>&1 | center; then
-		    echo "git pull failed, recloning" | center
-		    rm -rf /root/Aurora
-        	git clone --branch=$(auroraval origin) https://github.com/AerialiteLabs/Aurora /root/Aurora 2>&1 | center || return
-		fi
+    ntpd -q -p pool.ntp.org || true
+    apk add --no-progress git >$TTY4 2>&1
+    upd_dir=$(mktemp -d)
+    cleanup() { 
+        rm -rf "$upd_dir"
+    }
+    trap cleanup EXIT
+    branch=$(auroraval origin)
+    if [ -d "/root/Aurora/.git" ]; then
+        if ! git -C "/root/Aurora" pull origin "$branch" 2>&1 | center; then
+            echo "git pull failed, recloning" | center
+            rm -rf /root/Aurora
+            git clone --branch="$branch" https://github.com/AerialiteLabs/Aurora /root/Aurora 2>&1 | center || return
+        fi
     else
-        [ -d "/root/Aurora" ] && rm -rf "/root/Aurora"
-        git clone --branch=$(auroraval origin) https://github.com/AerialiteLabs/Aurora /root/Aurora 2>&1 | center || return
+        rm -rf /root/Aurora
+        git clone --branch="$branch" https://github.com/AerialiteLabs/Aurora /root/Aurora 2>&1 | center || return
     fi
-    echo "Copying files to root..." | center
+
+    echo "Staging rootfs update..." | center
     updated=0
-    if ! cmp -s /usr/share/aurora/aurora.sh /root/Aurora/rootfs/usr/share/aurora/aurora.sh 2>$TTY4; then
+    if ! cmp -s /usr/share/aurora/aurora.sh /root/Aurora/rootfs/usr/share/aurora/aurora.sh 2>"$TTY4"; then
         updated=1
     fi
-    mv /etc/aurora /etc/aurora.bak
-    sync
-    cp -Lar /root/Aurora/rootfs/. /
-    rm -f /etc/aurora
-    mv /etc/aurora.bak /etc/aurora
-    rm -rf /usr/share/patches/*
-    mkdir -p /usr/share/patches/sh1mmer/
-    cp -Lar /root/Aurora/patches/sh1mmer/. /usr/share/patches/sh1mmer/
-    sync
+
+    rsync -a --delete /root/Aurora/rootfs/ "$upd_dir/rootfs/"
+    cp -a /etc/aurora "$upd_dir/etc.aurora.bak"
+
+    cp -f "$upd_dir/rootfs/sbin/init" /sbin/init
+    chmod +x /sbin/init
+    cp -f "$upd_dir/rootfs/usr/share/aurora/aurora.sh" /usr/share/aurora/aurora.sh
+    chmod +x /usr/share/aurora/aurora.sh
+    cp -f "$upd_dir/rootfs/usr/share/aurora/functions" /usr/share/aurora/functions
+    chmod +x /usr/share/aurora/functions
+    sync # it shocks me people genuinely haven't learned you shouldn't reboot during updates. the fact i have to skidproof an update system is wild
+
+    rsync -a --inplace --exclude="sbin/init" --exclude="usr/share/aurora/aurora.sh" --exclude="usr/share/aurora/functions" "$upd_dir/rootfs/" /
+    mv -f "$upd_dir/etc.aurora.bak" /etc/aurora
+    rsync -a --delete /root/Aurora/patches/sh1mmer/ /usr/share/patches/sh1mmer/
     chmod +x /usr/share/aurora/* /usr/bin/* /sbin/init
+    sync
     aurorabootmnt=$(mktemp -d)
-    mount "$(lsblk -pro NAME,PARTLABEL,MOUNTPOINT | grep -i "AuroraBoot" | awk '{print $1}')" $aurorabootmnt
-    cp -Lar /root/Aurora/auroraboot/. $aurorabootmnt/
-    cp -Lar /root/Aurora/patches/shimboot/. $aurorabootmnt/
-    chmod +x $aurorabootmnt/init $aurorabootmnt/bootstrap.sh $aurorabootmnt/sbin/init
+    aurorabootdev=$(lsblk -pro NAME,PARTLABEL,MOUNTPOINT | awk '/AuroraBoot/ {print $1; exit}')
+    mount "$aurorabootdev" "$aurorabootmnt"
+    rsync -a --inplace /root/Aurora/auroraboot/ "$aurorabootmnt/"
+    rsync -a --inplace /root/Aurora/patches/shimboot/ "$aurorabootmnt/"
+    chmod +x "$aurorabootmnt/init" "$aurorabootmnt/bootstrap.sh" "$aurorabootmnt/sbin/init"
+    sync
     umount $aurorabootmnt
     if [ "$updated" = "1" ]; then
         echo "Restarting aurora.sh" | center
@@ -944,7 +957,7 @@ updateshim() {
 
 aftggp() {
     tput cnorm
-    apk add python3 py3-flask py3-bcrypt >$TTY4
+    apk add --no-progress python3 py3-flask py3-bcrypt >$TTY4
     kill $(ps aux | grep "python3 /usr/share/ggp/" | grep -v grep | awk '{print $1}') 2>$TTY4
     rm -f /etc/aftggp
     read_center -d "Enter Password for AFT: " readpassword
@@ -1215,9 +1228,9 @@ if [ -e "/etc/wpa_supplicant.conf" ]; then
 
     if [ $connected -eq 0 ]; then
         echo -e "[${RED_B}-${COLOR_RESET}] No nearby saved networks found" | center
-    else
-        updateshim
-        sync
+#    else
+#        updateshim
+#        sync
     fi
 fi
 
