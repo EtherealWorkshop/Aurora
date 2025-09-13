@@ -11,7 +11,8 @@ export TTY2="/dev/tty2"
 export TTY3="/dev/tty4"
 [ -e /dev/pts/0 ] && export TTY1="/dev/pts/0" && export TTY2="/dev/pts/1" && export TTY3="/dev/pts/3"
 for i in $(seq 1 10); do
-    rc-update del $(rc-update | grep sysinit | grep -v udev | head -1 | awk '{print $1}') sysinit >/dev/null 2>&1
+    service=$(rc-update | grep sysinit | grep -v udev | head -1 | awk '{print $1}')
+    [ -n "$service" ] && rc-update del $service sysinit >/dev/null 2>&1
 done
 rc-update add udev sysinit >/dev/null
 rc-update add udev-postmount default >/dev/null
