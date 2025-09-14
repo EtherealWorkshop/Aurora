@@ -7,8 +7,20 @@ printf "\033[?25h"
 rm -f /init
 clear
 export TTY1="/dev/tty1"
-[ -e /dev/pts/0 ] && export TTY1="/dev/pts/0"
-chmod +x /usr/bin/frecon-lite /sbin/startfrecon
+export TTY2="/dev/tty2"
+export TTY3="/dev/tty4"
+[ -e /dev/pts/0 ] && export TTY1="/dev/pts/0" && export TTY2="/dev/pts/1" && export TTY3="/dev/pts/3"
+chmod +x /usr/bin/frecon-lite
+startfrecon() {
+    export TERM=xterm-256color
+    export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+    busybox pkill -9 frecon || :
+    busybox rm -rf /run/frecon
+    frecon-lite --enable-vt1 --daemon --no-login --enable-vts --pre-create-vts --num-vts=8 --enable-gfx
+    until [ -e /run/frecon/vt0 ]; do busybox sleep 0.1; done
+    exec </run/frecon/vt0 >/run/frecon/vt0 2>&1
+    busybox printf "\033]input:on\a\033]switchvt:0\a"
+}
 startfrecon
 setsid -c test
 exec bash /usr/share/aurora/aurora.sh
