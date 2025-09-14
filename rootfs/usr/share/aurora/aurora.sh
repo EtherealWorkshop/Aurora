@@ -10,7 +10,7 @@
 # DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE 
 # FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
 # THE COPYRIGHT HOLDERS, SPECIFICALLY SOPHIA, ARE NOT LIABLE FOR BAD CODE
-# BY USING THIS SOFTWARE, YOU ALSO AGREE THAT Aerialite Labs HAS
+# BY USING THIS SOFTWARE, YOU ALSO AGREE THAT AERIALITE LABS HAS
 # THE LEGAL RIGHTS TO YOUR FIRSTBORN CHILD, AND MAY STEAL ANY OF
 # YOUR CHILDREN AND THROW THEM ON A ROAD DURING ONCOMING TRAFFIC.
 # DAMAGES INCLUDE, BUT ARE NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
@@ -27,7 +27,8 @@ stty intr ''
 stty -echo
 export stty=$(stty -g)
 stty echo
-export TTY1="/run/frecon/vt0" && export TTY2="/run/frecon/vt1" && export TTY3="/run/frecon/vt2" && export TTY4="/run/frecon/vt3"
+
+export TTY1="/run/frecon/vt0" TTY2="/run/frecon/vt1" TTY3="/run/frecon/vt2" TTY4="/run/frecon/vt3"
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
 #################
@@ -92,7 +93,7 @@ funText() {
         "${CYAN_B}??? -xmb9"
         "${CYAN_B}Use protection, Kids"
         "${PURPLE_B}Can Uzi use absolute solver on my dih?"
-        "${GEEN}\"hi crazy ant\" - crazy ant"
+        "${GEEN_B}\"hi crazy ant\" - crazy ant"
         "${YELLOW_B}I'm gonna shove a cravat up your ass"
         "${CYAN_B}You barely sentient toaster."
         "${PINK_B}beautiful sophie art"
@@ -102,7 +103,7 @@ funText() {
         "${CYAN_B}Your footjob is weak"
         "${CYAN_B}idk why age matters - shrey719"
         "${GEEN_B}gurt: yo"
-        "${ORANGE_B}I am the Lorax and I speak for the trees"
+        "${YELLOW_B}I am the Lorax and I speak for the trees"
         "${GEEN_B}CHICKEN JOCKEY"
         "${BLUE_B}stellaword12"
         "${YELLOW_B}the higher glue appear trend is now large."
@@ -198,8 +199,8 @@ menu() {
             case $key in
                 $'\e[A') ((selected--)) ;;
                 $'\e[B') ((selected++)) ;;
-				$'\e[D') export page=$((page - 1)) && export updatedpage=1 && return 255 ;;
-				$'\e[C') export page=$((page + 1)) && export updatedpage=1 && return 255 ;;
+				$'\e[D') export page=$((page - 1)) updatedpage=1 && return 255 ;;
+				$'\e[C') export page=$((page + 1)) updatedpage=1 && return 255 ;;
                 '') break ;;
             esac
         else

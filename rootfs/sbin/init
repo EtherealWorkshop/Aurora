@@ -7,38 +7,8 @@ printf "\033[?25h"
 rm -f /init
 clear
 export TTY1="/dev/tty1"
-export TTY2="/dev/tty2"
-export TTY3="/dev/tty4"
-[ -e /dev/pts/0 ] && export TTY1="/dev/pts/0" && export TTY2="/dev/pts/1" && export TTY3="/dev/pts/3"
-for i in $(seq 1 10); do
-    service=$(rc-update | grep sysinit | grep -v udev | head -1 | awk '{print $1}')
-    [ -n "$service" ] && rc-update del $service sysinit >/dev/null 2>&1
-done
-rc-update add udev sysinit >/dev/null
-rc-update add udev-postmount default >/dev/null
-rc-update add udev-settle sysinit >/dev/null
-rc-update add udev-trigger sysinit >/dev/null
-openrc sysinit >/dev/null
-mkdir -p /run/dbus /run/user/0 /dev/shm
-dbus-daemon --system
-seatd -l silent &
-mount -t tmpfs tmpfs /dev/shm
-chmod +x /usr/bin/frecon-lite
-cat <<EOF > /sbin/startfrecon
-export TERM=xterm-256color
-export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-busybox pkill -9 frecon || :
-busybox pkill -9 mpv || :
-busybox pkill -9 X || :
-busybox pkill -9 xinit || :
-busybox rm -rf /run/frecon
-frecon-lite --enable-vt1 --daemon --no-login --enable-vts --pre-create-vts --num-vts=8 --enable-gfx
-until [ -e /run/frecon/vt0 ]; do busybox sleep 0.1; done
-exec </run/frecon/vt0 >/run/frecon/vt0 2>&1
-busybox printf "\033]input:on\a\033]switchvt:0\a"
-EOF
-chmod +x /sbin/startfrecon
-
-/sbin/startfrecon
+[ -e /dev/pts/0 ] && export TTY1="/dev/pts/0"
+chmod +x /usr/bin/frecon-lite /sbin/startfrecon
+startfrecon
 setsid -c test
 exec bash /usr/share/aurora/aurora.sh
