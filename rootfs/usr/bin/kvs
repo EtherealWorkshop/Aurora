@@ -4,6 +4,8 @@ source /usr/share/aurora/functions
 source /usr/bin/kvg
 export TERM=xterm-256color
 
+fail "no"
+
 kvs() {
     while true; do
         read_center -d "Enter Kernver[Max 8 characters after 0x]: 0x" kernver
