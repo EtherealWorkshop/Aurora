@@ -13,16 +13,16 @@ if [ -z "$dev_partition" ]; then
     sleep 5
     exit 1
 fi
-bash /resize >/dev/null
-sync
-mkdir -p /auroraroot
 
+chmod +x /resize
+bash /resize >/dev/null
+
+mkdir -p /auroraroot
 mount $dev_partition /auroraroot || {
     echo "failed to mount aurora partition"
-    sleep 5
-    exit 1
+    sleep infinity
 }
 
-chmod +x /auroraroot/sbin/init /auroraroot/usr/share/aurora/aurora.sh /resize
+chmod +x /auroraroot/sbin/init /auroraroot/usr/share/aurora/aurora.sh
 
 exec switch_root /auroraroot /sbin/init < "$TTY1" >> "$TTY1" 2>&1
