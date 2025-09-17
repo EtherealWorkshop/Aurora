@@ -57,7 +57,7 @@ funText() {
         "${MAGENTA_B}it runs the demon - OlyB"
         "${YELLOW_B}GOOD MANNERS\n${RED_B}1 Wait your turn\n${BLUE_B}2 Use polite words\n${GEEN_B}3 Listen Carefully"
         "${YELLOW_B}mommy may I please have fakemod :3\n- synaptic"
-        "${GREEN}crazy ant [...] :thumbsup:"
+        "${GEEN}crazy ant [...] :thumbsup:"
         "${CYAN_B}Nothing beats a Jet2 Holiday"
         "${PINK_B}\"soap\" manor"
         "${PURPLE_B}rogged"
