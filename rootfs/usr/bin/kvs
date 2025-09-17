@@ -48,6 +48,7 @@ kvs() {
     umount /.crosenv
     sync
 }
+
 if [ "$(crossystem mainfw_type)" = "recovery" ]; then
     kvs
 else

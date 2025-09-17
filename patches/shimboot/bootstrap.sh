@@ -124,6 +124,7 @@ print_selector() {
   echo "s) enter a shell"
   echo "l) view license"
 }
+
 auroraselected() {
     echo "Moving mounts to /auroraroot"
     mkdir -p "/auroraroot/sys"
@@ -138,6 +139,7 @@ auroraselected() {
     umount -l /initramfs
     exec /sbin/init < "$TTY1" >> "$TTY1" 2>&1
 }
+
 get_selection() {
   local rootfs_partitions="$1"
   local i=1
@@ -371,6 +373,7 @@ boot_chromeos() {
   /sbin/modprobe zram
   exec_init
 }
+
 echo "starting the shimboot bootloader"
 enable_debug_console "$TTY2"
 valid_partitions="$(find_all_partitions)"

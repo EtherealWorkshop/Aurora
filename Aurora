@@ -33,10 +33,12 @@ echo_c() {
     local color="${!color_variable}"
     echo -e "${color}${text}${COLOR_RESET}"
 }
+
 cleanup() {
     for dir in proc sys dev run; do umount -l "$rootfs/$dir"; done
     rm -rf "$rootfs" "$auroraboot" "$statemount" "$root_amount" "$root_bmount"
 }
+
 lsbval() {
   local key="$1" lsbfile="${2:-$rootfs/etc/lsb-release}"
   echo "$key" | grep -Eq '^[a-zA-Z0-9_]+$' || return 1
@@ -46,6 +48,7 @@ lsbval() {
     p
   }" "$lsbfile"
 }
+
 source ./checks $@
 
 if [ -z "$shim" ] || echo "$shim" | grep -vq ".bin"; then
@@ -114,6 +117,7 @@ copyfromcros() {
     cp -a ${tempmount}${path} $rootfs/.crosenv/usr/bin/
   done
 }
+
 chromeos=$(cgpt find -l ROOT-A "$shimdev" | head -n 1)
 tempmount=$(mktemp -d)
 echo_c "Done. Rootfs: $(du -sh $rootfs | awk '{print $1}')\n\n${BLUE_B}Copying Modules..." GEEN_B
@@ -186,6 +190,7 @@ if [ "$DEBUG" -eq "1" ]; then
     sleep 10
 else
     rsync -avH --info=progress2 --delete "$rootfs/." "$root_bmount" >/dev/null || { echo "failed to copy all files"; exit 1; }
+
 fi
 echo_c "Done. Rootfs: $(du -sh $rootfs | awk '{print $1}')\n\n${BLUE_B}Copying auroraboot to shim" "GEEN_B"
 rm -f "$auroraboot/bin/init"
@@ -195,6 +200,7 @@ if [ "$DEBUG" -eq "1" ]; then
     sleep 10
 else
     rsync -avH --info=progress2 --delete "$auroraboot/." "$root_amount" >/dev/null || { echo "failed to copy all files"; exit 1; }
+
 fi
 chmod +x "$root_amount/init" "$root_amount/sbin/init" "$root_amount/bootstrap.sh" 2>/dev/null
 chmod +x "$root_bmount/sbin/init" "$root_bmount/usr/bin/"* "$root_bmount/usr/share/aurora/"* 2>/dev/null

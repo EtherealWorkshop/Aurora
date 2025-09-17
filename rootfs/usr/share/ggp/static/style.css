@@ -2,6 +2,7 @@
     font-family: 'Terminus';
     src: url('../Terminus.ttf');
 }
+
 body {
     display: flex;
     flex-direction: column;
@@ -13,6 +14,7 @@ body {
     color: #FFFFFF;
     background-color: #000000;
 }
+
 a {
     text-decoration: none;
     color: #FFFFFF;

@@ -65,9 +65,11 @@ Required:
     -ar --arch      applies action to arch env
 EOF
 }
+
 aurorabuildenv-list() {
     find $aroot/build/ -type f -name .exists | awk -F/ '{print $7}'
 }
+
 aurorabuildenv-create() {
     downloadrawshim
     mkdir -p "$alpinebuild" "$crosbuild" "$debianbuild" "$archbuild"

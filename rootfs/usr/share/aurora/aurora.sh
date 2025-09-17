@@ -30,6 +30,7 @@ stty echo
 
 export TTY1="/run/frecon/vt0" TTY2="/run/frecon/vt1" TTY3="/run/frecon/vt2" TTY4="/run/frecon/vt3"
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+export_args $(cat /proc/cmdline | sed -e 's/"[^"]*"/DROPPED/g') 1> /dev/null
 
 #################
 ## DEFINITIONS ##
@@ -49,401 +50,6 @@ mkdir -p $aroot/images/recovery
 declare -A VERSION
 rm -f /etc/aftggp /etc/kernverpending
 
-VERSION["BRANCH"]="alpine"
-VERSION["NUMBER"]="1.0.0"
-VERSION["BUILDDATE"]="[2025-08-14]"
-VERSION["RELNAME"]="Rhymes with Grug"
-VERSION["STRING"]="v${VERSION["NUMBER"]} ${VERSION["BRANCH"]} - \"${VERSION["RELNAME"]}\""
-
-####################
-## BASE FUNCTIONS ##
-####################
-
-# haha 69
-
-funText() {
-	splashText=(
-        "${CYAN_B}The lower tape fade meme is still massive."
-        "${LIGHT_BLUE_B}It most likely existed in the first place." 
-        "${GEEN_B}HACKED BY GEEN" 
-        "${LIGHT_BLUE_B}\"how do i type a backslash\" -simon" 
-        "${PURPLE_B}MURDER DRONES SEASON 2 IS REAL I SWEAR"
-        "${PURPLE_B}JCJENSON in SPAAAAAAC3"
-        "${PURPLE_B}Well-made Quality Assured Durability" 
-        "${YELLOW_B}\"purr :3 mrrow\" - Synaptic" 
-        "${RED_B}who else but quagmire?\nhe's quagmire, quagmire,\nyou never really know what\nhe's gonna do next\nhe's quagmire, quagmire,\ngiggitygiggitygiggitygiggity\nlet's have [...]"
-        "${GEEN_B}rhymes with grug"
-        "${PINK_B}now with free thigh highs!"
-        "${PINK_B}:3"
-        "cr50 hammer? i think you meant \"no PoC\"."
-        "public nuisance???\nis that a hannah reference"
-        "${YELLOW_B}can you overdose on pepperjack cheese?"
-        "${PURPLE_B}make me staff lil bro i'm overqualified..."
-        "${YELLOW_B}:cheese;"
-        "${YELLOW_B}toilet command best command!"
-        "${CYAN_B}Sign in to Letterloop:\nHi friend,\nClick here to sign in with this magic link\n-Letterloop Team"
-        "${GEEN_B}Also try Terraria!"
-        "${GEEN_B}Terraria: Also try Minecraft"
-        "${CYAN_B}HOW MANY HOLES IN A POLO??"
-        "${CYAN_B}It's rewind time"
-        "${CYAN_B}Ain't no party like a Putt Party"
-        "${CYAN_B}Maxington hole 3"
-        "${YELLOW_B}what's a nugget?"
-        "${YELLOW_B}I'm gonna install a door on your face."
-        "${CYAN_B}??? -xmb9"
-        "${CYAN_B}Use protection, Kids"
-        "${PURPLE_B}Can Uzi use absolute solver on my dih?"
-        "${GEEN_B}\"hi crazy ant\" - crazy ant"
-        "${YELLOW_B}I'm gonna shove a cravat up your ass"
-        "${CYAN_B}You barely sentient toaster."
-        "${PINK_B}beautiful sophie art"
-        "${YELLOW_B}Synaptic Network"
-        "${BLUE_B}he could be in this very room!\nhe could be you!\nhe could be me!!"
-        "${CYAN_B}Nothing built can last forever -ivor"
-        "${CYAN_B}Your footjob is weak"
-        "${CYAN_B}idk why age matters - shrey719"
-        "${GEEN_B}gurt: yo"
-        "${YELLOW_B}I am the Lorax and I speak for the trees"
-        "${GEEN_B}CHICKEN JOCKEY"
-        "${BLUE_B}stellaword12"
-        "${YELLOW_B}the higher glue appear trend is now large."
-        "${RED_B}one cannot simply walk into mordor\n- some dumbass who didn't walk into mordor"
-        "${RED_B}i don't want a lot for christmas\n${GEEN_B}there is just one thing i need"
-        "${GEEN_B}vermont isn't real"
-        "${BLUE_B}\"Bite Me\" - Weird Al"
-        "${PURPLE_B}Hi there. I'm SmallAnt1."
-        "${CYAN_B}Man I sure do love InitramF5"
-        "${LIGHT_BLUE_B}If a gay bomb was dropped - Zack D Films"
-        "${YELLOW_B}swiss cheese yo ahhh"
-        "${CYAN_B}you keep using that word\ni do not think it means what you think it means."
-        "${CYAN_B}give me andrew"
-        "${MAGENTA_B}it runs the demon - OlyB"
-        "${YELLOW_B}GOOD MANNERS\n${RED_B}1 Wait your turn\n${BLUE_B}2 Use polite words\n${GEEN_B}3 Listen Carefully"
-        "${YELLOW_B}mommy may I please have fakemod :3\n- synaptic"
-        "${GREEN}crazy ant [...] :thumbsup:"
-        "${CYAN_B}Nothing beats a Jet2 Holiday"
-        "${PINK_B}\"soap\" manor"
-        "${PURPLE_B}rogged"
-        "${LIGHT_BLUE_B}Oh Reginald? I DISAGREE!"
-        "${CYAN_B}Good News, Everyone!"
-        "${RED_B}Error: Failed to find funText."
-        "${PINK_B}Trans${LIGHT_BLUE_B} Rights${COLOR_RESET} Are${LIGHT_BLUE_B} Human${PINK_B} Rights"
-        "${GEEN_B}Big news for the unemployed!"
-        "${BLUE_B}blahaj"
-        "${YELLOW_B}Shut Up, Synaptic!"
-        "${YELLOW_B}We need to remove Antonios"
-        "bash: line 182: tput: I/O error$(printf "%*s" "$(( $(tput cols) - 31 ))" "")bash: line 192: tput: I/O error$(printf "%*s" "$(( $(tput cols) - 31 ))" "")bash: line 194: tput: I/O error$(printf "%*s" "$(( $(tput cols) - 31 ))" "")"
-        ) #              cen-><-ter" 
-
-  	selectedSplashText=${splashText[$RANDOM % ${#splashText[@]}]}
-	echo -e " "
-   	echo -e "$selectedSplashText${COLOR_RESET}"
-}
-
-
-echo_c() {
-    local text="$1"
-    local color_variable="$2"
-    local color="${!color_variable}"
-    echo -e "${color}${text}${COLOR_RESET}"
-}
-
-echo_menu() {
-    local text="$1"
-    while IFS= read -r line; do
-        local length=${#line}
-        local spacing=$(( (42 - length) / 2 ))
-        spacing=$((spacing < 0 ? 0 : spacing))
-        printf "%*s%s\n" "$spacing" "" "$line"
-    done <<< "$text"
-}
-
-menu() {
-    local prompt="$1"
-    shift
-    local args=""
-    if [[ "$1" == "-p" ]]; then
-        args="$1"
-        shift
-    fi
-    local options=("$@")
-    local selected=0
-    local count=${#options[@]}
-    updatedpage=0
-    tput civis
-    echo "$prompt" | center
-    for i in "${!options[@]}"; do
-        if [[ $i -eq $selected ]]; then
-            echo "> ${options[i]} <" | center
-        else
-            echo "${options[i]}" | center
-        fi
-    done
-    while true; do
-        tput cuu $count
-        for i in "${!options[@]}"; do
-            tput el
-            if [[ $i -eq $selected ]]; then
-                echo "> ${options[i]} <" | center
-            else
-                echo "${options[i]}" | center
-            fi
-        done
-
-        IFS= read -rsn1 key
-        if [[ $key == $'\e' ]]; then
-            read -rsn2 -t 0.01 key_rest
-            key+="$key_rest"
-        fi
-        if [ "$args" = "-p" ]; then
-            case $key in
-                $'\e[A') ((selected--)) ;;
-                $'\e[B') ((selected++)) ;;
-				$'\e[D') export page=$((page - 1)) updatedpage=1 && return 255 ;;
-				$'\e[C') export page=$((page + 1)) updatedpage=1 && return 255 ;;
-                '') break ;;
-            esac
-        else
-            case $key in
-                $'\e[A') ((selected--)) ;;
-                $'\e[B') ((selected++)) ;;
-                '') break ;;
-            esac
-        fi
-        ((selected < 0)) && selected=$((count - 1))
-        ((selected >= count)) && selected=0
-    done
-    return $selected
-}
-
-get_largest_cros_blockdev() {
-	local largest size dev_name tmp_size remo
-	size=0
-	for blockdev in /sys/block/*; do
-		dev_name="${blockdev##*/}"
-		echo -e "$dev_name" | grep -q '^\(loop\|ram\)' && continue
-		tmp_size=$(cat "$blockdev"/size)
-		remo=$(cat "$blockdev"/removable)
-		if [ "$tmp_size" -gt "$size" ] && [ "${remo:-0}" -eq 0 ]; then
-			case "$(sfdisk -d "/dev/$dev_name" 2>$TTY4)" in
-				*'name="STATE"'*'name="KERN-A"'*'name="ROOT-A"'*)
-					largest="/dev/$dev_name"
-					size="$tmp_size"
-					;;
-			esac
-		fi
-	done
-	echo -e "$largest"
-}
-
-splash() {
-    if [ "$rogged" -eq 69 ]; then
-        grug
-        tput cup 0 0
-        clear
-    fi
-    if cat /sys/devices/virtual/dmi/id/product_name 2>$TTY4 | grep -Eqi 'treeya|barla' 2>$TTY4; then
-        echo -e "${RED_B}Barla/Treeya wifi unsupported. Please contact @kxtzownsu on discord${COLOR_RESET}"
-    else
-        signal=$(iw dev $wifidevice link | grep signal | awk '{print $2}' | sed 's/.00//' | head -1)
-        if (( signal >= -50 )); then color=$'\e[1;38;5;82m'; strength=$'▃▅▇'
-        elif (( signal >= -60 )); then color=$'\e[1;38;5;226m'; strength=$'▃▅\e[1;38;5;236m▇'
-        elif (( signal >= -70 )); then color=$'\e[1;38;5;208m'; strength=$'▃\e[1;38;5;236m▅▇'
-        else color=$'\e[1;38;5;196m'; strength=$'▃\e[1;38;5;236m▅▇'; fi
-        ssid="$(iw dev "$wifidevice" link 2>$TTY4 | awk -F ': ' '/SSID/ {print $2}')"
-        if [ -f /etc/aftggp ]; then
-            ssid="$ssid | ${CYAN_B}AFT running at: $(ip a | grep wlan0 | grep inet | awk '{print $2}' | sed 's|/.*||'):42069${COLOR_RESET}"
-        fi
-        if [ -n "$ssid" ]; then
-            echo -e "\n${color}${strength}${color} $wifidevice${COLOR_RESET} $ssid" | center
-        else
-            echo -e "\n\e[1;38;5;196m▃\e[1;38;5;236m▅▇\e[1;38;5;196m $wifidevice${COLOR_RESET} disconnected" | center
-        fi
-    fi
-    local width=42
-	local verstring=${VERSION["STRING"]}
-	local build=${VERSION["BUILDDATE"]}
-	local version_pad=$(( (width - ${#verstring}) / 2 ))
-    local build_pad=$(( (width - ${#build}) / 2 ))
-    echo -ne "$CYAN_B"
-    cat <<'EOF' | center
-╒════════════════════════════════════════╕
-│ .    . .    '    +   *       o    .    │
-│+  '.                    '   .-.     +  │
-│          +      .    +   .   ) )     ''│
-│                   '  .      '-´  *.    │
-│     .    \      .     .  .  +          │
-│         .-o-'       '    .o        o   │
-│  *        \      *            +'       │
-│                '       '               │
-│        .*       .       o   o      .   │
-│              o     . *.                │
-│ 'o*           .        .'    .         │
-│              ┏┓   '. O           *     │
-│     .*       ┣┫┓┏┏┓┏┓┏┓┏┓  .    \      │
-│     o        ┛┗┗┛┛ ┗┛┛ ┗┻     +        │
-╘════════════════════════════════════════╛
-EOF
-    echo -ne "$CYAN_B"
-    echo -e "\n$verstring" | center
-    echo -e "$build" | center
-    kernelver=$(getkv)
-    if [ -f /etc/kernverpending ]; then
-        kernelver=$(cat /etc/kernverpending)
-        echo -e "$kernelver ${YELLOW_B}(pending reboot)${COLOR_RESET}" | center
-    else
-        echo -e "$kernelver" | center
-    fi
-    echo -e "\nhttps://github.com/AerialiteLabs/Aurora" | center
-	echo -e "Page ${page}${COLOR_RESET}" | center
-    funText | center
-}
-
-##################
-## MURKMOD SHIT ##
-##################
-
-lsbval() {
-  local key="$1"
-  local lsbfile="${2:-/etc/lsb-release}"
-
-  if ! echo "${key}" | grep -Eq '^[a-zA-Z0-9_]+$'; then
-    return 1
-  fi
-
-  sed -E -n -e \
-    "/^[[:space:]]*${key}[[:space:]]*=/{
-      s:^[^=]+=[[:space:]]*::
-      s:[[:space:]]+$::
-      p
-    }" "${lsbfile}"
-}
-
-auroraval() {
-  local key="$1"
-  local lsbfile="${2:-/etc/aurora}"
-
-  if ! echo "${key}" | grep -Eq '^[a-zA-Z0-9_]+$'; then
-    return 1
-  fi
-
-  sed -E -n -e \
-    "/^[[:space:]]*${key}[[:space:]]*=/{
-      s:^[^=]+=[[:space:]]*::
-      s:[[:space:]]+$::
-      p
-    }" "${lsbfile}"
-}
-
-versions() {
-    echo ""
-    local release_board=$(lsbval CHROMEOS_RELEASE_BOARD 2>$TTY4)
-    export board_name=${release_board%%-*}
-    echo "What ChromeOS version do you want to download?" | center
-	options_install=(
-	    "Latest Version"
-	    "Custom Version"
-	)
-
-	menu "Select an option (use ↑ ↓ arrows, Enter to select)" "${options_install[@]}"
-	install_choice=$?
-
-	case "$install_choice" in
-	    0) chromeVersion="latest" ;;
-	    1) stty echo
-           read_center -d "Enter Version: " chromeVersion ;;
-        *) fail "Invalid choice (somehow?????)" ;;
-	esac
-    echo "Fetching recovery image..." | center
-    if [ $chromeVersion == "latest" ]; then
-        builds="https://chromiumdash.appspot.com/cros/fetch_serving_builds?deviceCategory=Chrome%20OS"
-        chromeVersion=$(curl -s $builds | jq -r ".builds.${board_name}.models | to_entries[0].value.servingStable.chromeVersion" | awk -F. '{print $1}')
-        FINAL_URL=$(curl -s $builds | jq -r ".builds.${board_name}.models | to_entries[0].value.pushRecoveries[\"$chromeVersion\"]")
-        if [ ! -n $FINAL_URL ]; then
-            echo "Falling back to the most recent version found." | center
-            FINAL_URL=$(curl -s $builds | jq ".builds.${board_name}.models | to_entries[0].value.pushRecoveries | to_entries | sort_by(.key | tonumber) | .[-1].value")
-        fi
-        [ -n "$chromeVersion" ] || fail "Failed finding Version"
-        export chromeVersion
-        export FINAL_URL
-    else
-        export url="https://raw.githubusercontent.com/MercuryWorkshop/chromeos-releases-data/refs/heads/main/data.json"
-        cros_json=$(curl -s "$url" | jq --arg board "$board_name" --arg ver "$chromeVersion" '.[$board].images[] | select((.chrome_version | tostring) | test("^" + $ver))')
-        if [[ -z "$cros_json" ]]; then return; fi
-        cros_platform=$(echo "$cros_json" | jq -r '.platform_version'| head -1 )
-        cros_url=$(echo "$cros_json" | jq -r '.url' | head -1 )
-        last_modified=$(echo "$cros_json" | jq -r '.last_modified' | head -1 )
-        MATCH_FOUND=0
-        if [[ -n "$cros_url" ]]; then
-            echo "Found a $chromeVersion match on platform $cros_platform from $last_modified." | center
-            MATCH_FOUND=1
-            export FINAL_URL="$cros_url"
-            return 0
-        fi
-        if [ $MATCH_FOUND -eq 0 ]; then
-            echo "No recovery image found for your board and target version. Exiting" | center
-            return 1
-        fi
-    fi
-}
-
-#########################
-## IMPORTANT FUNCTIONS ##
-#########################
-
-detect_aurora_in_shimboot_function() {
-	echo "dD0oIkhlYXJzYXkhIiAiSSByZWZ1c2UuIiAiSSBzaGFsbCBkbyBubyBzdWNoIHRoaW5nISIgIkxpa2UuLi4gd2h5Pz8/IiAiSSBjZXJ0YWlubHkgd2lsbCBub3QhIiAiQXJlIHlvdSBqdXN0IGhlcmUgdG8gZGlsbHlkYWRkbGU/IiAiWW91IHJlYWxseSBoYXZlIG5vdGhpbmcgYmV0dGVyIHRvIGRvLCBkb24ndCB5b3U/IikKcz0ke3RbJFJBTkRPTSAlICR7I3RbQF19XX0KZWNobyAtZSAiICIKZWNobyAtZSAiJHMi" | base64 -d | bash | center
-}
-
-export_args() {
-  local arg=
-  local key=
-  local val=
-  local acceptable_set='[A-Za-z0-9]_'
-  echo "Exporting kernel argument..." | center
-  for arg in "$@"; do
-    key=$(echo "${arg%%=*}" | busybox tr 'a-z' 'A-Z' | \
-                   busybox tr -dc "$acceptable_set" '_')
-    val="${arg#*=}"
-    export "KERN_ARG_$key"="$val"
-    echo -n " KERN_ARG_$key=$val,"
-  done
-  echo ""
-}
-
-export_args $(cat /proc/cmdline | sed -e 's/"[^"]*"/DROPPED/g') 1> /dev/null
-
-copy_lsb() {
-    echo "Copying lsb..." | center
-    local src_path="/stateful/dev_image/etc/lsb-factory"
-    local dest_path="/newroot/etc/lsb-factory"
-
-    mkdir -p "$(dirname "${dest_path}")"
-
-    if [ -f "${src_path}" ]; then
-        echo "Found ${src_path}." | center
-        cp "${src_path}" "${dest_path}" || fail "failed with $?"
-        if cgpt find -l SH1MMER "${loop}" | head -n 1 | grep --color=never -q /dev/; then
-            export specialshim="sh1mmer"
-            echo "STATEFUL_DEV=${loop}p1" >> "${dest_path}"
-        fi
-        echo "REAL_USB_DEV=${loop}p3" >> "${dest_path}"
-        echo "KERN_ARG_KERN_GUID=$(echo "${KERN_ARG_KERN_GUID}" | tr '[:lower:]' '[:upper:]')" >> "${dest_path}"
-        echo "Copied lsb-factory to ${dest_path}" | center
-    else
-        fail "Missing ${src_path}!"
-    fi
-}
-
-
-pv_dircopy() {
-	[ -d "$1" ] || return 1
-	local apparent_bytes
-	apparent_bytes=$(du -sb "$1" | cut -f 1)
-	mkdir -p "$2"
-	tar -C /shimroot -cf - . | tar -C /newroot -xf -
-}
-
 ############
 ## IMAGES ##
 ############
@@ -460,7 +66,7 @@ installcros() {
 		return
 	else
         mapfile -t recochoose < <(find "$aroot/images/recovery" -type f)
-        reco_options=("${recochoose[@]}" "Exit")
+        reco_options=("${recochoose[@]}" "Exit") # haha 69
         while true; do
             menu "Choose the recovery image you want to boot" "${reco_options[@]}"
             choice=$?
@@ -669,30 +275,30 @@ EOF
     fi
 }
 
-chromium() {
-    apk add --no-progress pcre-tools
-    if [ ! -f /usr/sbin/setup-xorg-base ] && [ ! -f /usr/sbin/setup-devd ]; then
-        mkdir -p "/tmp/apk-tools-static"
-        wget -q --show-progress "https://dl-cdn.alpinelinux.org/alpine/latest-stable/main/$(uname -m)/$(echo "$(wget -qO- --show-progress "https://dl-cdn.alpinelinux.org/alpine/latest-stable/main/$(uname -m)/" | grep "apk-tools-static")" | pcregrep -o1 '"(.+?.apk)"')" -O "/tmp/apk-tools-static/pkg.apk"
-        tar --warning=no-unknown-keyword -xzf "/tmp/apk-tools-static/pkg.apk" -C "/tmp/apk-tools-static"
-        chmod +x /tmp/apk-tools-static/sbin/apk.static
-        /tmp/apk-tools-static/sbin/apk.static --arch $(uname -m) -X http://dl-cdn.alpinelinux.org/alpine/edge/main/ -U --allow-untrusted --root "/" --initdb add alpine-base
-        sync
-    fi
-    setup-xorg-base chromium gvfs font-dejavu openbox hsetroot
-    rc-update add dbus sysinit
-    openrc sysinit
-    rm ~/.xinitrc
-    cat <<EOF > ~/.xinitrc
-openbox &
-hsetroot -cover /usr/share/aurora/bg.png &
-while true; do
-    chromium --start-maximized --no-first-run --disable-infobars --disable-session-crashed-bubble --restore-last-session --no-sandbox
-done
-EOF
-    killall frecon-lite
-    startx
-}
+#chromium() {
+#    apk add --no-progress pcre-tools
+#    if [ ! -f /usr/sbin/setup-xorg-base ] && [ ! -f /usr/sbin/setup-devd ]; then
+#        mkdir -p "/tmp/apk-tools-static"
+#        wget -q --show-progress "https://dl-cdn.alpinelinux.org/alpine/latest-stable/main/$(uname -m)/$(echo "$(wget -qO- --show-progress "https://dl-cdn.alpinelinux.org/alpine/latest-stable/main/$(uname -m)/" | grep "apk-tools-static")" | pcregrep -o1 '"(.+?.apk)"')" -O "/tmp/apk-tools-static/pkg.apk"
+#        tar --warning=no-unknown-keyword -xzf "/tmp/apk-tools-static/pkg.apk" -C "/tmp/apk-tools-static"
+#        chmod +x /tmp/apk-tools-static/sbin/apk.static
+#        /tmp/apk-tools-static/sbin/apk.static --arch $(uname -m) -X http://dl-cdn.alpinelinux.org/alpine/edge/main/ -U --allow-untrusted --root "/" --initdb add alpine-base
+#        sync
+#    fi
+#    setup-xorg-base chromium gvfs font-dejavu openbox hsetroot
+#    rc-update add dbus sysinit
+#    openrc sysinit
+#    rm ~/.xinitrc
+#    cat <<EOF > ~/.xinitrc
+#openbox &
+#hsetroot -cover /usr/share/aurora/bg.png &
+#while true; do
+#    chromium --start-maximized --no-first-run --disable-infobars --disable-session-crashed-bubble --restore-last-session --no-sandbox
+#done
+#EOF
+#    killall frecon-lite
+#    startx
+#}
 
 ##################
 ## OPTIONS MENU ##
@@ -723,64 +329,7 @@ payloads() {
     fi
 }
 
-errormessage() {
-    if [ -n "$errormsg" ]; then 
-        echo -en "${RED_B}"
-        echo "Error: ${errormsg}" | center
-    fi
-    echo -e "${COLOR_RESET}"
-}
-
-setupuser() {
-    read_center -d "Username: " username
-    stty -echo
-    read_center -d "Password: " password
-    stty echo 
-    adduser -D "$username"
-    echo "$username:$password" | chpasswd 2>$TTY4
-    echo "$username ALL=(ALL:ALL) ALL" >> /etc/sudoers
-    mkdir -p /run/user/$(id -u $username)
-    chown $username:$username /run/user/$(id -u $username)
-    addgroup $username video
-    addgroup $username seat 2>/dev/null
-}
-
-setup() {
-    tput cnorm
-    stty echo
-    if [ "$(auroraval setup)" == "1" ]; then
-        clear
-        splash
-        echo -e "\nSetup Aurora" | center
-        read_center -d "Setup a user? (Y/n) " setupuser
-        case $setupuser in
-            n|N) ;;
-            *) setupuser ;;
-        esac
-        while true; do
-            read_center -d "Enter your timezone: " timezone
-            timezone="*$(echo "$timezone" | sed 's/ /*/g')*"
-            timezonefile=$(find /usr/share/zoneinfo -type f -iname "$timezone" | head -1)
-            if [[ -z "$timezonefile" ]]; then echo "Invalid timezone" | center; continue; fi
-            rm -rf /etc/localtime
-            ln -s "$timezonefile" /etc/localtime
-            break
-        done
-        read_center -d "Change Hostname? (y/N): " changehostname
-        case $changehostname in
-            y) read_center -d "Hostname: " hostname
-               hostname $hostname
-               echo "$hostname" > /etc/hostname
-               echo "127.0.0.1 localhost $hostname" >> /etc/hosts ;;
-            *) hostname Aurora
-               echo "Aurora" > /etc/hostname
-               echo "127.0.0.1 localhost Aurora" >> /etc/hosts ;;
-        esac
-        sed -i 's/setup=1/setup=0/' /etc/aurora
-    fi
-}
-
-crosrun() { # sigh
+crosrun() {
     [ -f /usr/share/cros/usr/sbin/sh1mmer_main.sh ] || fail "Sh1mmer directory nonexistent."
     cat /usr/share/cros/usr/sbin/sh1mmer_main.sh | grep -q "patched by aurora" || fail "Sh1mmer Unpatched (How???)"
     stty echo
@@ -828,6 +377,7 @@ download() {
         *) fail "Invalid choice (somehow?????)" ;; 
 	esac
 }
+
 downloadreco() {
     chmod +x /usr/bin/bigtext
     bigtext download
@@ -847,6 +397,7 @@ downloadreco() {
     echo_c "Syncing filesystem" GEEN_B | center
     sync
 }
+
 downloadshim() {
     chmod +x /usr/bin/bigtext
     bigtext download
@@ -1042,6 +593,7 @@ network={
     ssid="$ssid"
     key_mgmt=NONE
 }
+
 EOF
         else
             wpa_passphrase "$ssid" "$psk" >> "$conf"
@@ -1238,6 +790,7 @@ fi
 
 release_board=$(lsbval CHROMEOS_RELEASE_BOARD 2>$TTY4)
 export board_name=${release_board%%-*}
+
 for chmod in /usr/bin/aurorabuildenv; do
     chmod +x $chmod
 done
