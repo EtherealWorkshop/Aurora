@@ -32,7 +32,7 @@ set-kernver() {
             done
             continue
         fi
-        rawbytes=$(kvg "0x${kernver}" --ver="$ver")
+        rawbytes=$(hex2raw "0x${kernver}" --ver="$ver")
         chroot /.crosenv bash -c "tpmc write 0x1008 $rawbytes" >/dev/null || {
             echo "Invalid Kernver. Maximum 8 characters after 0x [e.g: 0x00000001]" | center
             break=0
