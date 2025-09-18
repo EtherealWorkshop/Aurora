@@ -30,7 +30,8 @@ fi
 
 debug_run() {
     if $debug; then
-        read -p "run $@? (enter)"
+        echo -n "run $@? (enter)"
+        read
         $@
     else
         $@
