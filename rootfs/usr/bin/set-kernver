@@ -33,6 +33,7 @@ set-kernver() {
             continue
         fi
         rawbytes=$(hex2raw "0x${kernver}" --ver="$ver")
+        [ "$(echo $rawbytes | awk '{print $1}')" == "$vercheck" ] || fail "Failed to convert kernver to raw bytes"
         chroot /.crosenv bash -c "tpmc write 0x1008 $rawbytes" >/dev/null || {
             echo "Invalid Kernver. Maximum 8 characters after 0x [e.g: 0x00000001]" | center
             break=0
