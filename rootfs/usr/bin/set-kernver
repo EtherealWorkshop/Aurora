@@ -22,7 +22,6 @@ set-kernver() {
             echo "$vercheck"
             break
         fi
-        echo "Struct ver: $ver" | center
         break=1
         if [[ ! "$kernver" =~ ^[0-9A-Fa-f]{1,8}$ ]]; then
             echo "Invalid Kernver. Maximum 8 characters after 0x [e.g: 0x00000001]" | center
@@ -33,7 +32,11 @@ set-kernver() {
             continue
         fi
         rawbytes=$(hex2raw "0x${kernver}" --ver="$ver")
-        [ "$(echo $rawbytes | awk '{print $1}')" == "$vercheck" ] || fail "Failed to convert kernver to raw bytes"
+        if [ "$(echo $rawbytes | awk '{print $1}')" == "$vercheck" ]; then
+            echo_c "Successfuly converted kernver 0x$kernver to raw bytes $rawbytes" BLUE_B
+        else
+            fail "Failed to convert kernver to raw bytes"
+        fi
         chroot /.crosenv bash -c "tpmc write 0x1008 $rawbytes" >/dev/null || {
             echo "Invalid Kernver. Maximum 8 characters after 0x [e.g: 0x00000001]" | center
             break=0
