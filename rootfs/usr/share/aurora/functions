@@ -28,6 +28,7 @@ else
     export PROMPT_COMMAND='PS1="\e[1;34m\u@\h \e[1;33m$(date +"%H:%M %b %d")\e[1;32m \w/\e[0m "'
 fi
 
+declare -A VERSION
 VERSION["BRANCH"]="alpine"
 VERSION["NUMBER"]="1.0.0"
 VERSION["BUILDDATE"]="[2025-08-14]"

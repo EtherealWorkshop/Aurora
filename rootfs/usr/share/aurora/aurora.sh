@@ -47,7 +47,6 @@ alias grep='grep --color=auto'
 mkdir -p $aroot/images/shims
 mkdir -p $aroot/build
 mkdir -p $aroot/images/recovery
-declare -A VERSION
 rm -f /etc/aftggp /etc/kernverpending
 
 ############
