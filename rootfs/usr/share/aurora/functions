@@ -171,7 +171,6 @@ fail() {
     cd /
     umount /dev/loop*p* 2>/dev/null
     umount /dev/loop* 2>/dev/null
-	losetup -D
     for arg in "$@"; do
         if [ "$arg" = "--fatal" ]; then
             echo_c "A fatal error occured. Please Reboot" RED_B | center
