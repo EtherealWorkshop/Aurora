@@ -33,7 +33,9 @@ set-kernver() {
         fi
         rawbytes=$(hex2raw "0x${kernver}" --ver="$ver")
         if [ "$(echo $rawbytes | awk '{print $1}')" == "$vercheck" ]; then
-            echo_c "Successfuly converted kernver 0x$kernver to raw bytes $rawbytes" BLUE_B | center
+            mkdir -p /root/.cache/logs/kernver/
+            echo "0x$kernver  >  $rawbytes" >/root/.cache/logs/kernver/log-$kernver
+            echo_c "Successfuly converted kernver 0x$kernver to raw bytes." BLUE_B | center
         else
             fail "Failed to convert kernver to raw bytes"
         fi
