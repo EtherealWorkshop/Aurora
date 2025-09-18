@@ -500,10 +500,9 @@ updateshim() {
     umount $aurorabootmnt
     if [ "$updated" = "1" ]; then
         echo "Restarting aurora.sh" | center
-        sleep 10
+        sleep 5
         exec bash /usr/share/aurora/aurora.sh
     fi
-    sleep 10
 }
 
 aftggp() {
