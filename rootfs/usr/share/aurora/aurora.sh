@@ -457,6 +457,7 @@ updateshim() {
     }
     trap cleanup EXIT
     branch=$(auroraval origin)
+    echo "Branch: $branch" | center
     if [ -d "/root/Aurora/.git" ]; then
         if ! git -C "/root/Aurora" pull origin "$branch" 2>&1 | center; then
             echo "git pull failed, recloning" | center
