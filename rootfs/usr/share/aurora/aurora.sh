@@ -41,6 +41,7 @@ export releaseBuild=1
 export shimroot="/shimroot"
 export recoroot="/recoroot"
 export rogged=$((RANDOM % 100))
+export debug=false
 alias ls='ls --color=auto'
 alias dir='dir --color=auto'
 alias grep='grep --color=auto'
@@ -262,7 +263,7 @@ EOF
         chmod +x /newroot/sbin/init
         stty echo
         tput cnorm
-        pivot_root /newroot /newroot/tmp/aurora
+        debug_run pivot_root /newroot /newroot/tmp/aurora
         echo "Successfully switched root. Starting init..."
         exec /sbin/init || {
             echo "Failed to start init"
