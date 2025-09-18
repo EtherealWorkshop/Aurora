@@ -128,7 +128,7 @@ shimboot() {
     bigtext shimboot
 	if [[ -z "$(ls -A $aroot/images/shims)" ]]; then
         echo -e "${YELLOW_B}You have no shims downloaded!\nPlease download or build a few images." | center
-		echo "Alternatively, shims are available in https://github.com/AerialiteLabs/[Sh1mmer, KVS, Aurora]/releases. Put them into /usr/share/aurora/images/shims" | center
+		echo "Alternatively, shims are available in https://github.com/AerialiteLabs/[Sh1mmer, Aurora]/releases. Put them into /usr/share/aurora/images/shims" | center
         read_center "Press Enter to return to the main menu..."
         echo -e "${COLOR_RESET}"
 		return
@@ -448,7 +448,6 @@ downloadshim() {
 }
 
 updateshim() {
-    set -euo pipefail
     export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
     update-ca-certificates
     ntpd -q -p pool.ntp.org || true
@@ -502,9 +501,10 @@ updateshim() {
     umount $aurorabootmnt
     if [ "$updated" = "1" ]; then
         echo "Restarting aurora.sh" | center
-        sleep 3
+        sleep 10
         exec bash /usr/share/aurora/aurora.sh
     fi
+    sleep 10
 }
 
 aftggp() {
@@ -685,13 +685,13 @@ menu2_options=(
     "1. Open Terminal"
     "2. AFTGGP [Aurora File Transfer]"
     "3. Build Environment"
-    "4. KVS"
+    "4. Set Kernver"
 )
 menu2_actions=(
     "clear && script -qfc 'stty sane && stty erase '^H' && exec bash -l || exec busybox sh -l' /dev/null"
     "canwifi aftggp"
     "clear && canwifi aurorabuildenv"
-    "clear && kvs"
+    "clear && set-kernver"
 )
 
 menu3_options=(

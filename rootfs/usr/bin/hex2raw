@@ -1,0 +1,68 @@
+#!/bin/bash
+
+help() {
+cat <<EOF
+Usage:
+    $0 <hex string>
+    $0 <operation>
+
+operations:
+    $0 {-h --help}
+EOF
+case $1 in
+    -h|--help) exit 0 ;;
+    *) exit 1 ;;
+esac
+}
+
+byte_at() {
+    echo $(( ($1 >> (8*$2)) & 0xFF ))
+}
+
+crc_8() {
+    local crc=0
+    for byte; do
+        crc=$((crc ^ (byte << 8)))
+        for _ in {1..8}; do
+            ((crc & 0x8000)) && crc=$((crc ^ (0x1070 << 3)))
+            crc=$((crc << 1))
+        done
+    done
+    echo $(( (crc >> 8) & 0xFF ))
+}
+
+kvarg=$1
+case $kvarg in
+    0x[0-9A-Fa-f]*) ;;
+    [0-9A-Fa-f]*) kvarg="0x$kvarg" ;;
+    *) help ;;
+esac
+
+shift
+
+ver=0
+[[ $1 == --ver=1 ]] && ver=1
+
+buffer=()
+if ((ver)); then
+    structver=0x10
+    structsize=$((3+1+4+32))
+    flags=0x00
+    buffer=($structver $structsize 0 $flags)
+    for i in {0..3}; do buffer+=($(byte_at kvarg $i)); done
+    for _ in {1..32}; do buffer+=(0x00); done
+    crc=$(crc_8 "${buffer[@]:3}")
+    buffer[2]=$crc
+else
+    structver=0x02
+    uid=0x4752574c
+    buffer=($structver)
+    for i in {0..3}; do buffer+=($(byte_at uid $i)); done
+    for i in {0..3}; do buffer+=($(byte_at kvarg $i)); done
+    buffer+=(0 0 0)
+    crc=$(crc_8 "${buffer[@]}")
+    buffer+=($crc)
+fi
+
+printf "%02x " "${buffer[@]}"
+echo

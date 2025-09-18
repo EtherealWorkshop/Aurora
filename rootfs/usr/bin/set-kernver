@@ -1,12 +1,12 @@
 #!/bin/bash
 
 source /usr/share/aurora/functions
-source /usr/bin/kvg
+chmod +x /usr/bin/hex2raw
 export TERM=xterm-256color
 
 fail "no"
 
-kvs() {
+set-kernver() {
     while true; do
         read_center -d "Enter Kernver[Max 8 characters after 0x]: 0x" kernver
         mount --bind /.crosenv /.crosenv
@@ -55,8 +55,8 @@ kvs() {
 }
 
 if [ "$(crossystem mainfw_type)" = "recovery" ]; then
-    kvs
+    set-kernver
 else
-    echo "Please boot Aurora in recovery [Esc+Ref+Pwr] to use KVS." | center
+    echo "Please boot Aurora in recovery [Esc+Ref+Pwr] to set your Kernver" | center
     read_center "Press Enter to return to the main menu"
 fi
