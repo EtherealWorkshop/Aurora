@@ -468,7 +468,6 @@ updateshim() {
         git clone --branch="$branch" https://github.com/AerialiteLabs/Aurora /root/Aurora 2>&1 | center || return
     fi
 
-    echo "Staging rootfs update..." | center
     updated=0
     if ! cmp -s /usr/share/aurora/aurora.sh /root/Aurora/rootfs/usr/share/aurora/aurora.sh 2>"$TTY4"; then
         updated=1
@@ -495,7 +494,7 @@ updateshim() {
     mount "$aurorabootdev" "$aurorabootmnt"
     rsync -a --inplace /root/Aurora/auroraboot/ "$aurorabootmnt/"
     rsync -a --inplace /root/Aurora/patches/shimboot/ "$aurorabootmnt/"
-    chmod +x "$aurorabootmnt/init" "$aurorabootmnt/bootstrap.sh" "$aurorabootmnt/sbin/init"
+    chmod +x "$aurorabootmnt/bootstrap.sh" "$aurorabootmnt/sbin/init"
     sync
     umount $aurorabootmnt
     if [ "$updated" = "1" ]; then
