@@ -878,9 +878,6 @@ main() {
   # get installed last. The order shouldn't matter but legacy behavior has
   # us go in reverse order.
 
-  lsblk
-  bash || busybox sh
-
   # 12
   copy_partition "${PARTITION_NUM_EFI_SYSTEM:?}" "${SRC}" "${DST}" 1 1 false
 
