@@ -1,0 +1,119 @@
+#!/bin/bash
+
+# made by soap phia
+
+#   . parse_flags.sh "p,parameter,1 b,boolean,0 a,array,2 c,conflict,^parameter,^boolean,^array,0"
+
+# last field = flag_type:
+#   0 = boolean
+#   1 = single parameter
+#   2 = list of items until next flag or "--"
+# extra fields beginning with "^" = conflicts
+
+flags=($1)
+shift
+
+declare -A map_flags
+declare -A flag_args
+declare -A flag_conflicts
+
+for flag in "${flags[@]}"; do
+    IFS=',' read -ra parts <<< "$flag"
+    flag_type="${parts[-1]}"
+    var_name="${parts[1]}"
+    flag_args["$var_name"]=$flag_type
+
+    conflicts=()
+    for p in "${parts[@]}"; do
+        if [[ "$p" == ^* ]]; then
+            conflicts+=("${p#^}")
+        fi
+    done
+    flag_conflicts["$var_name"]="${conflicts[*]}"
+
+    for i in "${!parts[@]}"; do
+        if [[ $i -lt $((${#parts[@]}-1)) ]]; then
+            alias="${parts[$i]}"
+            if [[ "$alias" == ^* ]]; then
+                continue
+            fi
+            if [[ ${#alias} -eq 1 ]]; then
+                map_flags["-$alias"]="$var_name"
+            else
+                map_flags["--$alias"]="$var_name"
+            fi
+        fi
+    done
+done
+
+for flag in "${flags[@]}"; do
+    IFS=',' read -ra parts <<< "$flag"
+    var_name="${parts[1]}"
+    unset "$var_name"
+done
+
+while [[ $# -gt 0 ]]; do
+    arg="$1"
+
+    if [[ "$arg" == --*=* ]]; then
+        flag="${arg%%=*}"
+        value="${arg#*=}"
+        if [[ -n "${map_flags[$flag]}" ]]; then
+            key="${map_flags[$flag]}"
+            case "${flag_args[$key]}" in
+                1) export "$key"="$value" ;;
+                2) read -ra arr <<< "$value"; export "$key"="${arr[*]}" ;;
+                0) export "$key"=true ;;
+            esac
+            shift
+            continue
+        else
+            echo "unknown option: $flag" >&2
+            return 1
+        fi
+    fi
+
+    if [[ "${map_flags[$arg]}" ]]; then
+        key="${map_flags[$arg]}"
+        flag_type="${flag_args[$key]}"
+        case "$flag_type" in
+            0) export "$key"=true
+               shift ;;
+            1) if [[ -n "$2" && "$2" != -* ]]; then
+                   export "$key"="$2"
+                   shift 2
+               else
+                   echo "$arg [$key] requires a value" >&2
+                   return 1
+               fi ;;
+            2) shift
+               vals=()
+               while [[ $# -gt 0 && "$1" != -* ]]; do
+                   vals+=("$1")
+                   shift
+               done
+               export "$key"="${vals[*]}" ;;
+        esac
+    elif [[ "$arg" == "--" ]]; then
+        shift
+        break
+    elif [[ "$arg" == -* ]]; then
+        echo "unknown option: $arg" >&2
+        return 1
+    else
+        break
+    fi
+done
+
+for flag in "${flags[@]}"; do
+    IFS=',' read -ra parts <<< "$flag"
+    key="${parts[1]}"
+    if [[ -n "${!key}" ]]; then
+        for bad in ${flag_conflicts[$key]}; do
+            if [[ -n "${!bad}" ]]; then
+                echo "error: --$key cannot be used with --$bad" >&2
+                return 1
+            fi
+        done
+    fi
+done

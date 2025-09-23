@@ -1,16 +1,47 @@
 #!/bin/bash
 
+echo_c() {
+    local text="$1"
+    local color_variable="$2"
+    local color="${!color_variable}"
+    echo -e "${color}${text}${COLOR_RESET}"
+}
+debug_msg() {
+  if "$verbose"; then
+    echo_c $@
+  fi
+}
+
 if [ "$EUID" -ne 0 ]; then
     echo "Please run as root."
     exit 1
 fi
+
+. rootfs/usr/bin/parse_flags "v,verbose,0 h,help,0 i,shim,1 b,board,1 m,shimsize,1 s,shims,2 r,recovery,2 p,payloads,2" $@
+
+if [ -n "$shimsize" ]; then
+    sizenum=${shimsize//[!0-9.]/}
+    sizeformat=${shimsize//[0-9.]/}
+    if ! [[ $sizeformat =~ ^[KMGT]$ ]]; then
+        echo_c "--shimsize needs to be formatted in K,M,G,T units." RED_B
+        exit 1
+    fi
+    case $sizeformat in
+        K) shimsize=$(echo "(${sizenum})/1" | bc) ;;
+        M) shimsize=$(echo "(${sizenum}*1024)/1" | bc) ;;
+        G) shimsize=$(echo "(${sizenum}*1024*1024)/1" | bc) ;;
+        T) shimsize=$(echo "(${sizenum}*1024*1024*1024)/1" | bc) ;;
+    esac
+    export shimsize
+fi
+
 if [ -z "$1" ]; then
-    echo "Usage: sudo bash Aurora /path/to/rawshim.bin [--auto]"
+    echo "Usage: sudo bash Aurora [-i /path/to/shim.bin]/[-b <board>]"
     exit 1
 fi
 
 deps=""
-for cmd in basename cat cgpt chroot chmod cp dd findmnt git grep head losetup mkfs.ext4 mktemp mount mv rm rsync sed sgdisk sync tar touch truncate umount wget; do
+for cmd in bc basename cat cgpt chroot chmod cp dd findmnt git grep head losetup mkfs.ext4 mktemp mount mv rm rsync sed sgdisk sync tar touch truncate umount wget; do
     if ! command -v "$cmd" >/dev/null 2>&1; then
         deps+=", $cmd"
     fi
@@ -21,18 +52,6 @@ if [ -n "$deps" ]; then
     exit 1
 fi
 
-if [ "$2" = "--auto" ]; then
-    board="$1"
-    export shim="./${board}.bin"
-    if [ ! -f "$shim" ]
-    then
-        wget -q --show-progress "https://github.com/AerialiteLabs/sh1mmer/releases/download/v1.0.0/${board}.bin" -O "$shim" || {
-            echo "Invalid board."    
-        }
-    fi
-else
-    export shim=$(realpath -m $1)
-fi
 export aurorashim="./aurora-$(basename "$shim")"
 
 temproot=$(mktemp -d)

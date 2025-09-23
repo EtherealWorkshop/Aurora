@@ -15,9 +15,6 @@
 # TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 # THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#This is the automated buildscript for Aurora
-
-export DEBUG="${DEBUG:=0}"
 export COLOR_RESET="\033[0m"
 export RED_B="\033[1;31m"
 export GEEN_B="\033[1;32m"
@@ -27,12 +24,6 @@ export MAGENTA_B="\033[1;35m"
 export PINK_B="\x1b[1;38;2;235;170;238m"
 export CYAN_B="\033[1;36m"
 
-echo_c() {
-    local text="$1"
-    local color_variable="$2"
-    local color="${!color_variable}"
-    echo -e "${color}${text}${COLOR_RESET}"
-}
 
 cleanup() {
     for dir in proc sys dev run; do umount -l "$rootfs/$dir"; done
@@ -51,22 +42,54 @@ lsbval() {
 
 source ./checks $@
 
+export verbose="${verbose:=false}"
+
 if [ -z "$shim" ] || echo "$shim" | grep -vq ".bin"; then
   echo_c "Please run on a raw shim." RED_B
 fi
 
 auroraboot=$(mktemp -d)
 rootfs=$(mktemp -d)
+
 rm -rf "$rootfs" "$auroraboot"
 mkdir -p "$rootfs" "$auroraboot"
+
 [ -z "rootfs/usr/share/aurora/aurora.sh" ] && echo_c "Please run in the base directory of Aurora." RED_B
 
 if findmnt -T "$rootfs" -o OPTIONS -n | grep -qE 'noexec|nodev'; then
     mount -o remount,dev,exec "$(findmnt -T "$rootfs" -o TARGET -n)"
 fi
+
 rm -f "$aurorashim"
 
-truncate -s 694200K "$aurorashim" # haha 69
+if [ -z "$shims" ] && [ -z "$recovery" ] && [ -z "$shimsize" ]; then
+  echo_c "Creating shim with size 694200KB" GEEN_B
+  truncate -s 694200K "$aurorashim" # haha 69
+elif [ -n "$shims" ] || [ -n "$recovery" ] && [ $(df --output=avail / | tail -1) -gt $((15*1024*1024)) ]; then
+  shimsize=694200
+  recovery=${recovery:=""}
+  shims=${shims:=""}
+  for image in $shims $recovery; do
+    [ -e "$image" ] || {
+      echo_c "$image not found. Skipping..." RED_B
+      continue
+    }
+    image_kilobytes=$(du -sk $image | awk '{print $1}')
+    shimsize=$((shimsize+image_kilobytes+4096))
+  done
+  echo_c "Building Aurora with size $(echo "scale=1; $shimsize/1024/1024" | bc)GB" GEEN_B
+  debug_msg "[${shimsize}KB]" RED_B
+  echo_c "Recovery Images: ${recovery:="None"}" GEEN_B
+  echo_c "Shims: ${shims:="None"}" GEEN_B
+  echo_c "Extra payloads: ${payloads:="None"}" GEEN_B
+  truncate -s ${shimsize}K "$aurorashim"
+elif [ -n "$shimsize" ] && [ "$shimsize" -gt "694200" ] && [ $(df --output=avail / | tail -1) -gt $shimsize ]; then
+  echo_c "Creating shim with size $(echo "scale=1; $shimsize/1024/1024" | bc)GB" GEEN_B
+  truncate -s ${shimsize}K "$aurorashim"
+else
+  echo_c "Not enough free space on disk. Available:$(df -h --output=avail / | tail -1)" RED_B
+  exit 1
+fi
 
 echo_c "\nBootstrapping Alpine" BLUE_B
 wget -q --show-progress "https://dl-cdn.alpinelinux.org/alpine/v3.22/releases/$arch/alpine-minirootfs-3.22.0-$arch.tar.gz" -O alpine-minirootfs.tar.gz 
@@ -144,7 +167,20 @@ fi
 rm -f $rootfs/usr/bin/qemu-$arch-static
 rm -f $auroraboot/usr/bin/qemu-$arch-static
 
-echo_c "Done. Rootfs: $(du -sh $rootfs | awk '{print $1}')\n\n${BLUE_B}Partitioning shim..." GEEN_B
+echo_c "Done. Rootfs: $(du -sh $rootfs | awk '{print $1}')\n\n${BLUE_B}Copying Recovery Images, Shims, and Payloads..." GEEN_B
+for shim in $shims; do
+  mkdir -p $rootfs/usr/share/aurora/images/shims/
+  [ -e "$shim" ] && cp $shim $rootfs/usr/share/aurora/images/shims/
+done
+for reco in $recovery; do
+  mkdir -p $rootfs/usr/share/aurora/images/recovery/
+  [ -e "$reco" ] && cp $reco $rootfs/usr/share/aurora/images/recovery/
+done
+for payload in $payloads; do
+  mkdir -p $rootfs/usr/share/aurora/payloads
+  [ -e "$payload" ] && cp $payload $rootfs/usr/share/aurora/payloads/
+done
+echo_c "Done. Rootfs: $(du -sh $rootfs | awk '{print $1}')\n\n${BLUE_B}Partitioning shim..." "GEEN_B"
 sgdisk --zap-all "$dev"
 sgdisk -n 1:2048:10239 -c 1:"STATE" "$dev"
 sgdisk -n 2:10240:75775 "$dev"
@@ -207,10 +243,15 @@ chmod +x "$root_bmount/sbin/init" "$root_bmount/usr/bin/"* "$root_bmount/usr/sha
 sync
 
 echo_c "Done. auroraboot: $(du -sh $auroraboot | awk '{print $1}')\n\n${BLUE_B}Cleaning up...\n" "GEEN_B"
+
 umount "$statemount" "$root_amount" "$root_bmount"
 umount "$statemount" -l 2>/dev/null
 umount "$root_amount" -l 2>/dev/null
 umount "$root_bmount" -l 2>/dev/null
+
+end=$(blockdev --getsize64 "$root_b")
+shim_size=$(( end + 4*1024*1024 ))
+truncate -s "$shim_size" "$aurorashim"
 
 losetup -D
 rm -rf "$rootfs" "$auroraboot" "$statemount" "$root_amount" "$root_bmount"
