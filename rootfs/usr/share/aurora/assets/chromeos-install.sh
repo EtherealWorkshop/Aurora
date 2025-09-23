@@ -690,8 +690,6 @@ copy_partition() {
     ;;
   esac
   lsblk
-  echo "Waiting..."
-  read
 }
 
 # Find our destination device.
