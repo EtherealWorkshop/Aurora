@@ -689,6 +689,8 @@ copy_partition() {
     fi
     ;;
   esac
+  echo "Waiting..."
+  read
 }
 
 # Find our destination device.
