@@ -73,6 +73,7 @@ funText() {
 	"xmb9"
 		"You <NOT FOUND> the <NOT FOUND>. <NOT FOUND>"
 		"Expected OK, got <Object#null>"
+		"\”meal\” -TN Proxy bot"
         ) #              cen-><-ter" 
 
   	selectedSplashText=${splashText[$RANDOM % ${#splashText[@]}]}
