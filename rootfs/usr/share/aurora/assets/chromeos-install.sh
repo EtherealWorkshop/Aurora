@@ -879,7 +879,7 @@ main() {
   # us go in reverse order.
 
   lsblk
-  sleep 5
+  bash || busybox sh
 
   # 12
   copy_partition "${PARTITION_NUM_EFI_SYSTEM:?}" "${SRC}" "${DST}" 1 1 false
