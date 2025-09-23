@@ -114,7 +114,7 @@ installcros() {
         n|N) chroot ./ /usr/sbin/chromeos-install --payload_image="${loop}" --yes || fail "Failed during chroot!" --fatal ;;
         *) echo_c "Blocking Updates" GEEN_B | center
            mount -n --bind /usr/share/aurora/assets/chromeos-install.sh ./usr/sbin/chromeos-install.sh
-           debug_run chroot ./ /usr/sbin/chromeos-install --payload_image="${loop}" --yes --minimal_copy || fail "Failed during chroot!" --fatal 
+           debug_run chroot ./ /usr/sbin/chromeos-install --payload_image="${loop}" --minimal_copy || fail "Failed during chroot!" --fatal 
            umount ./usr/sbin/chromeos-install.sh;;
     esac # see, "case" spelled backwards is "esac", which is funny because until i've had my "case", i don't give "esac" about anything.
     local cros_dev="$(get_largest_cros_blockdev)"
