@@ -56,11 +56,13 @@ mkdir -p "$rootfs" "$auroraboot"
 
 [ -z "rootfs/usr/share/aurora/aurora.sh" ] && echo_c "Please run in the base directory of Aurora." RED_B
 
+
 if findmnt -T "$rootfs" -o OPTIONS -n | grep -qE 'noexec|nodev'; then
     mount -o remount,dev,exec "$(findmnt -T "$rootfs" -o TARGET -n)"
 fi
 
 rm -f "$aurorashim"
+
 
 if [ -z "$shims" ] && [ -z "$recovery" ] && [ -z "$shimsize" ]; then
   echo_c "Creating shim with size 694200KB" GEEN_B
