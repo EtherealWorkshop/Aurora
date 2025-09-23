@@ -119,6 +119,7 @@ installcros() {
            sgdisk -d 4 ${drive}
            sgdisk -d 5 ${drive}
            lsblk
+           partprobe
            mount -n --bind /usr/share/aurora/assets/chromeos-install.sh ./usr/sbin/chromeos-install.sh
            debug_run chroot ./ /usr/sbin/chromeos-install --payload_image="${loop}" --minimal_copy || fail "Failed during chroot!" --fatal 
            umount ./usr/sbin/chromeos-install.sh
