@@ -109,18 +109,19 @@ installcros() {
         mount -n --bind "${d}" "./${d}"
         mount --make-slave "./${d}"
     done
+    DEFAULT_ROOTDEV=$(jq -r '.load_base_vars.DEFAULT_ROOTDEV' usr/sbin/partition_vars.json)
+    drive=$(get_fixed_dst_drive)
     read_center -d "Block ChromeOS and Kernel Updates? (Y/n): " block
     case $block in
         n|N) chroot ./ /usr/sbin/chromeos-install --payload_image="${loop}" --yes || fail "Failed during chroot!" --fatal ;;
         *) echo_c "Blocking Updates" GEEN_B | center
-           sgdisk -d 4 ${loop}
-           sgdisk -d 5 ${loop}
+           mkfs.ext4 -F "${drive}p1" || mkfs.ext4 -F "${drive}1" # im lazy
+           sgdisk -d 4 ${drive}
+           sgdisk -d 5 ${drive}
+           lsblk
            mount -n --bind /usr/share/aurora/assets/chromeos-install.sh ./usr/sbin/chromeos-install.sh
            debug_run chroot ./ /usr/sbin/chromeos-install --payload_image="${loop}" --minimal_copy || fail "Failed during chroot!" --fatal 
            umount ./usr/sbin/chromeos-install.sh
-           umount /mnt/stateful_partition -R 2>/dev/null
-           umount "$stateful" 2>/dev/null
-           mkfs.ext4 -F "$stateful"
            ;;
     esac # see, "case" spelled backwards is "esac", which is funny because until i've had my "case", i don't give "esac" about anything.
     local cros_dev="$(get_largest_cros_blockdev)"

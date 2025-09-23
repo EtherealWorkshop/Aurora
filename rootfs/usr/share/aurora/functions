@@ -38,6 +38,48 @@ debug_run() {
     fi
 }
 
+get_largest_nvme_namespace() {
+  local largest size tmp_size dev
+  size=0
+  dev=$(basename "$1")
+
+  for nvme in /sys/block/"${dev%n*}"*; do
+    tmp_size=$(cat "${nvme}"/size)
+    if [ "${tmp_size}" -gt "${size}" ]; then
+      largest="${nvme##*/}"
+      size="${tmp_size}"
+    fi
+  done
+  echo "${largest}"
+}
+
+# Find the drive to install based on the build write_cgpt.sh
+# script. If not found, return ""
+get_fixed_dst_drive() {
+  local dev rootdev
+
+  if [ -n "${DEFAULT_ROOTDEV}" ]; then
+    # No " here, the variable may contain wildcards.
+    for rootdev in ${DEFAULT_ROOTDEV}; do
+      [ -d "${rootdev}" ] || continue
+      dev="/dev/$(basename "${rootdev}")"
+      if [ -b "${dev}" ]; then
+        case "${dev}" in
+          *nvme*)
+            dev="/dev/$(get_largest_nvme_namespace "${dev}")"
+            ;;
+        esac
+        break
+      else
+        dev=""
+      fi
+    done
+  else
+    dev=""
+  fi
+  echo "${dev}"
+}
+
 declare -A VERSION
 VERSION["BRANCH"]="alpine"
 VERSION["NUMBER"]="1.0.0"
