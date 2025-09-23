@@ -72,6 +72,7 @@ funText() {
         "${YELLOW_B}We need to remove Antonios"
 	"xmb9"
 		"You <NOT FOUND> the <NOT FOUND>. <NOT FOUND>"
+		"Expected OK, got <Object#null>"
         ) #              cen-><-ter" 
 
   	selectedSplashText=${splashText[$RANDOM % ${#splashText[@]}]}
