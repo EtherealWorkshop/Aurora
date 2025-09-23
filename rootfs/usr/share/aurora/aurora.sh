@@ -109,7 +109,7 @@ installcros() {
         mount -n --bind "${d}" "./${d}"
         mount --make-slave "./${d}"
     done
-    read_center "Block ChromeOS and Kernel Updates? (Y/n): " block
+    read_center -d "Block ChromeOS and Kernel Updates? (Y/n): " block
     case $block in
         n|N) chroot ./ /usr/sbin/chromeos-install --payload_image="${loop}" --yes || fail "Failed during chroot!" --fatal ;;
         *) chroot ./ /usr/sbin/chromeos-install --payload_image="${loop}" --yes --minimal_copy || fail "Failed during chroot!" --fatal
