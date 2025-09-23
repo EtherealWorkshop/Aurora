@@ -76,8 +76,8 @@ jobs:
         set -e
         chmod +x Aurora
         sudo apt update
-        sudo apt install wget curl bash e2fsprogs gdisk cgpt rsync qemu-user-static binfmt-support
-        sudo ./Aurora "${{ matrix.board }}" --auto
+        sudo apt install bc wget curl bash e2fsprogs gdisk cgpt rsync qemu-user-static binfmt-support
+        sudo ./Aurora -b "${{ matrix.board }}"
 
     - name: Upload built shim
       uses: softprops/action-gh-release@v2

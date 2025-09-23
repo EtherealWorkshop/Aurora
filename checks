@@ -17,7 +17,7 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
-. rootfs/usr/bin/parse_flags "v,verbose,0 h,help,0 i,shim,1 b,board,1 m,shimsize,1 s,shims,2 r,recovery,2 p,payloads,2" $@
+. rootfs/usr/bin/parse_flags "v,verbose,0 h,help,0 i,shim,!board,1 b,board,!shim,1 m,shimsize,1 s,shims,2 r,recovery,2 p,payloads,2" $@
 
 if [ -n "$shimsize" ]; then
     sizenum=${shimsize//[!0-9.]/}
@@ -50,6 +50,16 @@ done
 if [ -n "$deps" ]; then
     echo "Error: Missing Dependencies: $deps" | sed 's/cies: , /cies: /'
     exit 1
+fi
+
+if [ -n "$board" ]; then
+    export shim="./${board}.bin"
+    if [ ! -f "$shim" ]
+    then
+        wget -q --show-progress "https://github.com/AerialiteLabs/sh1mmer/releases/download/v1.0.0/${board}.bin" -O "$shim" || {
+            echo "Invalid board."    
+        }
+    fi
 fi
 
 export aurorashim="./aurora-$(basename "$shim")"
