@@ -103,14 +103,12 @@ installcros() {
     stateful="$(cgpt find -l STATE ${loop} | head -n 1 | grep --color=never /dev/)" || fail "Failed to find stateful on ${loop}!"
     mkdir -p /mnt/stateful_partition
     mount $stateful /mnt/stateful_partition || fail "Failed to mount stateful!"
-    MOUNTS="/proc /dev /sys /tmp /run /var /mnt/stateful_partition"
     cd $recoroot
-    d=
-    for d in ${MOUNTS}; do
+    d=""
+    for d in /proc /dev /sys /tmp /run /var /mnt/stateful_partition; do
         mount -n --bind "${d}" "./${d}"
         mount --make-slave "./${d}"
     done
-    debug_run nano usr/sbin/chromeos-install
     read -p "Block ChromeOS and Kernel Updates? (Y/n)" block
     case $block in
         n|N) chroot ./ /usr/sbin/chromeos-install --payload_image="${loop}" --yes || fail "Failed during chroot!" --fatal ;;
