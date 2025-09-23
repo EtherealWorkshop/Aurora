@@ -112,7 +112,8 @@ installcros() {
     read_center -d "Block ChromeOS and Kernel Updates? (Y/n): " block
     case $block in
         n|N) chroot ./ /usr/sbin/chromeos-install --payload_image="${loop}" --yes || fail "Failed during chroot!" --fatal ;;
-        *) chroot ./ /usr/sbin/chromeos-install --payload_image="${loop}" --yes --minimal_copy || fail "Failed during chroot!" --fatal
+        *) echo "Blocking Updates..."
+           chroot ./ /usr/sbin/chromeos-install --payload_image="${loop}" --yes --minimal_copy || fail "Failed during chroot!" --fatal ;;
     esac # see, "case" spelled backwards is "esac", which is funny because until i've had my "case", i don't give "esac" about anything.
     local cros_dev="$(get_largest_cros_blockdev)"
     cgpt add -i 2 $cros_dev -P 15 -T 15 -S 1 -R 1 || echo -e "${YELLOW_B}Failed to set kernel priority! Continuing anyway${COLOR_RESET}"
