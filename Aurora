@@ -221,7 +221,7 @@ mount "$root_b" "$root_bmount"
 echo_c "Done. Rootfs: $(du -sh $rootfs | awk '{print $1}')\n\n${BLUE_B}Copying rootfs to shim" "GEEN_B"
 rm -f "$rootfs/sbin/init"
 cp -ar rootfs/. "$rootfs"
-if [ "$DEBUG" -eq "1" ]; then
+if [ "$verbose" -eq "1" ]; then
     rsync -avH --info=progress2 --delete "$rootfs/." "$root_bmount" || { echo "failed to copy all files"; exit 1; }
     sleep 10
 else
@@ -231,7 +231,7 @@ fi
 echo_c "Done. Rootfs: $(du -sh $rootfs | awk '{print $1}')\n\n${BLUE_B}Copying auroraboot to shim" "GEEN_B"
 rm -f "$auroraboot/bin/init"
 cp -ar auroraboot/. "$auroraboot"
-if [ "$DEBUG" -eq "1" ]; then
+if [ "$verbose" -eq "1" ]; then
     rsync -avH --info=progress2 --delete "$auroraboot/." "$root_amount" || { echo "failed to copy all files"; exit 1; }
     sleep 10
 else
