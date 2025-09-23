@@ -69,7 +69,8 @@ funText() {
         "${BLUE_B}blahaj"
         "${YELLOW_B}Shut Up, Synaptic!"
         "${YELLOW_B}We need to remove Antonios"
-        "bash: line 182: tput: I/O error$(printf "%*s" "$(( $(tput cols) - 31 ))" "")bash: line 192: tput: I/O error$(printf "%*s" "$(( $(tput cols) - 31 ))" "")bash: line 194: tput: I/O error$(printf "%*s" "$(( $(tput cols) - 31 ))" "")"
+        "bash: line 182: tput: I/O error$(printf "%*s" "$(( $(tput cols  ""You <NOT FOUND> the <NOT FOUND>. <NOT FOUND>""
+) - 31 ))" "")bash: line 192: tput: I/O error$(printf "%*s" "$(( $(tput cols) - 31 ))" "")bash: line 194: tput: I/O error$(printf "%*s" "$(( $(tput cols) - 31 ))" "")"
         ) #              cen-><-ter" 
 
   	selectedSplashText=${splashText[$RANDOM % ${#splashText[@]}]}
