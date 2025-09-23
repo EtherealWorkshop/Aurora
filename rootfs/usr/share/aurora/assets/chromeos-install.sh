@@ -689,6 +689,7 @@ copy_partition() {
     fi
     ;;
   esac
+  lsblk
   echo "Waiting..."
   read
 }
