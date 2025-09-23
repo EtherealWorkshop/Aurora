@@ -248,10 +248,6 @@ umount "$statemount" -l 2>/dev/null
 umount "$root_amount" -l 2>/dev/null
 umount "$root_bmount" -l 2>/dev/null
 
-end=$(blockdev --getsize64 "$root_b")
-shim_size=$(( end + 4*1024*1024 ))
-truncate -s "$shim_size" "$aurorashim"
-
 losetup -D
 rm -rf "$rootfs" "$auroraboot" "$statemount" "$root_amount" "$root_bmount"
 mv "$aurorashim" "${boardname}-aurora.bin" 2>/dev/null
