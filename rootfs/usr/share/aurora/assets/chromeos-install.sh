@@ -679,6 +679,9 @@ copy_partition() {
           --dst "${dst_block}"
     fi
     ;;
+  "${PARTITION_NUM_KERN_B:?}"|"${PARTITION_NUM_ROOT_B:?}")
+    echo "Blocking updates."
+    ;;
   *)
     if safety_check_size "${part_num}" "${part_size}" "${dst}" ; then
       write_partition "${part_size}" "${src_block}" "${dst_block}" \
