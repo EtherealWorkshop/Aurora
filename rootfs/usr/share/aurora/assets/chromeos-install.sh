@@ -868,10 +868,12 @@ EOF
     reload_partitions
   fi
 
+  echo "Clearing and reinstalling the stateful partition."
+  wipe_stateful
+  install_stateful
+  sync
+  
   if [ "${FLAGS_skip_rootfs:?}" -eq "${FLAGS_TRUE}" ]; then
-    echo "Clearing and reinstalling the stateful partition."
-    wipe_stateful
-    install_stateful
     cleanup
     echo "Done installing partitions."
     exit 0
