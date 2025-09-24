@@ -956,6 +956,7 @@ EOF
   fi
 
   do_post_install
+  mkfs.ext4 ${DST}p1 || mkfs.ext4 ${DST}1
 
   # Force data to disk before we declare done.
   sync
