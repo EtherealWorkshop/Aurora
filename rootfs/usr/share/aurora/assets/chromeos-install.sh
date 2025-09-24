@@ -689,7 +689,6 @@ copy_partition() {
     fi
     ;;
   esac
-  lsblk
 }
 
 # Find our destination device.
