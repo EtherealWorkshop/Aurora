@@ -1,0 +1,43 @@
+#!/bin/bash
+
+help() {
+cat <<EOF
+Usage:
+    $0 <hex bytes...>
+    $0 <operation>
+
+operations:
+    $0 {-h --help}
+EOF
+case $1 in
+    -h|--help) exit 0 ;;
+    *) exit 1 ;;
+esac
+}
+
+hex=()
+for arg in "$@"; do
+    case $arg in
+        -h|--help) help -h ;;
+        0x[0-9A-Fa-f]*) arg="${arg#0x}" ;;
+    esac
+    while [[ -n $arg ]]; do
+        hex+=( "0x${arg:0:2}" )
+        arg="${arg:2}"
+    done
+done
+
+structver=$((hex[0]))
+
+if ((structver == 0x10)); then
+    kv=$(( (${hex[4]}<<0) | (${hex[5]}<<8) | (${hex[6]}<<16) | (${hex[7]}<<24) ))
+elif ((structver == 0x02)); then
+    # version 0 structure
+    # buffer layout: ver, uid(4), kvarg(4), 0 0 0, crc
+    kv=$(( (${hex[5]}<<0) | (${hex[6]}<<8) | (${hex[7]}<<16) | (${hex[8]}<<24) ))
+else
+    echo "unknown struct version: $structver" >&2
+    exit 1
+fi
+
+printf "0x%08x\n" "$kv"

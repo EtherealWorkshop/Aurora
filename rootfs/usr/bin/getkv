@@ -1,41 +1,15 @@
 #!/bin/bash
 
-getkv() {
-    mount --bind /.crosenv /.crosenv
-    for mnt in /dev /proc /sys; do
-        mkdir -p /.crosenv$mnt
-        mount --bind "$mnt" "/.crosenv$mnt"
-    done
-    local cmd_output
-    cmd_output=$(chroot /.crosenv tpmc read 0x1008 9 2>/dev/null)
-
-    if [[ -z "$cmd_output" ]]; then
-        echo "Please boot Aurora in recovery [Esc+Ref+Pwr] to see kernver."
-        return
-    fi
-
-    cmd_output=$(echo "$cmd_output" | tr -d '\n')
-
-    local kernver=0
-    local b1 b2 b3 b4
-
-    if [[ "${cmd_output:0:2}" == "10" ]]; then
-        read b1 b2 b3 b4 < <(echo "$cmd_output" | cut -c13- | awk '{print $1, $2, $3, $4}')
-        kernver=$(( 0x$b1 + (0x$b2 << 8) + (0x$b3 << 16) + (0x$b4 << 24) ))
-    elif [[ "${cmd_output:0:1}" == "2" ]]; then
-        read b1 b2 b3 b4 < <(echo "$cmd_output" | cut -c15- | awk '{print $1, $2, $3, $4}')
-        kernver=$(( 0x$b1 + (0x$b2 << 8) + (0x$b3 << 16) + (0x$b4 << 24) ))
-    else
-        echo "$(crossystem tpm_kernver)"
-        echo "Please boot Aurora in recovery [Esc+Ref+Pwr] to see proper kernver"
-        return
-    fi
-
-    printf "0x%08x\n" "$kernver"
-    for mnt in /dev /proc /sys; do
-        umount "/.crosenv$mnt" 2>/dev/null
-    done
-    umount /.crosenv 2>/dev/null
-}
-
-getkv
+mount --bind /.crosenv /.crosenv
+for mnt in /dev /proc /sys; do
+    mkdir -p /.crosenv$mnt
+    mount --bind "$mnt" "/.crosenv$mnt"
+done
+local cmd_output
+cmd_output=$(chroot /.crosenv tpmc read 0x1008 9 2>/dev/null)
+chmod +x /usr/bin/raw2hex
+raw2hex $cmd_output
+for mnt in /dev /proc /sys; do
+    umount "/.crosenv$mnt" 2>/dev/null
+done
+umount /.crosenv 2>/dev/null
