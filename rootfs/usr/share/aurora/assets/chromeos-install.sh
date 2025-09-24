@@ -849,6 +849,26 @@ main() {
     echo "Done reloading system partition information."
   fi
 
+  if [ "${FLAGS_minimal_copy:?}" -eq "${FLAGS_TRUE}" ]; then
+    echo -e "\n\n\n\n" # separate from the wall of text
+    echo "Blocking system updates"
+    if command -v sfdisk >/dev/null 2>&1; then
+      sfdisk --delete ${DST} 4 # it fails if one partition doesn't exist
+      sfdisk --delete ${DST} 5 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    elif command -v fdisk >/dev/null 2>&1; then
+      fdisk ${DST} <<EOF
+d
+4
+
+d
+5
+
+w
+EOF
+    fi
+    reload_partitions
+  fi
+
   if [ "${FLAGS_skip_rootfs:?}" -eq "${FLAGS_TRUE}" ]; then
     echo "Clearing and reinstalling the stateful partition."
     wipe_stateful
