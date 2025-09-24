@@ -125,6 +125,10 @@ installcros() {
     clear
     source /usr/share/aurora/functions
     bigtext installcros
+    echo "lsblk output" | center
+    echo ""
+    lsblk
+    echo ""
     echo_c "Finished! Press any key to reboot." GEEN_B | center
     read -n1
     reboot -f
