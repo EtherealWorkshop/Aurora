@@ -408,6 +408,7 @@ downloadshim() {
     	options_download=(
 	    "Sh1mmer Legacy - AerialiteLabs/Sh1mmer/releases"
 	    "Shimboot - ading2210/shimboot/releases"
+        "Br0ker - ading2210/sh1mmer/releases"
         "Custom Shim from URL"
 	)
 
@@ -417,10 +418,10 @@ downloadshim() {
 	case "$download_choice" in
 	    0) export FINALSHIM_URL="https://github.com/AerialiteLabs/sh1mmer/releases/download/v2.0.0/${board_name}.bin" ;;
 	    1) export FINALSHIM_URL="https://github.com/ading2210/shimboot/releases/download/v1.3.0/shimboot_${board_name}.zip" ;;
-	    2) tput cnorm
+        2) export FINALSHIM_URL="https://gh-releases.ading2210.workers.dev/ading2210/sh1mmer/releases/download/2025.9.19/sh1mmer_${board_name}_broker.zip" ;;
+	    *) tput cnorm
            stty echo
            read_center -d "Enter Shim URL: " FINALSHIM_URL ;;
-        *) fail "Invalid choice (somehow?????)" ;;
 	esac
     shimtype=$(echo $FINALSHIM_URL | awk -F. '{print $NF}')
     if [ -z "$shimtype" ]; then
@@ -429,7 +430,8 @@ downloadshim() {
     shimfile=$(echo $FINALSHIM_URL | awk -F/ '{print $NF}')
     shimname=$(echo $shimfile | sed "s/.${shimtype}//")
     if curl --head --silent --fail "$FINALSHIM_URL" >$TTY4; then
-        wget -q --show-progress "$FINALSHIM_URL" -O "$aroot/images/shims/$shimfile" || {
+        cd $aroot/images/shims/
+        wget -q --show-progress "$FINALSHIM_URL" || {
             fail "Failed to download shim."
         }
     else
