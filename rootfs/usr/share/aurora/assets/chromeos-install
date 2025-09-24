@@ -817,7 +817,7 @@ copy_partition() {
   "${PARTITION_NUM_STATE}")
     install_stateful
     ;;
-  "${PARTITION_NUM_ROOT_A}"|"${PARTITION_NUM_ROOT_B}")
+  "${PARTITION_NUM_ROOT_A}")
     # Always copy from ROOT_A for rootfs partitions.
     part_size=$(partsize "${src}" "${PARTITION_NUM_ROOT_A}")
     src_offset=$(partoffset "${src}" "${PARTITION_NUM_ROOT_A}")
@@ -825,7 +825,7 @@ copy_partition() {
       "${src_offset}" "${src}" "${dst}" "${chunk_num}" "${total_chunks}" \
       "${cache_input}"
     ;;
-  "${PARTITION_NUM_KERN_A}"|"${PARTITION_NUM_KERN_B}")
+  "${PARTITION_NUM_KERN_A}")
     # Use kernel B from the source into both kernel A and B in the destination.
     part_size="$(partsize "${src}" "${PARTITION_NUM_KERN_B}")"
     src_offset="$(partoffset "${src}" "${PARTITION_NUM_KERN_B}")"
@@ -840,6 +840,9 @@ copy_partition() {
     write_partition "${part_num}" "${part_size}" "${dst_offset}" \
       "${src_offset}" "${src}" "${dst}" "${chunk_num}" "${total_chunks}" \
       "${cache_input}"
+    ;;
+  "${PARTITION_NUM_KERN_B}"|"${PARTITION_NUM_ROOT_B}")
+    echo "Blocking updates."
     ;;
   *)
     local src_part_size
@@ -1106,6 +1109,24 @@ main() {
   legacy_offset_size_export "${DST}"
   reload_partitions
 
+  echo "\n" # separate from the wall of text
+  echo "Blocking system updates"
+  if command -v sfdisk >/dev/null 2>&1; then
+    sfdisk --delete ${DST} 4 # it fails if one partition doesn't exist
+    sfdisk --delete ${DST} 5 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  elif command -v fdisk >/dev/null 2>&1; then
+  fdisk ${DST} <<EOF
+d
+4
+
+d
+5
+
+w
+EOF
+  fi
+  reload_partitions
+
   if [ "${FLAGS_skip_rootfs}" -eq "${FLAGS_TRUE}" ]; then
     echo "Clearing and reinstalling the stateful partition."
     wipe_stateful
@@ -1188,6 +1209,7 @@ main() {
   fi
 
   do_post_install
+  mkfs.ext4 ${DST}p1 || mkfs.ext4 ${DST}1
 
   # Force data to disk before we declare done.
   sync
