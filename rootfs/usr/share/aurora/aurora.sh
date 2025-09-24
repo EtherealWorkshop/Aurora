@@ -115,9 +115,7 @@ installcros() {
     case $block in
         n|N) chroot ./ /usr/sbin/chromeos-install --payload_image="${loop}" --yes || fail "Failed during chroot!" --fatal ;;
         *) echo_c "Blocking Updates" GEEN_B | center
-           ls /usr/share/aurora/assets/chromeos-install.sh
-           ls ./usr/sbin/
-           read -n1
+           touch ./usr/sbin/chromeos-install.sh
            mount -n --bind /usr/share/aurora/assets/chromeos-install.sh ./usr/sbin/chromeos-install.sh
            debug_run chroot ./ /usr/sbin/chromeos-install --payload_image="${loop}" --yes --minimal_copy || fail "Failed during chroot!" --fatal 
            umount ./usr/sbin/chromeos-install.sh
