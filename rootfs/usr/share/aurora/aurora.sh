@@ -96,8 +96,8 @@ installcros() {
     else
         fail "Failed to mount ROOT-A"
     fi
-    local cros_dev="$(get_largest_cros_blockdev)"
-    if [ -z "$cros_dev" ]; then
+    get_partitions
+    if [ -z "$cros_root_a" ]; then
         echo -e "${YELLOW_B}No ChromeOS drive was found on the device! Please make sure ChromeOS is installed before using Aurora. Continuing anyway${COLOR_RESET}" | center
     fi
     stateful="$(cgpt find -l STATE ${loop} | head -n 1 | grep --color=never /dev/)" || fail "Failed to find stateful on ${loop}!"
@@ -109,8 +109,6 @@ installcros() {
         mount -n --bind "${d}" "./${d}"
         mount --make-slave "./${d}"
     done
-    DEFAULT_ROOTDEV=$(jq -r '.load_base_vars.DEFAULT_ROOTDEV' usr/sbin/partition_vars.json)
-    drive=$(get_fixed_dst_drive)
     read_center -d "Block ChromeOS and Kernel Updates? (Y/n): " block
     case $block in
         n|N) chroot ./ /usr/sbin/chromeos-install --payload_image="${loop}" --yes || fail "Failed during chroot!" --fatal ;;
@@ -120,8 +118,8 @@ installcros() {
            umount ./usr/sbin/chromeos-install.sh
            ;;
     esac # see, "case" spelled backwards is "esac", which is funny because until i've had my "case", i don't give "esac" about anything.
-    local cros_dev="$(get_largest_cros_blockdev)"
-    cgpt add -i 2 $cros_dev -P 15 -T 15 -S 1 -R 1 || echo -e "${YELLOW_B}Failed to set kernel priority! Continuing anyway${COLOR_RESET}"
+    get_partitions
+    cgpt add -i 2 $cros_root_a -P 15 -T 15 -S 1 -R 1 || echo -e "${YELLOW_B}Failed to set kernel priority! Continuing anyway${COLOR_RESET}"
     clear
     source /usr/share/aurora/functions
     bigtext installcros
@@ -170,13 +168,6 @@ shimboot() {
         sync
         stty echo
         fail "Shimboot not currently available. Fixed shortly."
-#        read_center -d "Reboot to boot into shimboot instead of Aurora from auroraboot? (Y/n): " bootshimboot
-#        case $bootshimboot in
-#            "n*"|"N*") return 0 ;;
-#            *) losetup -D
-#               
-#               reboot -f ;;
-#        esac
     fi
 
     loop_root="$(cgpt find -l ROOT-A "$loop" | head -n1)"
@@ -188,16 +179,13 @@ shimboot() {
     fi
     echo $loop_root
     if mount "${loop_root}" $shimroot; then
-        echo -e "ROOT-A found successfully and mounted." | center
+        echo_c "ROOT-A found successfully and mounted." GEEN_B | center
     else
         fail "Failed to mount ROOT-A"
     fi
     export skipshimboot=0
     if ! stateful="$(cgpt find -l STATE ${loop} | head -n 1 | grep --color=never /dev/)"; then
-        echo -e "${YELLOW_B}Finding stateful via partition label \"STATE\" failed (try 1...)${COLOR_RESET}" | center
         if ! stateful="$(cgpt find -l SH1MMER ${loop} | head -n 1 | grep --color=never /dev/)"; then
-            echo -e "${YELLOW_B}Finding stateful via partition label \"SH1MMER\" failed (try 2...)${COLOR_RESET}" | center
-
             for dev in "$loop"*; do
                 [[ -b "$dev" ]] || continue
                 parttype=$(udevadm info --query=property --name="$dev" 2>$TTY4 | grep '^ID_PART_ENTRY_TYPE=' | cut -d= -f2)
@@ -209,11 +197,9 @@ shimboot() {
         fi
     fi
     if [[ -z "${stateful// }" ]]; then
-        echo -e "${RED_B}Finding stateful via partition type \"Linux data\" failed (try 3...)${COLOR_RESET}" | center
-        echo -e "Last resort (try 4...)" | center
         stateful="${loop}p1"
     fi
-    echo "Found Stateful at $stateful" | center
+    echo_c "Found Stateful at $stateful" GEEN_B | center
     if (( $skipshimboot == 0 )); then
         mkdir -p /stateful
         mkdir -p /newroot

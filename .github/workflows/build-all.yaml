@@ -11,7 +11,6 @@ on:
 permissions:
   contents: write
 
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -61,22 +60,18 @@ jobs:
           - zork
 
     steps:
-    - name: github is annoying
-      run: |
-        git config --global url."https://${{ secrets.SUPERDUPERSECRET }}@github.com/".insteadOf https://github.com/
-
     - name: Checkout repo
       uses: actions/checkout@v4
       with:
         submodules: recursive
-        token: ${{ secrets.SUPERDUPERSECRET }}
+        token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Build Aurora
       run: |
         set -e
         chmod +x Aurora
         sudo apt update
-        sudo apt install bc wget curl bash e2fsprogs gdisk cgpt rsync qemu-user-static binfmt-support
+        sudo apt install -y bc wget curl bash e2fsprogs gdisk cgpt rsync qemu-user-static binfmt-support
         sudo ./Aurora -b "${{ matrix.board }}"
 
     - name: Upload built shim
