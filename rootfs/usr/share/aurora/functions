@@ -237,7 +237,7 @@ term_login() {
     cat /etc/motd
     for attempt in 1 2 3; do
         stty intr '' erase '^H'
-        read -p "$(hostname) login: " USER
+        read -p "$(hostname) login: " username
         if id "$username" >/dev/null 2>&1; then
             return 0
         else
