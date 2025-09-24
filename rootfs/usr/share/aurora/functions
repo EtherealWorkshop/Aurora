@@ -59,12 +59,12 @@ get_largest_cros_blockdev() {
 }
 
 get_partitions() {
-    export cros_root_a="$(get_largest_cros_blockdev)"
-    export cros_drive="/dev/$(lsblk -no pkname "$cros_root_a" 2>/dev/null)"
-    export cros_stateful="$(cgpt find -l STATE ${cros_drive} 2>/dev/null | head -n 1 | grep --color=never /dev/)"
-    export cros_kern_a="$(cgpt find -l KERN-A ${cros_drive} 2>/dev/null | head -n 1 | grep --color=never /dev/)"
-    export cros_kern_b="$(cgpt find -l KERN-B ${cros_drive} 2>/dev/null | head -n 1 | grep --color=never /dev/)"
-    export cros_root_b="$(cgpt find -l ROOT-B ${cros_drive} 2>/dev/null | head -n 1 | grep --color=never /dev/)"
+    export cros_drive="$(get_largest_cros_blockdev)"
+    export cros_stateful=$(cgpt find -l STATE ${cros_drive} 2>/dev/null | head -n 1 | grep --color=never /dev/)
+    export cros_kern_a=$(cgpt find -l KERN-A ${cros_drive} 2>/dev/null | head -n 1 | grep --color=never /dev/)
+    export cros_root_a=$(cgpt find -l ROOT-A ${cros_drive} 2>/dev/null | head -n 1 | grep --color=never /dev/)
+    export cros_kern_b=$(cgpt find -l KERN-B ${cros_drive} 2>/dev/null | head -n 1 | grep --color=never /dev/)
+    export cros_root_b=$(cgpt find -l ROOT-B ${cros_drive} 2>/dev/null | head -n 1 | grep --color=never /dev/)
 }
 get_partitions
 
