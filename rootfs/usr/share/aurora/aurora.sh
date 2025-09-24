@@ -116,10 +116,6 @@ installcros() {
         n|N) chroot ./ /usr/sbin/chromeos-install --payload_image="${loop}" --yes || fail "Failed during chroot!" --fatal ;;
         *) echo_c "Blocking Updates" GEEN_B | center
            mkfs.ext4 -F "${drive}p1" || mkfs.ext4 -F "${drive}1" # im lazy
-           sgdisk -d 4 ${drive}
-           sgdisk -d 5 ${drive}
-           lsblk
-           partprobe
            mount -n --bind /usr/share/aurora/assets/chromeos-install.sh ./usr/sbin/chromeos-install.sh
            debug_run chroot ./ /usr/sbin/chromeos-install --payload_image="${loop}" --minimal_copy || fail "Failed during chroot!" --fatal 
            umount ./usr/sbin/chromeos-install.sh

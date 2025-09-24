@@ -849,7 +849,7 @@ main() {
   fi
 
   if [ "${FLAGS_minimal_copy:?}" -eq "${FLAGS_TRUE}" ]; then
-    echo -e "\n\n\n\n" # separate from the wall of text
+    echo "\n" # separate from the wall of text
     echo "Blocking system updates"
     if command -v sfdisk >/dev/null 2>&1; then
       sfdisk --delete ${DST} 4 # it fails if one partition doesn't exist
