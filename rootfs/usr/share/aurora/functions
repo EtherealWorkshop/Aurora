@@ -583,3 +583,18 @@ setup() {
         sed -i 's/setup=1/setup=0/' /etc/aurora
     fi
 }
+
+get_partitions() {
+    tmpmount=$(mktemp -d)
+    rm -rf $tmpmount
+    mount $cros_blockdev $tmpmount -o ro
+    DEFAULT_ROOTDEV=$(jq -r '.load_base_vars.DEFAULT_ROOTDEV' $tmpmount/usr/sbin/partition_vars.json)
+    export cros_drive=$(get_fixed_dst_drive)
+    umount $tmpmount
+    rm -rf $tmpmount
+    cros_stateful="$(cgpt find -l STATE ${cros_drive} | head -n 1 | grep --color=never /dev/)"
+    cros_kern_a="$(cgpt find -l KERN-A ${cros_drive} | head -n 1 | grep --color=never /dev/)"
+    cros_root_a="$(cgpt find -l ROOT-A ${cros_drive} | head -n 1 | grep --color=never /dev/)"
+    cros_kern_b="$(cgpt find -l KERN-B ${cros_drive} | head -n 1 | grep --color=never /dev/)"
+    cros_root_b="$(cgpt find -l ROOT-B ${cros_drive} | head -n 1 | grep --color=never /dev/)"
+}
