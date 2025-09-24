@@ -113,6 +113,9 @@ installcros() {
     case $block in
         n|N) chroot ./ /usr/sbin/chromeos-install --payload_image="${loop}" --yes || fail "Failed during chroot!" --fatal ;;
         *) echo_c "Blocking Updates" GEEN_B | center
+           cp /usr/sbin/write_gpt.sh /usr/share/aurora/assets/write_gpt.sh
+           sed -i -E "s/.*add -i (4|5|6|7).*target\}//" /usr/share/aurora/assets/write_gpt.sh
+           mount -n --bind /usr/share/aurora/assets/write_gpt.sh ./usr/sbin/write_gpt.sh
            mount -n --bind /usr/share/aurora/assets/chromeos-install.sh ./usr/sbin/chromeos-install.sh || mount -n --bind /usr/share/aurora/assets/chromeos-install ./usr/sbin/chromeos-install
            debug_run chroot ./ /usr/sbin/chromeos-install --payload_image="${loop}" --yes --minimal_copy || fail "Failed during chroot!" --fatal 
            umount ./usr/sbin/chromeos-install.sh
