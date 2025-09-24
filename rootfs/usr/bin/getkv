@@ -5,7 +5,6 @@ for mnt in /dev /proc /sys; do
     mkdir -p /.crosenv$mnt
     mount --bind "$mnt" "/.crosenv$mnt"
 done
-local cmd_output
 cmd_output=$(chroot /.crosenv tpmc read 0x1008 9 2>/dev/null)
 chmod +x /usr/bin/raw2hex
 raw2hex $cmd_output
