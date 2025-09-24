@@ -1,0 +1,20 @@
+#!/bin/bash
+
+. /usr/share/aurora/functions
+
+cros_blockdev=$(get_largest_cros_blockdev)
+
+if [ -z "$cros_blockdev" ]; then
+    fail "No ChromeOS device found"
+fi
+
+tmpmount=$(mktemp -d)
+rm -rf $tmpmount
+mount $cros_blockdev $tmpmount -o ro
+DEFAULT_ROOTDEV=$(jq -r '.load_base_vars.DEFAULT_ROOTDEV' $tmpmount/usr/sbin/partition_vars.json)
+drive=$(get_fixed_dst_drive)
+umount $tmpmount
+rm -rf $tmpmount
+stateful="$(cgpt find -l STATE ${drive} | head -n 1 | grep --color=never /dev/)" || fail "Failed to find stateful on ${drive}!"
+mkfs.ext4 -F ${stateful}
+echo_c "Wiped stateful on $drive." GEEN_B | center
