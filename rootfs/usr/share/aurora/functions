@@ -190,6 +190,10 @@ read_center() {
     fi
 }
 
+wait_enter() {
+    read_center "Press Enter to continue..."
+}
+
 disable_input() {
     stty -echo
     tput civis

@@ -60,8 +60,8 @@ installcros() {
 	if [[ -z "$(ls -A $aroot/images/recovery 2>$TTY4)" ]]; then
         echo -ne "${YELLOW_B}"
 		echo "You have no recovery images downloaded! Please download a few images" | center
-		echo "Alternatively, these are available on websites such as chrome100.dev or cros.tech. Put them into /usr/share/aurora/images/recovery" | center
-        read_center "Press Enter to return to the main menu"
+		echo "Alternatively, these are available on websites such as cros.download or cros.tech. Put them into /usr/share/aurora/images/recovery" | center
+        wait_enter
         echo -ne "${COLOR_RESET}"
 		return
 	else
@@ -72,7 +72,7 @@ installcros() {
             choice=$?
             reco="${reco_options[$choice]}"
             if [[ "$reco" == "Exit" ]]; then
-                read_center "Press Enter to continue..."
+                wait_enter
                 return
             fi
             break
@@ -143,7 +143,7 @@ shimboot() {
 	if [[ -z "$(ls -A $aroot/images/shims)" ]]; then
         echo -e "${YELLOW_B}You have no shims downloaded!\nPlease download or build a few images." | center
 		echo "Alternatively, shims are available in https://github.com/AerialiteLabs/[Sh1mmer, Aurora]/releases. Put them into /usr/share/aurora/images/shims" | center
-        read_center "Press Enter to return to the main menu..."
+        wait_enter
         echo -e "${COLOR_RESET}"
 		return
 	else
@@ -155,7 +155,7 @@ shimboot() {
             choice=$?
             shim="${shim_options[$choice]}"
             if [[ "$shim" == "Exit" ]]; then
-                read_center "Press Enter to continue..."
+                wait_enter
                 return
             fi
             break
@@ -326,7 +326,7 @@ payloads() {
                 break
             fi
         done
-        read_center "Press Enter to continue..."
+        wait_enter
         return
     fi
 }
@@ -573,7 +573,7 @@ connect() {
         ssid_option="${wifi_options[$choice]}"
 
         if [[ "$ssid_option" == "Exit" ]]; then
-            read_center "Press Enter to continue..."
+            wait_enter
             return
         elif [[ "$ssid_option" == "Enter Network manually" ]]; then
             read_center -d "Enter SSID: " ssid
