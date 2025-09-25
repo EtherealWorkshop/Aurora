@@ -20,7 +20,7 @@ declare -A flag_conflicts
 for flag in "${flags[@]}"; do
     IFS=',' read -ra parts <<< "$flag"
     flag_type="${parts[-1]}"
-    var_name="${parts[1]}"
+    var_name="${parts[-2]}"
     flag_args["$var_name"]=$flag_type
 
     conflicts=()
@@ -32,7 +32,7 @@ for flag in "${flags[@]}"; do
     flag_conflicts["$var_name"]="${conflicts[*]}"
 
     for i in "${!parts[@]}"; do
-        if [[ $i -lt $((${#parts[@]}-1)) ]]; then
+        if [[ $i -lt $((${#parts[@]}-2)) ]]; then
             alias="${parts[$i]}"
             if [[ "$alias" == ^* ]]; then
                 continue
@@ -48,12 +48,21 @@ done
 
 for flag in "${flags[@]}"; do
     IFS=',' read -ra parts <<< "$flag"
-    var_name="${parts[1]}"
+    var_name="${parts[-2]}"
     unset "$var_name"
 done
 
 while [[ $# -gt 0 ]]; do
     arg="$1"
+
+    if [[ "$arg" =~ ^-[a-zA-Z]{2,}$ ]]; then
+        expanded=()
+        for ((i=1; i<${#arg}; i++)); do
+            expanded+=("-${arg:$i:1}")
+        done
+        set -- "${expanded[@]}" "${@:2}"
+        continue
+    fi
 
     if [[ "$arg" == --*=* ]]; then
         flag="${arg%%=*}"
@@ -107,7 +116,7 @@ done
 
 for flag in "${flags[@]}"; do
     IFS=',' read -ra parts <<< "$flag"
-    key="${parts[1]}"
+    key="${parts[-2]}"
     if [[ -n "${!key}" ]]; then
         for bad in ${flag_conflicts[$key]}; do
             if [[ -n "${!bad}" ]]; then
