@@ -850,7 +850,7 @@ main() {
 
   if [ "${FLAGS_minimal_copy:?}" -eq "${FLAGS_TRUE}" ]; then
     echo "\n" # separate from the wall of text
-    echo "Blocking system updates"
+    echo "Blocking system updates" # ensures they are truly gone if sed doesnt work
     if command -v sfdisk >/dev/null 2>&1; then
       sfdisk --delete ${DST} 4 # it fails if one partition doesn't exist
       sfdisk --delete ${DST} 5 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
