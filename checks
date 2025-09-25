@@ -17,7 +17,7 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
-. rootfs/usr/bin/parse_flags "v,verbose,0 h,help,0 i,shim,!board,1 b,board,!shim,1 m,shimsize,1 s,shims,2 r,recovery,2 p,payloads,2" $@
+. rootfs/usr/bin/parse_flags "v,verbose,0 h,help,0 i,!board,image,shim,1 b,!shim,board,1 m,shimsize,1 s,shims,2 r,recovery,2 p,payloads,2" $@ || exit 1
 
 if [ -n "$shimsize" ]; then
     sizenum=${shimsize//[!0-9.]/}

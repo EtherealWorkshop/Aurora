@@ -30,6 +30,8 @@ for flag in "${flags[@]}"; do
         fi
     done
     flag_conflicts["$var_name"]="${conflicts[*]}"
+    
+    map_flags["--$var_name"]="$var_name"
 
     for i in "${!parts[@]}"; do
         if [[ $i -lt $((${#parts[@]}-2)) ]]; then
