@@ -80,6 +80,6 @@ jobs:
         name: Aurora ${{ inputs.tag }}
         tag_name: ${{ inputs.tag }}
         files: ./${{ matrix.board }}-aurora.bin
-        overwrite: true
+        overwrite_files: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
