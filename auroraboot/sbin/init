@@ -1,28 +1,12 @@
 #!/bin/busybox sh
-
 clear
-
 export TTY1="/dev/tty1"
 [ -e /dev/pts/0 ] && export TTY1="/dev/pts/0"
-
 /bin/busybox --install /bin || true
-
 dev_partition=$(blkid | grep 'LABEL="Aurora"' | awk -F: '{print $1}' | head -n1 || true)
-if [ -z "$dev_partition" ]; then
-    echo "failed to find aurora partition"
-    sleep 5
-    exit 1
-fi
-
 chmod +x /resize
 bash /resize >/dev/null
-
 mkdir -p /auroraroot
-mount $dev_partition /auroraroot || {
-    echo "failed to mount aurora partition"
-    sleep infinity
-}
-
+mount $dev_partition /auroraroot || sleep infinity
 chmod +x /auroraroot/sbin/init /auroraroot/usr/share/aurora/aurora.sh
-
 exec switch_root /auroraroot /sbin/init < "$TTY1" >> "$TTY1" 2>&1

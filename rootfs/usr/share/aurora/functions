@@ -317,8 +317,8 @@ menu() {
 
 splash() {
     if [ "$rogged" -eq 69 ]; then
-        grug
-        tput cup 0 0
+        doug
+        printf "\033[H"
         clear
     fi
     if cat /sys/devices/virtual/dmi/id/product_name 2>$TTY4 | grep -Eqi 'treeya|barla' 2>$TTY4; then
@@ -331,7 +331,7 @@ splash() {
         else color=$'\e[1;38;5;196m'; strength=$'▃\e[1;38;5;236m▅▇'; fi
         ssid="$(iw dev "$wifidevice" link 2>$TTY4 | awk -F ': ' '/SSID/ {print $2}')"
         if [ -f /etc/aftggp ]; then
-            ssid="$ssid | ${CYAN_B}AFT running at: $(ip a | grep wlan0 | grep inet | awk '{print $2}' | sed 's|/.*||'):42069${COLOR_RESET}"
+            ssid="$ssid | ${CYAN_B}AFT running at: $(ip a | grep $wifidevice | grep inet | awk '{print $2}' | sed 's|/.*||'):42069${COLOR_RESET}"
         fi
         if [ -n "$ssid" ]; then
             echo -e "\n${color}${strength}${color} $wifidevice${COLOR_RESET} $ssid" | center

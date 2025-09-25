@@ -21,7 +21,6 @@ startfrecon() {
     exec </run/frecon/vt0 >/run/frecon/vt0 2>&1
     busybox printf "\033]input:on\a\033]switchvt:0\a"
 }
-
 startfrecon
 setsid -c test
 exec bash /usr/share/aurora/aurora.sh
