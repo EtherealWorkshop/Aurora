@@ -634,7 +634,27 @@ menu2_actions=(
 #############
 
 clear
-splash
+tput civis
+echo -e "$CYAN_B"
+cat <<'EOF' | center
+╒════════════════════════════════════════╕
+│ .    . .    '    +   *       o    .    │
+│+  '.                    '   .-.     +  │
+│          +      .    +   .   ) )     ''│
+│                   '  .      '-´  *.    │
+│     .    \      .     .  .  +          │
+│         .-o-'       '    .o        o   │
+│  *        \      *            +'       │
+│                '       '               │
+│        .*       .       o   o      .   │
+│              o     . *.                │
+│ 'o*           .        .'    .         │
+│              ┏┓   '. O           *     │
+│     .*       ┣┫┓┏┏┓┏┓┏┓┏┓  .    \      │
+│     o        ┛┗┗┛┛ ┗┛┛ ┗┻     +        │
+╘════════════════════════════════════════╛
+EOF
+echo -e "${COLOR_RESET}"
 printf '\033c' > $TTY4
 bigtext log >>$TTY4
 script -qfc 'bigtext debug && stty sane && stty erase ^H && exec bash -l || exec busybox sh -l' /dev/null >$TTY3
