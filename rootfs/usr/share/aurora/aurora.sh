@@ -135,7 +135,6 @@ shimboot() {
     mkdir -p $shimroot
     echo -e "Searching for ROOT-A on shim" | center
     loop=$(losetup -Pf --show $shim)
-    loop
     loop_root="$(cgpt find -l ROOT-A "$loop" | head -n1)"
     if [ -z "$loop_root" ]; then
             loop_root="$(cgpt find -t rootfs "$loop" | head -n1)"
