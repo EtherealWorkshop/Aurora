@@ -657,9 +657,10 @@ EOF
 echo -e "${COLOR_RESET}"
 printf '\033c' > $TTY4
 bigtext log >>$TTY4
-script -qfc 'bigtext debug && stty sane && stty erase ^H && exec sudo -u root login=1 bash -l || exec sudo -u root login=1 busybox sh -l' /dev/null < $TTY3 > $TTY3 2>&1
-sleep 1
-
+while true; do
+    script -qfc 'bigtext debug && stty sane && stty erase ^H && exec sudo -u root login=1 bash -l || exec sudo -u root login=1 busybox sh -l' /dev/null < $TTY3 > $TTY3 2>&1
+    sleep 1
+done &
 for wifi in iwlwifi iwlmvm ccm 8021q rtw88 rtwpci ath10k_sdio mt7921e mt7921s mt76 rtw88_8822ce rtw8821ce rtw89pci; do
     modprobe -r "$wifi" 2>$TTY4 || true
     modprobe "$wifi" 2>$TTY4
