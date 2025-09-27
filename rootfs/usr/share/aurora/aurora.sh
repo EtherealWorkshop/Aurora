@@ -18,11 +18,11 @@ export_args $(cat /proc/cmdline | sed -e 's/"[^"]*"/DROPPED/g') 1> /dev/null
 #################
 
 export aroot="/usr/share/aurora"
-releaseBuild=1
-shimroot="/shimroot"
-recoroot="/recoroot"
-rogged=$((RANDOM % 100))
-debug=$(lsbval debug /etc/aurora)
+export releaseBuild=1
+export shimroot="/shimroot"
+export recoroot="/recoroot"
+export rogged=$((RANDOM % 100))
+export debug=$(lsbval debug /etc/aurora)
 alias ls='ls --color=auto'
 alias dir='dir --color=auto'
 alias grep='grep --color=auto'
@@ -563,7 +563,7 @@ wifi() {
     chmod +x /usr/bin/bigtext
     bigtext wifi
     stty echo
-    wifidevice=$(ip link | grep -E "^[0-9]+: " | grep -oE '^[0-9]+: [^:]+' | awk '{print $2}' | grep -E '^wl' | head -n1)
+    export wifidevice=$(ip link | grep -E "^[0-9]+: " | grep -oE '^[0-9]+: [^:]+' | awk '{print $2}' | grep -E '^wl' | head -n1)
     if cat /sys/devices/virtual/dmi/id/product_name 2>$TTY4 | grep -Eqi 'treeya|barla' 2>$TTY4; then
         fail "Barla/Treeya wifi unsupported. Please contact @kxtzownsu on discord"
     fi
@@ -653,7 +653,7 @@ if [ -e "/etc/wpa_supplicant.conf" ]; then
         sleep 1
     done
     echo -e "[${GEEN_B}+${COLOR_RESET}] Connecting to wifi" | center
-    wifidevice=$(ip link | grep -E "^[0-9]+: " | grep -oE '^[0-9]+: [^:]+' | awk '{print $2}' | grep -E '^wl' | head -n1)
+    export wifidevice=$(ip link | grep -E "^[0-9]+: " | grep -oE '^[0-9]+: [^:]+' | awk '{print $2}' | grep -E '^wl' | head -n1)
     ifconfig "$wifidevice" down
     pkill -12 udhcpc
     pkill udhcpc 2>$TTY4
@@ -707,7 +707,7 @@ while true; do
     eval "setup"
     clear
     hostname $(cat /etc/hostname)
-    wifidevice=$(ip link 2>$TTY4 | grep -E "^[0-9]+: " | grep -oE '^[0-9]+: [^:]+' | awk '{print $2}' | grep -E '^wl' | head -n1)
+    export wifidevice=$(ip link 2>$TTY4 | grep -E "^[0-9]+: " | grep -oE '^[0-9]+: [^:]+' | awk '{print $2}' | grep -E '^wl' | head -n1)
     splash
     errormessage
     export errormsg=""
