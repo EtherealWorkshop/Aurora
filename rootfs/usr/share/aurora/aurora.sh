@@ -633,6 +633,7 @@ menu2_actions=(
 ## STARTUP ##
 #############
 
+clear
 splash
 printf '\033c' > $TTY4
 bigtext log >>$TTY4
