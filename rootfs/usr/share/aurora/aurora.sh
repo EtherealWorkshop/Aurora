@@ -448,7 +448,7 @@ aftggp() {
     kill $(ps aux | grep "python3 /usr/share/ggp/" | grep -v grep | awk '{print $1}') 2>$TTY4
     rm -f /etc/aftggp
     read_center -d "Enter Password for AFT: " readpassword
-    readpassword
+    export readpassword
     python3 /usr/share/ggp/GGP.py > $TTY4 2>&1 &
     touch /etc/aftggp
 }
@@ -695,12 +695,12 @@ for chmod in /usr/bin/aurorabuildenv; do
     chmod +x $chmod
 done
 clear
-page=1 updatedpage=0
+export page=1 updatedpage=0
 while true; do
 	if ((page <= 0)); then
-		page=2
+		export page=2
 	elif ((page >= 3)); then
-		page=1
+		export page=1
 	fi
     export TERM=xterm-256color
     stty $stty
