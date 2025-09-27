@@ -32,7 +32,7 @@ if [ -n "$shimsize" ]; then
         G) shimsize=$(echo "(${sizenum}*1024*1024)/1" | bc) ;;
         T) shimsize=$(echo "(${sizenum}*1024*1024*1024)/1" | bc) ;;
     esac
-    export shimsize
+    shimsize
 fi
 
 if [ -z "$1" ]; then
@@ -53,7 +53,7 @@ if [ -n "$deps" ]; then
 fi
 
 if [ -n "$board" ]; then
-    export shim="./${board}.bin"
+    shim="./${board}.bin"
     if [ ! -f "$shim" ]
     then
         wget -q --show-progress "https://github.com/AerialiteLabs/sh1mmer/releases/download/v1.0.0/${board}.bin" -O "$shim" || {
@@ -62,17 +62,17 @@ if [ -n "$board" ]; then
     fi
 fi
 
-export aurorashim="./aurora-$(basename "$shim")"
+aurorashim="./aurora-$(basename "$shim")"
 
 temproot=$(mktemp -d)
 loopdev=$(losetup -Pf --show $shim)
 mount -o ro "${loopdev}p3" "$temproot"
 
-export hostarch=$(uname -m)
-export arch=x86_64
+hostarch=$(uname -m)
+arch=x86_64
 if [ -f "$temproot/bin/bash" ]; then
     case "$(file -b "$temproot/bin/bash" | awk -F ', ' '{print $2}' | tr '[:upper:]' '[:lower:]')" in
-        *aarch64* | *armv8* | *arm*) export arch=aarch64 ;;
+        *aarch64* | *armv8* | *arm*) arch=aarch64 ;;
     esac
 fi
 

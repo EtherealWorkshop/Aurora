@@ -72,9 +72,9 @@ while [[ $# -gt 0 ]]; do
         if [[ -n "${map_flags[$flag]}" ]]; then
             key="${map_flags[$flag]}"
             case "${flag_args[$key]}" in
-                1) export "$key"="$value" ;;
-                2) read -ra arr <<< "$value"; export "$key"="${arr[*]}" ;;
-                0) export "$key"=true ;;
+                1) "$key"="$value" ;;
+                2) read -ra arr <<< "$value"; "$key"="${arr[*]}" ;;
+                0) "$key"=true ;;
             esac
             shift
             continue
@@ -88,10 +88,10 @@ while [[ $# -gt 0 ]]; do
         key="${map_flags[$arg]}"
         flag_type="${flag_args[$key]}"
         case "$flag_type" in
-            0) export "$key"=true
+            0) "$key"=true
                shift ;;
             1) if [[ -n "$2" && "$2" != -* ]]; then
-                   export "$key"="$2"
+                   "$key"="$2"
                    shift 2
                else
                    echo "$arg [$key] requires a value" >&2
@@ -103,7 +103,7 @@ while [[ $# -gt 0 ]]; do
                    vals+=("$1")
                    shift
                done
-               export "$key"="${vals[*]}" ;;
+               "$key"="${vals[*]}" ;;
         esac
     elif [[ "$arg" == "--" ]]; then
         shift

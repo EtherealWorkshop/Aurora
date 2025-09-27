@@ -8,21 +8,25 @@
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 # WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
 # DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE 
-# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# THE COPYRIGHT HOLDERS, SPECIFICALLY SOPHIA, ARE NOT LIABLE FOR BAD CODE
+# BY USING THIS SOFTWARE, YOU ALSO AGREE THAT AERIALITE LABS HAS
+# THE LEGAL RIGHTS TO YOUR FIRSTBORN CHILD, AND MAY STEAL ANY OF
+# YOUR CHILDREN AND THROW THEM ON A ROAD DURING ONCOMING TRAFFIC.
+# DAMAGES INCLUDE, BUT ARE NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION HOWEVER
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
 # TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 # THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-export COLOR_RESET="\033[0m"
-export RED_B="\033[1;31m"
-export GEEN_B="\033[1;32m"
-export YELLOW_B="\033[1;33m"
-export BLUE_B="\033[1;34m"
-export MAGENTA_B="\033[1;35m"
-export PINK_B="\x1b[1;38;2;235;170;238m"
-export CYAN_B="\033[1;36m"
+COLOR_RESET="\033[0m"
+RED_B="\033[1;31m"
+GEEN_B="\033[1;32m"
+YELLOW_B="\033[1;33m"
+BLUE_B="\033[1;34m"
+MAGENTA_B="\033[1;35m"
+PINK_B="\x1b[1;38;2;235;170;238m"
+CYAN_B="\033[1;36m"
 
 
 cleanup() {
@@ -40,9 +44,9 @@ lsbval() {
   }" "$lsbfile"
 }
 
-source ./checks $@
+. checks $@
 
-export verbose="${verbose:=false}"
+verbose="${verbose:=false}"
 
 if [ -z "$shim" ] || echo "$shim" | grep -vq ".bin"; then
   echo_c "Please run on a raw shim." RED_B
@@ -50,19 +54,15 @@ fi
 
 auroraboot=$(mktemp -d)
 rootfs=$(mktemp -d)
-
 rm -rf "$rootfs" "$auroraboot"
 mkdir -p "$rootfs" "$auroraboot"
 
 [ -z "rootfs/usr/share/aurora/aurora.sh" ] && echo_c "Please run in the base directory of Aurora." RED_B
-
-
 if findmnt -T "$rootfs" -o OPTIONS -n | grep -qE 'noexec|nodev'; then
     mount -o remount,dev,exec "$(findmnt -T "$rootfs" -o TARGET -n)"
 fi
 
 rm -f "$aurorashim"
-
 
 if [ -z "$shims" ] && [ -z "$recovery" ] && [ -z "$shimsize" ]; then
   echo_c "Creating shim with size 694200KB" GEEN_B
@@ -150,7 +150,7 @@ mount -o ro "$chromeos" "$tempmount"
 if [ -d "$tempmount/lib/modules" ]; then
   cp -ar "$tempmount/lib/modules" $rootfs/lib/
   cp -ar "$tempmount/etc/lsb-release" $rootfs/etc/lsb-release
-  export boardname=$(lsbval CHROMEOS_RELEASE_BOARD)
+  boardname=$(lsbval CHROMEOS_RELEASE_BOARD)
   
   mkdir -p $rootfs/.crosenv/usr/bin $rootfs/.crosenv/lib64
   cp "$tempmount/usr/lib64/libpcre2-8.so*" $rootfs/.crosenv/lib64 2>/dev/null

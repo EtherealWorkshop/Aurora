@@ -8,8 +8,8 @@ canwifi apk add mpv yt-dlp
     killall frecon-lite
     mpv --vo=drm --volume=100 https://www.youtube.com/watch?v=9lNZ_Rnr7Jc ytdl-raw-options='ignore-config=,sub-langs="^en.*",write-subs=,write-auto-subs='
 )
-export TERM=xterm-256color
-export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+TERM=xterm-256color
+PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 busybox pkill -9 mpv || :
 busybox rm -rf /run/frecon
 frecon-lite --enable-vt1 --daemon --no-login --enable-vts --pre-create-vts --num-vts=8 --enable-gfx

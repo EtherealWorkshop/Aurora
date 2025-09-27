@@ -1,24 +1,5 @@
 #!/bin/bash
 
-# Copyright 2025 Aerialite Labs. All rights reserved.
-# Use of this source code is governed by the GNU AGPLv3 license
-# that can be found in the LICENSE.md file.
-
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
-# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE 
-# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-# THE COPYRIGHT HOLDERS, SPECIFICALLY SOPHIA, ARE NOT LIABLE FOR BAD CODE
-# BY USING THIS SOFTWARE, YOU ALSO AGREE THAT AERIALITE LABS HAS
-# THE LEGAL RIGHTS TO YOUR FIRSTBORN CHILD, AND MAY STEAL ANY OF
-# YOUR CHILDREN AND THROW THEM ON A ROAD DURING ONCOMING TRAFFIC.
-# DAMAGES INCLUDE, BUT ARE NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION HOWEVER
-# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
-# TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
-# THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 cd /
 source /usr/share/aurora/functions
 stty sane
@@ -37,11 +18,11 @@ export_args $(cat /proc/cmdline | sed -e 's/"[^"]*"/DROPPED/g') 1> /dev/null
 #################
 
 export aroot="/usr/share/aurora"
-export releaseBuild=1
-export shimroot="/shimroot"
-export recoroot="/recoroot"
-export rogged=$((RANDOM % 100))
-export debug=false
+releaseBuild=1
+shimroot="/shimroot"
+recoroot="/recoroot"
+rogged=$((RANDOM % 100))
+debug=$(lsbval debug /etc/aurora)
 alias ls='ls --color=auto'
 alias dir='dir --color=auto'
 alias grep='grep --color=auto'
@@ -66,7 +47,7 @@ installcros() {
 		return
 	else
         mapfile -t recochoose < <(find "$aroot/images/recovery" -type f)
-        reco_options=("${recochoose[@]}" "Exit") # haha 69
+        reco_options=("${recochoose[@]}" "Exit")
         while true; do
             menu "Choose the recovery image you want to boot" "${reco_options[@]}"
             choice=$?
@@ -85,7 +66,7 @@ installcros() {
     if [ ! "$confirmation" = "confirm" ]; then echo "Exiting..." | center; sleep 2; return; fi
     if (( $(cat /sys/class/power_supply/BAT0/capacity) <= 20 )) && [ "$(cat /sys/class/power_supply/BAT0/status)" != "Charging" ]; then
         fail "Battery Power below 20%. Please plug in your device."
-    fi
+    fi # haha 69
     mkdir -p $recoroot
     echo -e "Searching for ROOT-A on reco image" | center
     loop=$(losetup -fP --show $reco)
@@ -154,7 +135,7 @@ shimboot() {
     mkdir -p $shimroot
     echo -e "Searching for ROOT-A on shim" | center
     loop=$(losetup -Pf --show $shim)
-    export loop
+    loop
     loop_root="$(cgpt find -l ROOT-A "$loop" | head -n1)"
     if [ -z "$loop_root" ]; then
             loop_root="$(cgpt find -t rootfs "$loop" | head -n1)"
@@ -168,7 +149,7 @@ shimboot() {
     else
         fail "Failed to mount ROOT-A"
     fi
-    export skipshimboot=0
+    skipshimboot=0
     if ! stateful="$(cgpt find -l STATE ${loop} | head -n 1 | grep --color=never /dev/)"; then
         if ! stateful="$(cgpt find -l SH1MMER ${loop} | head -n 1 | grep --color=never /dev/)"; then
             for dev in "$loop"*; do
@@ -259,31 +240,6 @@ EOF
     fi
 }
 
-#chromium() {
-#    apk add --no-progress pcre-tools
-#    if [ ! -f /usr/sbin/setup-xorg-base ] && [ ! -f /usr/sbin/setup-devd ]; then
-#        mkdir -p "/tmp/apk-tools-static"
-#        wget -q --show-progress "https://dl-cdn.alpinelinux.org/alpine/latest-stable/main/$(uname -m)/$(echo "$(wget -qO- --show-progress "https://dl-cdn.alpinelinux.org/alpine/latest-stable/main/$(uname -m)/" | grep "apk-tools-static")" | pcregrep -o1 '"(.+?.apk)"')" -O "/tmp/apk-tools-static/pkg.apk"
-#        tar --warning=no-unknown-keyword -xzf "/tmp/apk-tools-static/pkg.apk" -C "/tmp/apk-tools-static"
-#        chmod +x /tmp/apk-tools-static/sbin/apk.static
-#        /tmp/apk-tools-static/sbin/apk.static --arch $(uname -m) -X http://dl-cdn.alpinelinux.org/alpine/edge/main/ -U --allow-untrusted --root "/" --initdb add alpine-base
-#        sync
-#    fi
-#    setup-xorg-base chromium gvfs font-dejavu openbox hsetroot
-#    rc-update add dbus sysinit
-#    openrc sysinit
-#    rm ~/.xinitrc
-#    cat <<EOF > ~/.xinitrc
-#openbox &
-#hsetroot -cover /usr/share/aurora/bg.png &
-#while true; do
-#    chromium --start-maximized --no-first-run --disable-infobars --disable-session-crashed-bubble --restore-last-session --no-sandbox
-#done
-#EOF
-#    killall frecon-lite
-#    startx
-#}
-
 ##################
 ## OPTIONS MENU ##
 ##################
@@ -311,31 +267,6 @@ payloads() {
         wait_enter
         return
     fi
-}
-
-crosrun() {
-    [ -f /usr/share/cros/usr/sbin/sh1mmer_main.sh ] || fail "Sh1mmer directory nonexistent."
-    cat /usr/share/cros/usr/sbin/sh1mmer_main.sh | grep -q "patched by aurora" || fail "Sh1mmer Unpatched (How???)"
-    stty echo
-    tput cnorm
-    mount --bind /usr/share/cros /usr/share/cros
-    for mnt in /dev /proc /sys; do
-        mkdir -p /usr/share/cros$mnt
-        mount --bind "$mnt" "/usr/share/cros$mnt"
-    done
-    case $1 in
-        shell) script="/bin/bash" ;;
-        unenrollment) script="/usr/sbin/unenrollment.sh" ;;
-        sh1mmer) script="/usr/sbin/sh1mmer.sh" ;;
-        aub) script="/usr/sbin/updateblocker.sh" ;;
-    esac
-    chmod +x "/usr/share/cros${script}"
-    TERM=linux
-    chroot /usr/share/cros /bin/bash -c "${script}"
-    for mnt in /dev /proc /sys; do
-        umount "/usr/share/cros$mnt"
-    done
-    umount /usr/share/cros
 }
 
 ##########
@@ -386,25 +317,44 @@ downloadshim() {
     chmod +x /usr/bin/bigtext
     bigtext download
     local release_board=$(lsbval CHROMEOS_RELEASE_BOARD 2>$TTY4)
-    export board_name=${release_board%%-*}
-    	options_download=(
-	    "Sh1mmer Legacy - AerialiteLabs/Sh1mmer/releases"
-	    "Shimboot - ading2210/shimboot/releases"
-        "Br0ker - ading2210/sh1mmer/releases"
-        "Custom Shim from URL"
-	)
+    board_name=${release_board%%-*}
+    options_download=()
+    if [ "$rogged" -eq 69 ]; then
+        options_download+=(
+            "Sh67mmer Legacy - AerialiteLabs/Sh67mmer/releases"
+        )
+    else
+        options_download+=(
+            "Sh1mmer Legacy - AerialiteLabs/Sh1mmer/releases"
+            "Shimboot - AerialiteLabs/shimboot/releases"
+            "Br0ker - ading2210/sh1mmer/releases"
+            "Custom Shim from URL"
+        )
+    fi
 
 	menu "Select an option (use ↑ ↓ arrows, Enter to select)" "${options_download[@]}"
 	download_choice=$?
 
-	case "$download_choice" in
-	    0) export FINALSHIM_URL="https://github.com/AerialiteLabs/sh1mmer/releases/download/v2.0.0/${board_name}.bin" ;;
-	    1) export FINALSHIM_URL="https://github.com/ading2210/shimboot/releases/download/v1.3.0/shimboot_${board_name}.zip" ;;
-        2) export FINALSHIM_URL="https://gh-releases.ading2210.workers.dev/ading2210/sh1mmer/releases/download/2025.9.19/sh1mmer_${board_name}_broker.zip" ;;
-	    *) tput cnorm
-           stty echo
-           read_center -d "Enter Shim URL: " FINALSHIM_URL ;;
-	esac
+    if [ "$rogged" -eq 69 ]; then
+        case "$download_choice" in
+            0) FINALSHIM_URL="https://github.com/AerialiteLabs/sh67mmer/releases/download/v67/sh67mmer-${board_name}.bin" ;;
+            1) FINALSHIM_URL="https://github.com/AerialiteLabs/sh1mmer/releases/download/v2.0.0/${board_name}.bin" ;;
+            2) FINALSHIM_URL="https://github.com/ading2210/shimboot/releases/download/v1.3.0/shimboot_${board_name}.zip" ;;
+            3) FINALSHIM_URL="https://gh-releases.ading2210.workers.dev/ading2210/sh1mmer/releases/download/2025.9.19/sh1mmer_${board_name}_broker.zip" ;;
+            *) tput cnorm
+            stty echo
+            read_center -d "Enter Shim URL: " FINALSHIM_URL ;;
+        esac
+    else
+        case "$download_choice" in
+            0) FINALSHIM_URL="https://github.com/AerialiteLabs/sh1mmer/releases/download/v2.0.0/${board_name}.bin" ;;
+            1) FINALSHIM_URL="https://github.com/ading2210/shimboot/releases/download/v1.3.0/shimboot_${board_name}.zip" ;;
+            2) FINALSHIM_URL="https://gh-releases.ading2210.workers.dev/ading2210/sh1mmer/releases/download/2025.9.19/sh1mmer_${board_name}_broker.zip" ;;
+            *) tput cnorm
+            stty echo
+            read_center -d "Enter Shim URL: " FINALSHIM_URL ;;
+        esac
+    fi
     shimtype=$(echo $FINALSHIM_URL | awk -F. '{print $NF}')
     if [ -z "$shimtype" ]; then
         fail "Invalid Shim URL"
@@ -434,7 +384,7 @@ downloadshim() {
 }
 
 updateshim() {
-    export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+    PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
     update-ca-certificates
     ntpd -q -p pool.ntp.org || true
     apk add --no-progress git >$TTY4 2>&1
@@ -443,7 +393,7 @@ updateshim() {
         rm -rf "$upd_dir"
     }
     trap cleanup EXIT
-    branch=$(auroraval origin)
+    branch=$(lsbval origin /etc/aurora)
     echo "Branch: $branch" | center
     if [ -d "/root/Aurora/.git" ]; then
         if ! git -C "/root/Aurora" pull origin "$branch" 2>&1 | center; then
@@ -470,7 +420,7 @@ updateshim() {
     chmod +x /usr/share/aurora/aurora.sh
     cp -f "$upd_dir/rootfs/usr/share/aurora/functions" /usr/share/aurora/functions
     chmod +x /usr/share/aurora/functions
-    sync # it shocks me people genuinely haven't learned you shouldn't reboot during updates. the fact i have to skidproof an update system is wild
+    sync
 
     rsync -a --inplace --exclude="sbin/init" --exclude="usr/share/aurora/aurora.sh" --exclude="usr/share/aurora/functions" "$upd_dir/rootfs/" /
     mv -f "$upd_dir/etc.aurora.bak" /etc/aurora
@@ -498,7 +448,7 @@ aftggp() {
     kill $(ps aux | grep "python3 /usr/share/ggp/" | grep -v grep | awk '{print $1}') 2>$TTY4
     rm -f /etc/aftggp
     read_center -d "Enter Password for AFT: " readpassword
-    export readpassword
+    readpassword
     python3 /usr/share/ggp/GGP.py > $TTY4 2>&1 &
     touch /etc/aftggp
 }
@@ -613,7 +563,7 @@ wifi() {
     chmod +x /usr/bin/bigtext
     bigtext wifi
     stty echo
-    export wifidevice=$(ip link | grep -E "^[0-9]+: " | grep -oE '^[0-9]+: [^:]+' | awk '{print $2}' | grep -E '^wl' | head -n1)
+    wifidevice=$(ip link | grep -E "^[0-9]+: " | grep -oE '^[0-9]+: [^:]+' | awk '{print $2}' | grep -E '^wl' | head -n1)
     if cat /sys/devices/virtual/dmi/id/product_name 2>$TTY4 | grep -Eqi 'treeya|barla' 2>$TTY4; then
         fail "Barla/Treeya wifi unsupported. Please contact @kxtzownsu on discord"
     fi
@@ -679,56 +629,20 @@ menu2_actions=(
     "clear && set-kernver"
 )
 
-menu3_options=(
-    "1. Open a Cros Terminal"
-    "2. Unenroll [Sh1mmer Deprovision, Cryptosmite, Br1ck, Icarus, Br0ker]"
-    "3. Sh1mmer"
-    "4. Block Updates"
-)
-menu3_actions=(
-    "crosrun shell"
-    "crosrun unenrollment"
-    "crosrun sh1mmer"
-    "crosrun aub"
-)
-
 #############
 ## STARTUP ##
 #############
 
-if $pid; then
-    clear
-    tput civis
-    echo -e "$CYAN_B"
-    cat <<'EOF' | center
-╒════════════════════════════════════════╕
-│ .    . .    '    +   *       o    .    │
-│+  '.                    '   .-.     +  │
-│          +      .    +   .   ) )     ''│
-│                   '  .      '-´  *.    │
-│     .    \      .     .  .  +          │
-│         .-o-'       '    .o        o   │
-│  *        \      *            +'       │
-│                '       '               │
-│        .*       .       o   o      .   │
-│              o     . *.                │
-│ 'o*           .        .'    .         │
-│              ┏┓   '. O           *     │
-│     .*       ┣┫┓┏┏┓┏┓┏┓┏┓  .    \      │
-│     o        ┛┗┗┛┛ ┗┛┛ ┗┻     +        │
-╘════════════════════════════════════════╛
-EOF
-    echo -e "${COLOR_RESET}"
-fi
+splash
 printf '\033c' > $TTY4
-echo "Logging" >>$TTY4
+bigtext log >>$TTY4
+script -qfc 'bigtext debug && stty sane && stty erase ^H && exec bash -l || exec busybox sh -l' /dev/null >$TTY3
 
 for wifi in iwlwifi iwlmvm ccm 8021q rtw88 rtwpci ath10k_sdio mt7921e mt7921s mt76 rtw88_8822ce rtw8821ce rtw89pci; do
     modprobe -r "$wifi" 2>$TTY4 || true
     modprobe "$wifi" 2>$TTY4
 done
 modprobe -a iwlwifi iwlmvm ccm 8021q rtw88 rtwpci ath10k_sdio mt7921e mt7921s mt76 rtw88_8822ce rtw8821ce rtw89pci 2>$TTY4
-sleep 2
 if [ -e "/etc/wpa_supplicant.conf" ]; then
     ls /etc/wpa_supplicant.conf >$TTY4 2>&1
     for i in $(seq 1 60); do
@@ -738,7 +652,7 @@ if [ -e "/etc/wpa_supplicant.conf" ]; then
         sleep 1
     done
     echo -e "[${GEEN_B}+${COLOR_RESET}] Connecting to wifi" | center
-    export wifidevice=$(ip link | grep -E "^[0-9]+: " | grep -oE '^[0-9]+: [^:]+' | awk '{print $2}' | grep -E '^wl' | head -n1)
+    wifidevice=$(ip link | grep -E "^[0-9]+: " | grep -oE '^[0-9]+: [^:]+' | awk '{print $2}' | grep -E '^wl' | head -n1)
     ifconfig "$wifidevice" down
     pkill -12 udhcpc
     pkill udhcpc 2>$TTY4
@@ -766,33 +680,33 @@ if [ -e "/etc/wpa_supplicant.conf" ]; then
 
     if [ $connected -eq 0 ]; then
         echo -e "[${RED_B}-${COLOR_RESET}] No nearby saved networks found" | center
-#    else
-#        updateshim
-#        sync
+    elif [ "$(lsbval auto_update /etc/aurora)" == "1" ]; then
+        updateshim
+        sync
     fi
 fi
 
 
 release_board=$(lsbval CHROMEOS_RELEASE_BOARD 2>$TTY4)
-export board_name=${release_board%%-*}
+board_name=${release_board%%-*}
 
 for chmod in /usr/bin/aurorabuildenv; do
     chmod +x $chmod
 done
 clear
-export page=1 updatedpage=0
+page=1 updatedpage=0
 while true; do
 	if ((page <= 0)); then
-		export page=2
+		page=2
 	elif ((page >= 3)); then
-		export page=1
+		page=1
 	fi
     export TERM=xterm-256color
     stty $stty
     eval "setup"
     clear
     hostname $(cat /etc/hostname)
-    export wifidevice=$(ip link 2>$TTY4 | grep -E "^[0-9]+: " | grep -oE '^[0-9]+: [^:]+' | awk '{print $2}' | grep -E '^wl' | head -n1)
+    wifidevice=$(ip link 2>$TTY4 | grep -E "^[0-9]+: " | grep -oE '^[0-9]+: [^:]+' | awk '{print $2}' | grep -E '^wl' | head -n1)
     splash
     errormessage
     export errormsg=""

@@ -29,7 +29,7 @@ else
 fi
 
 debug_run() {
-    if $debug; then
+    if [ "$debug" == "0" ]; then
         echo -n "run $@? (enter)"
         read
         $@
@@ -239,14 +239,6 @@ term_login() {
     export username="root"
 }
 
-
-echo_c() {
-    local text="$1"
-    local color_variable="$2"
-    local color="${!color_variable}"
-    echo -e "${color}${text}${COLOR_RESET}"
-}
-
 echo_menu() {
     local text="$1"
     while IFS= read -r line; do
@@ -394,22 +386,6 @@ lsbval() {
     }" "${lsbfile}"
 }
 
-auroraval() {
-  local key="$1"
-  local lsbfile="${2:-/etc/aurora}"
-
-  if ! echo "${key}" | grep -Eq '^[a-zA-Z0-9_]+$'; then
-    return 1
-  fi
-
-  sed -E -n -e \
-    "/^[[:space:]]*${key}[[:space:]]*=/{
-      s:^[^=]+=[[:space:]]*::
-      s:[[:space:]]+$::
-      p
-    }" "${lsbfile}"
-}
-
 versions() {
     echo ""
     local release_board=$(lsbval CHROMEOS_RELEASE_BOARD 2>$TTY4)
@@ -524,7 +500,7 @@ setupuser() {
 setup() {
     tput cnorm
     stty echo
-    if [ "$(auroraval setup)" == "1" ]; then
+    if [ "$(lsbval setup /etc/aurora)" == "1" ]; then
         clear
         splash
         echo -e "\nSetup Aurora" | center

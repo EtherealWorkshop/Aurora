@@ -1,13 +1,6 @@
 #!/bin/bash
 
-export COLOR_RESET="\033[0m"
-export RED_B="\033[1;31m"
-export GEEN_B="\033[1;32m"
-export YELLOW_B="\033[1;33m"
-export BLUE_B="\033[1;34m"
-export MAGENTA_B="\033[1;35m"
-export PINK_B="\x1b[1;38;2;235;170;238m"
-export CYAN_B="\033[1;36m"
+. /usr/share/aurora/functions
 
 stty echo
 tput cnorm
@@ -29,20 +22,20 @@ lsbval() {
 }
 
 release_board=$(lsbval CHROMEOS_RELEASE_BOARD 2>/dev/null)
-export board_name=${release_board%%-*}
+board_name=${release_board%%-*}
 
 downloadrawshim() {
-    export basebuildshim="$aroot/build/.$board_name.bin"
+    basebuildshim="$aroot/build/.$board_name.bin"
     if [ ! -f "$basebuildshim" ]; then
         echo "Downloading Raw Shim for $board_name [ https://github.com/AerialiteLabs/sh1mmer/releases/download/v1.0.0/${board_name}.bin ]"
         wget -q --show-progress "https://github.com/AerialiteLabs/sh1mmer/releases/download/v1.0.0/${board_name}.bin" -O "$basebuildshim"
     fi
 }
 
-export alpinebuild="$aroot/build/env/alpine"
-export crosbuild="$aroot/build/env/cros"
-export debianbuild="$aroot/build/env/debian"
-export archbuild="$aroot/build/env/arch"
+alpinebuild="$aroot/build/env/alpine"
+crosbuild="$aroot/build/env/cros"
+debianbuild="$aroot/build/env/debian"
+archbuild="$aroot/build/env/arch"
 mkdir -p "$alpinebuild" "$crosbuild" "$debianbuild" "$archbuild"
 
 aurorabuildenv-help() {
@@ -94,7 +87,7 @@ aurorabuildenv-create() {
     esac
     if [ "${buildenvname}" = "alpine" ]; then
         if [ ! -e "${aroot}/build/env/${buildenvname}/etc/.exists" ]; then
-            export alpinebuild="$aroot/build/env/alpine"
+            alpinebuild="$aroot/build/env/alpine"
             wget -q --show-progress "https://dl-cdn.alpinelinux.org/alpine/v3.22/releases/$(uname -m)/alpine-minirootfs-3.22.0-$(uname -m).tar.gz" -O alpine-minirootfs.tar.gz
             tar -xf alpine-minirootfs.tar.gz -C "$alpinebuild"
             rm -f "$alpinebuild/sbin/init"
@@ -118,7 +111,7 @@ EOF
         if [ ! -e "${aroot}/build/env/${buildenvname}/etc/.exists" ]; then
             mkdir -p "$crosbuild/shims"
             if cp "$basebuildshim" "$crosbuild/shims/$board_name.bin"; then
-                export crosbuild="$aroot/build/env/cros"
+                crosbuild="$aroot/build/env/cros"
                 crosbuildloopdev=$(losetup -Pf --show "$basebuildshim")
                 crosbuildlooproota=$(lsblk -pro NAME,PARTLABEL "$crosbuildloopdev" | grep "ROOT-A" | awk '{print $1}')
                 crosbuildtempdir=$(mktemp -d)
@@ -138,7 +131,7 @@ EOF
     if [ "${buildenvname}" = "debian" ]; then
         if [ ! -e "${aroot}/build/env/${buildenvname}/etc/.exists" ]; then
             arch=$(uname -m)
-            export debianbuild="$aroot/build/env/debian"
+            debianbuild="$aroot/build/env/debian"
             case "$arch" in
                 x86_64)   dbsarch=amd64 ;;
                 aarch64)  dbsarch=arm64 ;;
@@ -155,7 +148,7 @@ EOF
     fi
     if [ "${buildenvname}" = "arch" ]; then
         if [ ! -e "${aroot}/build/env/${buildenvname}/etc/.exists" ]; then
-            export archbuild="$aroot/build/env/arch"
+            archbuild="$aroot/build/env/arch"
             wget -q --show-progress https://raw.githubusercontent.com/tokland/arch-bootstrap/master/arch-bootstrap.sh -O arch-bootstrap.sh
             chmod +x arch-bootstrap.sh
             ./arch-bootstrap.sh "$archbuild"

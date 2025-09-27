@@ -2,7 +2,7 @@
 
 source /usr/share/aurora/functions
 chmod +x /usr/bin/hex2raw
-export TERM=xterm-256color
+TERM=xterm-256color
 
 set-kernver() {
     while true; do
