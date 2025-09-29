@@ -90,7 +90,7 @@ installcros() {
         mount -n --bind "${d}" "./${d}"
         mount --make-slave "./${d}"
     done
-    chroot ./ /usr/sbin/chromeos-install --payload_image="${loop}" --yes || fail "Failed during chroot!" --fatal
+    chroot ./ /usr/sbin/chromeos-install --skip_postinstall --payload_image="${loop}" --yes || fail "Failed during chroot!" --fatal
     get_partitions
     cgpt add -i 2 $cros_root_a -P 15 -T 15 -S 1 -R 1 || echo -e "${YELLOW_B}Failed to set kernel priority! Continuing anyway${COLOR_RESET}"
     clear
