@@ -182,6 +182,12 @@ shimboot() {
             cp /usr/share/patches/sh1mmer/$version/bootstrap/noarch/init_sh1mmer.sh /stateful/bootstrap/noarch/init_sh1mmer.sh && echo "Successfully patched bootstrap"
             cp /usr/share/patches/sh1mmer/$version/root/noarch/* -r /stateful/root/noarch/ && echo "Successfully patched root"
             chmod +x /stateful/bootstrap/noarch/init_sh1mmer.sh
+            for file in /usr/share/patches/payloads/*; do
+                [ -e "$file" ] || continue
+                filename=${file##*/}
+                rm /stateful/root/noarch/payloads/$filename
+                cp /usr/share/patches/payloads/$filename /stateful/root/noarch/payloads/$filename
+            done
             rm /stateful/root/noarch/payloads/autoupdate.sh
             cp /usr/share/patches/payloads/autoupdate.sh /stateful/root/noarch/payloads/autoupdate.sh
             canwifi rm /stateful/root/noarch/payloads/mrchromebox.sh
