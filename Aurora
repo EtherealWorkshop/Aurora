@@ -47,6 +47,7 @@ lsbval() {
 . checks $@
 
 verbose="${verbose:=false}"
+krill="${krill:=false}"
 
 if [ -z "$shim" ] || echo "$shim" | grep -vq ".bin"; then
   echo_c "Please run on a raw shim." RED_B
@@ -124,6 +125,7 @@ cp -r rootfs/. "$rootfs/"
 mkdir -p "$rootfs/usr/share/patches/sh1mmer"
 cp -r patches/sh1mmer/. "$rootfs/usr/share/patches/sh1mmer/"
 chroot "$rootfs" /bin/sh -c "export PATH=/sbin:/bin:/usr/sbin:/usr/bin && chmod +x /opt/setup_rootfs.sh && /opt/setup_rootfs.sh $arch"
+$krill && sed -i 's/shrimp=0/shrimp=1/' $rootfs/etc/aurora
 rm -f $rootfs/opt/setup_rootfs.sh
 echo_c "Done. Rootfs: $(du -sh $rootfs | awk '{print $1}')\n\n${BLUE_B}Downloading firmware..." GEEN_B
 git clone --depth=1 https://chromium.googlesource.com/chromiumos/third_party/linux-firmware $rootfs/lib/firmware/

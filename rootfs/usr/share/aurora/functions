@@ -308,8 +308,12 @@ menu() {
 }
 
 splash() {
-    if [ "$rogged" -eq 69 ]; then
+    if [ "$rogged" -eq 69 ] && [ "$(lsbval shrimp /etc/aurora)" == "0" ]; then
         doug
+        printf "\033[H"
+        clear
+    else if [ "$(lsbval shrimp /etc/aurora)" == "1" ]; then
+        shrimp
         printf "\033[H"
         clear
     fi

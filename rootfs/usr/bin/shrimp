@@ -1,0 +1,61 @@
+#!/bin/bash
+
+default() {
+    shrimp_frames=$(ls /root/shrimp/shrimp.png 2>/dev/null)
+    sleep=5
+    scale=5
+}
+default
+
+mkdir -p /root/shrimp
+cp /root/shrimp.png /root/shrimp/shrimp.png
+scale=1
+
+if curl -Is https://example.com | head -n 1 | grep -q "HTTP/"; then
+    if ! command -v convert >/dev/null 2>&1; then
+        apk add imagemagick
+    fi
+    response=$(curl -sL -X GET https://api.github.com/repos/ading2210/shrimple/contents/assets/gif)
+    if [ $? -ne 0 ]; then
+        default
+    else
+        shrimp_list=$(echo "$response" | jq '[.[] | select(.type == "file") | {name: .name, url: .download_url}]')
+        if [ "$(echo "$shrimp_list" | jq 'length')" -eq 0 ]; then
+            default
+        fi
+        num_shrimps=$(echo "$shrimp_list" | jq 'length')
+        random_shrimp=$(( $(od -An -N2 -i /dev/urandom) % num_shrimps ))
+        shrimp_file=$(echo "$shrimp_list" | jq -r ".[$random_shrimp].name")
+        shrimp_url=$(echo "$shrimp_list" | jq -r ".[$random_shrimp].url")
+
+        curl -sL "$shrimp_url" -o "/root/$shrimp_file"
+
+        if [ $? -ne 0 ]; then
+            default
+        fi
+        echo "found shrimp $shrimp_file"
+        convert "/root/$shrimp_file" "/root/shrimp/shrimp_%04d.png"
+        if [ $? -eq 0 ]; then
+            shrimp_frames=$(find /root/shrimp/ -name "shrimp_*.png" 2>/dev/null)
+            sleep=0.1
+            echo $shrimp_frames
+            sleep 3
+        else
+            default
+        fi
+    fi
+else
+    default
+fi
+tput civis
+stty -echo
+clear
+for shrimp in $shrimp_frames
+do
+    printf "\033]image:file=${shrimp};scale=${scale}\a"
+    sleep $sleep
+    rm ${shrimp}
+    clear
+done
+tput cnorm
+stty echo
