@@ -19,6 +19,11 @@ fi
 
 . rootfs/usr/bin/parse_flags "v,verbose,0 h,help,0 i,!board,image,shim,1 b,!shim,board,1 m,shimsize,1 s,shims,2 r,recovery,2 p,payloads,2" $@ || exit 1
 
+if [ -z "$board" ] && [ -z "$shim" ]; then
+    echo "Usage: sudo bash Aurora [-i /path/to/shim.bin]/[-b <board>]"
+    exit 1
+fi
+
 if [ -n "$shimsize" ]; then
     sizenum=${shimsize//[!0-9.]/}
     sizeformat=${shimsize//[0-9.]/}
@@ -33,11 +38,6 @@ if [ -n "$shimsize" ]; then
         T) shimsize=$(echo "(${sizenum}*1024*1024*1024)/1" | bc) ;;
     esac
     shimsize
-fi
-
-if [ -z "$1" ]; then
-    echo "Usage: sudo bash Aurora [-i /path/to/shim.bin]/[-b <board>]"
-    exit 1
 fi
 
 deps=""
