@@ -24,6 +24,11 @@ if [ -z "$board" ] && [ -z "$shim" ]; then
     exit 1
 fi
 
+if [ -z "$board" ] && [ ! -f "$shim" ]; then
+  echo_c "File does not exist. Please run on a raw shim." RED_B
+  exit 1
+fi
+
 if [ -n "$shimsize" ]; then
     sizenum=${shimsize//[!0-9.]/}
     sizeformat=${shimsize//[0-9.]/}

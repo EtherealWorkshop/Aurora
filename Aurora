@@ -49,10 +49,6 @@ lsbval() {
 verbose="${verbose:=false}"
 krill="${krill:=false}"
 
-if [ -z "$shim" ] || echo "$shim" | grep -vq ".bin"; then
-  echo_c "Please run on a raw shim." RED_B
-fi
-
 auroraboot=$(mktemp -d)
 rootfs=$(mktemp -d)
 rm -rf "$rootfs" "$auroraboot"
