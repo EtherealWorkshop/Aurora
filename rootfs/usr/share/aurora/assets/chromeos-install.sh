@@ -931,9 +931,24 @@ main() {
   elif [ -n "${PARTITION_NUM_MINIOS_B}" ]; then
     copy_partition "${PARTITION_NUM_MINIOS_B}" "${SRC}" "${DST}" 1 1 false # 10
   fi
-
+  vpd -i RW_VPD -s check_enrollment=0
+  vpd -i RW_VPD -s block_devmode=0
+  crossystem block_devmode=0
+    if [ -e /etc/init/tcsd.conf ]; then
+        initctl stop tcsd || :
+        if tpmc getp 0x100a >/dev/null 2>&1; then
+            tpmc clear
+            tpmc def 0x100a 0x28 0x12000
+            tpmc write 0x100a 76 28 10 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+        fi
+    else
+        res=$(cryptohome --action=get_firmware_management_parameters 2>&1)
+        if [ $? -eq 0 ] && ! echo "$res" | grep -q "Unknown action"; then
+            tpm_manager_client take_ownership
+            cryptohome --action=remove_firmware_management_parameters
+        fi
+    fi
   do_post_install
-  sh
   # Force data to disk before we declare done.
   sync
   cleanup
