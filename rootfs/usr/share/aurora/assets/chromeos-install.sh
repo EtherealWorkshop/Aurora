@@ -948,6 +948,11 @@ main() {
             cryptohome --action=remove_firmware_management_parameters
         fi
     fi
+    vpd -i RW_VPD -s check_enrollment=0 -s block_devmode=1 || : # block_devmode=1 required
+    crossystem disable_dev_request=1 || :
+    crossystem disable_dev_request=1
+    crossystem block_devmode=1 || :
+    crossystem block_devmode=1
   do_post_install
   # Force data to disk before we declare done.
   sync
