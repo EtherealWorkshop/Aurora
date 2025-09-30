@@ -90,6 +90,7 @@ installcros() {
         mount -n --bind "${d}" "./${d}"
         mount --make-slave "./${d}"
     done
+    chmod +x /usr/share/aurora/assets/chromeos-install.sh
     mount -n --bind /usr/share/aurora/assets/chromeos-install.sh ./usr/sbin/chromeos-install.sh
     chroot ./ /usr/sbin/chromeos-install --payload_image="${loop}" --yes || fail "Failed during chroot!" --fatal
     get_partitions
