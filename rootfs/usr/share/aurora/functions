@@ -312,7 +312,7 @@ splash() {
         doug
         printf "\033[H"
         clear
-    else if [ "$(lsbval shrimp /etc/aurora)" == "1" ]; then
+    elif [ "$(lsbval shrimp /etc/aurora)" == "1" ]; then
         shrimp
         printf "\033[H"
         clear
