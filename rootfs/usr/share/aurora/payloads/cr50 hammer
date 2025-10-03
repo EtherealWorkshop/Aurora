@@ -4,8 +4,8 @@ source /usr/share/aurora/functions
 tput civis
 stty -echo
 clear
-printf "\033]image:file=/root/.img/douglas.png;scale=1\a"
-sleep 5
+printf "\033]image:file=/root/.img/tuff.png;scale=2\a"
+read -n1
 clear
 tput cnorm
 stty echo

@@ -253,6 +253,7 @@ EOF
 
 payloads() {
     mapfile -t payloadchoose < <(find "$aroot/payloads" -maxdepth 1 -type f 2>$TTY4)
+    canwifi mapfile -t -O "${#payloadchoose[@]}" payloadchoose < <(find "$aroot/wifi_payloads" -maxdepth 1 -type f 2>$TTY4)
     options_payload=()
     for f in "${payloadchoose[@]}"; do
         options_payload+=("$(basename "$f")")
