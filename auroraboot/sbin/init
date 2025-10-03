@@ -3,10 +3,26 @@ clear
 export TTY1="/dev/tty1"
 [ -e /dev/pts/0 ] && export TTY1="/dev/pts/0"
 /bin/busybox --install /bin || true
+
+lsbval() {
+  local key="$1" lsbfile="${2:-/auroraroot/etc/aurora}"
+  echo "$key" | grep -Eq '^[a-zA-Z0-9_]+$' || return 1
+  sed -E -n -e "/^[[:space:]]*${key}[[:space:]]*=/{
+    s:^[^=]+=[[:space:]]*::
+    s:[[:space:]]+$::
+    p
+  }" "$lsbfile"
+}
+
 dev_partition=$(blkid | grep 'LABEL="Aurora"' | awk -F: '{print $1}' | head -n1 || true)
 chmod +x /resize
-bash /resize >/dev/null
+if [ "$(lsbval setup)" == "1" ]; then
+    bash /resize  < "$TTY1" >> "$TTY1" 2>&1
+fi
 mkdir -p /auroraroot
 mount $dev_partition /auroraroot || sleep infinity
+if $shimboot; then
+    sed -i 's/shimboot=0/shimboot=1/' /auroraroot/etc/aurora
+fi
 chmod +x /auroraroot/sbin/init /auroraroot/usr/share/aurora/aurora.sh
 exec switch_root /auroraroot /sbin/init < "$TTY1" >> "$TTY1" 2>&1
