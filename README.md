@@ -61,7 +61,6 @@ Download Balena Etcher, select your USB, select board-aurora.bin.
 
 ### ChromeOS (personal/unenrolled device)
 Download a prebuilt, get the [Chromebook Recovery Utility](https://chromewebstore.google.com/detail/chromebook-recovery-utili/pocpnlppkickgojjlmhdmidojbmbodfm). Start CRU and click the gear icon in the top right, press "use local image" and navigate to the prebuilt. Select your USB, and let it do its thing. 
-Fun fact, you can also do this for stuff like badbr0ker, meaning you don't need a pc to unenroll now if you're willing to use prebuilts, just a chromebook!<br>
 # Booting
 After flashing, do the normal steps to boot sh1mmer, then plug it into your chromebook. It will automatically extend the rootfs to fill the rest of the drive. On future boots if you're connected to the internet it will automatically update itself. 
 You can then either download recovery images or shims in Aurora itself, or put them on Aurora via mounting the 4th partition of the device on another linux/chromeos machine and copying them into the relevant directory inside `/usr/share/aurora/images` on the mounted drive (there's images/recovery, images/shims, and images/gurt [yo]).
