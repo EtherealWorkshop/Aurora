@@ -534,4 +534,6 @@ setup() {
         esac
         sed -i 's/setup=1/setup=0/' /etc/aurora
     fi
+    tput civis
+    stty -echo
 }

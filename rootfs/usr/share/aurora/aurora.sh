@@ -731,7 +731,7 @@ while true; do
 	fi
     export TERM=xterm-256color
     stty $stty
-    eval "setup"
+    setup
     clear
     hostname $(cat /etc/hostname)
     export wifidevice=$(ip link 2>$TTY4 | grep -E "^[0-9]+: " | grep -oE '^[0-9]+: [^:]+' | awk '{print $2}' | grep -E '^wl' | head -n1)
