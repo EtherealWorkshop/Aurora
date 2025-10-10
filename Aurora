@@ -249,10 +249,10 @@ if [ -n "$avail_kb3" ] && [ "$avail_kb3" -lt $((need_kb3)) ]; then
   exit 1
 fi
 if $verbose; then
-  rsync -avH --info=progress2 --delete "$auroraboot/." "$root_amount" 2>&1 | tee /tmp/rsync-boot.log || { echo "rsync failed; see /tmp/rsync-boot.log"; tail -n 200 /tmp/rsync-boot.log; du -sh "$auroraboot"; lsblk; exit 1; }
+  rsync -avH --info=progress2 --delete "$auroraboot/." "$root_amount" 2>&1
   sleep 10
 else
-  rsync -avH --info=progress2 --delete "$auroraboot/." "$root_amount" 2>/tmp/rsync-boot.log || { echo "rsync failed; see /tmp/rsync-boot.log"; tail -n 200 /tmp/rsync-boot.log; exit 1; }
+  rsync -avH --info=progress2 --delete "$auroraboot/." "$root_amount" >/dev/null 2>&1
 fi
 avail_kb4=$(( $(df --output=avail --block-size=1 "$root_bmount" | tail -n1 | tr -d ' ')/512 ))
 need_kb4=$(( $(du -s --block-size=1 "$rootfs" | awk '{print $1}')/512 ))
@@ -262,10 +262,10 @@ if [ -n "$avail_kb4" ] && [ "$avail_kb4" -lt $((need_kb4)) ]; then
   exit 1
 fi
 if $verbose; then
-  rsync -avH --info=progress2 --delete "$rootfs/." "$root_bmount" 2>&1 | tee /tmp/rsync-root.log || { echo "rsync failed; see /tmp/rsync-root.log"; tail -n 200 /tmp/rsync-root.log; du -sh "$rootfs"; lsblk; exit 1; }
+  rsync -avH --info=progress2 --delete "$rootfs/." "$root_bmount" 2>&1
   sleep 10
 else
-  rsync -avH --info=progress2 --delete "$rootfs/." "$root_bmount" 2>/tmp/rsync-root.log || { echo "rsync failed; see /tmp/rsync-root.log"; tail -n 200 /tmp/rsync-root.log; exit 1; }
+  rsync -avH --info=progress2 --delete "$rootfs/." "$root_bmount" >/dev/null 2>&1
 fi
 chmod +x "$root_amount/init" "$root_amount/sbin/init" "$root_amount/bootstrap.sh" 2>/dev/null || :
 chmod +x "$root_bmount/sbin/init" "$root_bmount/usr/bin/"* "$root_bmount/usr/share/aurora/"* 2>/dev/null || :
