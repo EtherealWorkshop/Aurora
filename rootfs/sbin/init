@@ -6,6 +6,13 @@ printf "\033[?25h"
 /bin/busybox --install -s /bin
 rm -f /init
 clear
+if [ -f /root/firmware.tar.zst ]; then
+    if [ ! -e /lib/firmware/.exists ]; then
+        mkdir -p /lib/firmware/
+        zstd -d -c /root/firmware.tar.zst | tar -C / -xf -
+        rm -f /root/firmware.tar.zst
+    fi
+fi
 export TTY1="/dev/tty1"
 export TTY2="/dev/tty2"
 export TTY3="/dev/tty4"

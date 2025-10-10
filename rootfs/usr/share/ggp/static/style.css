@@ -1,14 +1,9 @@
-@font-face {
-    font-family: 'Terminus';
-    src: url('../Terminus.ttf');
-}
-
 body {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    font-family: "Terminus", monospace;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Roboto Mono', 'DejaVu Sans Mono', monospace;
     text-align: center;
     font-size: 1em;
     color: #FFFFFF;
@@ -31,7 +26,7 @@ a {
     padding: 0.5% 1.5%;
     margin: 0.5%;
     font-size: 3vh;
-    font-family: "Terminus", monospace;
+  font-family: 'Roboto Mono', 'DejaVu Sans Mono', monospace;
     display: flex;
     justify-content: space-between;
     align-items: center;

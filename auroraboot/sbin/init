@@ -16,12 +16,12 @@ lsbval() {
 
 dev_partition=$(blkid | grep 'LABEL="Aurora"' | awk -F: '{print $1}' | head -n1 || true)
 chmod +x /resize
-if [ "$(lsbval setup)" == "1" ]; then
-    bash /resize  < "$TTY1" >> "$TTY1" 2>&1
+if [ "$(lsbval setup)" = "1" ]; then
+    /resize < "$TTY1" >> "$TTY1" 2>&1
 fi
 mkdir -p /auroraroot
-mount $dev_partition /auroraroot || sleep infinity
-if $shimboot; then
+mount "$dev_partition" /auroraroot || sleep infinity
+if [ "$shimboot" = "true" ] || [ "$shimboot" = "1" ]; then
     sed -i 's/shimboot=0/shimboot=1/' /auroraroot/etc/aurora
 fi
 chmod +x /auroraroot/sbin/init /auroraroot/usr/share/aurora/aurora.sh

@@ -308,10 +308,12 @@ downloadreco() {
     wget -q --show-progress "$FINAL_URL" -O "$aroot/images/recovery/$chromeVersion.zip" || {
         fail "Failed to download ChromeOS recovery image."
     }
-    FINAL_FILENAME=$(unzip -Z1 "$aroot/images/recovery/$chromeVersion.zip")
-    file "$aroot/images/recovery/$chromeVersion.zip" | grep -iq "zip" || {
-        fail "ChromeOS recovery archive corrupted."
-    }
+    FINAL_FILENAME=$(unzip -Z1 "$aroot/images/recovery/$chromeVersion.zip" 2>/dev/null || true)
+    if ! unzip -Z1 "$aroot/images/recovery/$chromeVersion.zip" >/dev/null 2>&1; then
+        if ! head -c4 "$aroot/images/recovery/$chromeVersion.zip" | od -An -t x1 | tr -d ' \n' | grep -iq '^504b0304$'; then
+            fail "ChromeOS recovery archive corrupted."
+        fi
+    fi
     unzip "$aroot/images/recovery/$chromeVersion.zip" -d "$aroot/images/recovery/" || {
         fail "Failed to unzip ChromeOS recovery archive."
     }
@@ -378,10 +380,12 @@ downloadshim() {
         fail "File does not exist."
     fi
     if [ "$shimtype" = "zip" ]; then
-        FINALSHIM_FILENAME=$(unzip -Z1 "$aroot/images/shims/$shimfile")
-        file "$aroot/images/shims/$shimfile" | grep -iq "zip" || {
-            fail "Shim archive corrupted."
-        }
+        FINALSHIM_FILENAME=$(unzip -Z1 "$aroot/images/shims/$shimfile" 2>/dev/null || true)
+        if ! unzip -Z1 "$aroot/images/shims/$shimfile" >/dev/null 2>&1; then
+            if ! head -c4 "$aroot/images/shims/$shimfile" | od -An -t x1 | tr -d ' \n' | grep -iq '^504b0304$'; then
+                fail "Shim archive corrupted."
+            fi
+        fi
         unzip "$aroot/images/shims/$shimfile" -d "$aroot/images/shims/" || {
             fail "Failed to unzip shim archive."
         }

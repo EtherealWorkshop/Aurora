@@ -6,10 +6,51 @@ echo_c() {
     local color="${!color_variable}"
     echo -e "${color}${text}${COLOR_RESET}"
 }
+
+get_order() {
+  local part_table=$(cgpt show -q "$1")
+  local physical_parts=$(awk '{print $1}' <<< "$part_table" | sort -n)
+  for part in $physical_parts; do
+    grep "^\s*${part}\s" <<< "$part_table" | awk '{print $3}'
+  done
+}
+
+squash_partitions() {
+  for part in $(get_order "$1"); do
+    sfdisk -N "$part" --move-data "$1" <<< "+, -" || :
+  done
+}
+
+truncate_image() {
+  local buffer=35
+  local sector_size=$(sfdisk -l "$1" 2>/dev/null | grep "^Sector size" | awk '{print $4}')
+  local final_sector=$(sfdisk -l -o end "$1" 2>/dev/null | grep "^\s*[0-9]" | awk '{print $1}' | sort -nr | head -n 1)
+  local end_bytes=$(((final_sector + buffer) * sector_size))
+  if [ -b "$1" ]; then
+    local loopdev=$(losetup -f)
+    losetup -P "$loopdev" "$1" --sizelimit "$end_bytes"
+    sgdisk -e "$loopdev" 2>&1 | sed 's/\a//g'
+    losetup -d "$loopdev"
+  else
+    truncate -s "$end_bytes" "$1"
+    sgdisk -e "$1" 2>&1 | sed 's/\a//g'
+  fi
+  [ -z "$2" ] || echo "$end_bytes" >"$2"
+}
+
 debug_msg() {
   if "$verbose"; then
     echo_c $@
   fi
+}
+
+verify_syntax() {
+    for script in $1; do
+        bash -n "$script" || {
+            echo_c "Syntax error in $script. Please create an issue at https://github.com/AerialiteLabs/Aurora/issues" RED_B
+            exit 1
+        }
+    done
 }
 
 if [ "$EUID" -ne 0 ]; then
