@@ -306,6 +306,12 @@ menu() {
     done
     return $selected
 }
+funText() {
+	splashText=($(cat /usr/share/aurora/.funText))
+  	selectedSplashText=${splashText[$RANDOM % ${#splashText[@]}]}
+	echo -e " "
+   	echo -e "$selectedSplashText${COLOR_RESET}"
+}
 
 splash() {
     if [ "$(lsbval shrimp /etc/aurora)" == "1" ]; then

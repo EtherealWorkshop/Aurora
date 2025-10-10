@@ -50,11 +50,9 @@ lsbval() {
 }
 
 . checks $@
-
 verbose="${verbose:=false}"
 krill="${krill:=false}"
 $verbose && set -x
-
 auroraboot=$(mktemp -d)
 rootfs=$(mktemp -d)
 rm -rf "$rootfs" "$auroraboot"
@@ -64,6 +62,8 @@ mkdir -p "$rootfs" "$auroraboot"
 if findmnt -T "$rootfs" -o OPTIONS -n | grep -qE 'noexec|nodev'; then
     mount -o remount,dev,exec "$(findmnt -T "$rootfs" -o TARGET -n)"
 fi
+verify_syntax auroraboot/opt/setup_auroraboot.sh auroraboot/sbin/init auroraboot/resize
+verify_syntax rootfs/etc/profile rootfs/opt/setup_rootfs.sh rootfs/sbin/init rootfs/sbin/init $(ls rootfs/usr/bin/*) rootfs/usr/share/aurora/aurora.sh rootfs/usr/share/aurora/functions
 rm -f "$aurorashim"
 kb=204800K
 if [ -z "$shims" ] && [ -z "$recovery" ] && [ -z "$shimsize" ]; then # haha 69
@@ -283,14 +283,9 @@ umount "$statemount" -l 2>/dev/null
 umount "$root_amount" -l 2>/dev/null
 umount "$root_bmount" -l 2>/dev/null
 
-squash_partitions $dev
-sync
 losetup -D
 rm -rf "$rootfs" "$auroraboot" "$statemount" "$root_amount" "$root_bmount"
 finalshim="${boardname}-aurora.bin"
-sync
-sleep 1
-truncate_image $aurorashim
 mv "$aurorashim" "$finalshim" 2>/dev/null
 
 echo -e "${MAGENTA_B}Credits"
