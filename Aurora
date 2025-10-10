@@ -29,14 +29,14 @@ MAGENTA_B="\033[1;35m"
 PINK_B="\x1b[1;38;2;235;170;238m"
 CYAN_B="\033[1;36m"
 
-
 cleanup() {
-    for dir in proc sys dev run; do umount -l "$rootfs/$dir"; done
-    umount $rootfs $auroraboot $statemount $root_amount $root_bmount
-    rm -rf "$rootfs" "$auroraboot" "$statemount" "$root_amount" "$root_bmount"
-    losetup -d $dev
-    losetup -d $shimdev
-    exit 1
+  umount $auroraboot/etc/resolv.conf -l 2>/dev/null
+  umount $rootfs/etc/resolv.conf -l 2>/dev/null
+  for dir in proc sys dev run; do umount -l "$rootfs/$dir"; done
+  umount $rootfs $auroraboot $statemount $root_amount $root_bmount
+  rm -rf "$rootfs" "$auroraboot" "$statemount" "$root_amount" "$root_bmount"
+  losetup -D $dev
+  exit 1
 }
 
 lsbval() {
@@ -64,14 +64,13 @@ mkdir -p "$rootfs" "$auroraboot"
 if findmnt -T "$rootfs" -o OPTIONS -n | grep -qE 'noexec|nodev'; then
     mount -o remount,dev,exec "$(findmnt -T "$rootfs" -o TARGET -n)"
 fi
-
 rm -f "$aurorashim"
-kb=694200K
+kb=204800K
 if [ -z "$shims" ] && [ -z "$recovery" ] && [ -z "$shimsize" ]; then # haha 69
   echo_c "Creating shim with size $kb" GEEN_B
   truncate -s $kb "$aurorashim"
 elif [ -n "$shims" ] || [ -n "$recovery" ] && [ $(df --output=avail / | tail -1) -gt $((15*1024*1024)) ]; then
-  shimsize=694200
+  shimsize=204800
   recovery=${recovery:=""}
   shims=${shims:=""}
   for image in $shims $recovery; do
@@ -88,7 +87,7 @@ elif [ -n "$shims" ] || [ -n "$recovery" ] && [ $(df --output=avail / | tail -1)
   echo_c "Shims: ${shims:="None"}" GEEN_B
   echo_c "Extra payloads: ${payloads:="None"}" GEEN_B
   truncate -s ${shimsize}K "$aurorashim"
-elif [ -n "$shimsize" ] && [ "$shimsize" -gt "694200" ] && [ $(df --output=avail / | tail -1) -gt $shimsize ]; then
+elif [ -n "$shimsize" ] && [ "$shimsize" -gt "204800" ] && [ $(df --output=avail / | tail -1) -gt $shimsize ]; then
   echo_c "Creating shim with size $(echo "scale=1; $shimsize/1024/1024" | bc)GB" GEEN_B
   truncate -s ${shimsize}K "$aurorashim"
 else
@@ -117,8 +116,15 @@ trap cleanup EXIT
 trap cleanup ERR
 
 rm -f $rootfs/etc/resolv.conf
-echo "nameserver 1.1.1.1" > "$rootfs/etc/resolv.conf"
+touch $rootfs/etc/resolv.conf
 cp -Lar "$rootfs/." "$auroraboot/"
+if grep -q "nameserver" /etc/resolv.conf; then
+  mount --bind /etc/resolv.conf $auroraboot/etc/resolv.conf
+  mount --bind /etc/resolv.conf $rootfs/etc/resolv.conf
+else
+  echo "nameserver 8.8.8.8" > $auroraboot/etc/resolv.conf
+  echo "nameserver 8.8.8.8" > $rootfs/etc/resolv.conf
+fi
 cp -r auroraboot/. "$auroraboot/"
 cp -r patches/shimboot/. "$auroraboot/"
 echo_c "Done. Rootfs: $(du -sh $rootfs | awk '{print $1}')\n\n${BLUE_B}Installing Bootloader Packages" GEEN_B
@@ -197,8 +203,8 @@ echo_c "Done. Rootfs: $(du -sh $rootfs | awk '{print $1}')\n\n${BLUE_B}Partition
 sgdisk --zap-all "$dev"
 sgdisk -n 1:2048:10239 -c 1:"STATE" "$dev"
 sgdisk -n 2:10240:75775 "$dev"
-sgdisk -n 3:75776:110657 -c 3:"AuroraBoot" "$dev"
-sgdisk -n 4:110658:0 -c 4:"Aurora" "$dev"
+sgdisk -n 3:75776:117999 -c 3:"AuroraBoot" "$dev"
+sgdisk -n 4:118000:0 -c 4:"Aurora" "$dev"
 sgdisk -t 3:3CB8E202-3B7E-47DD-8A3C-7FF2A13CFCEC "$dev"
 sgdisk -t 4:8300 "$dev"
 sgdisk -p "$dev"
@@ -236,8 +242,8 @@ rm -f "$auroraboot/bin/init"
 cp -ar auroraboot/. "$auroraboot"
 avail_kb3=$(( $(df --output=avail --block-size=1 "$root_amount" | tail -n1 | tr -d ' ')/512 ))
 need_kb3=$(( $(du -s --block-size=1 "$auroraboot" | awk '{print $1}')/512 ))
-if [ -n "$avail_kb3" ] && [ "$avail_kb3" -lt $((need_kb3 + 1024)) ]; then
-  echo_c "Not enough space on target partition for auroraboot. Need ${need_kb3}, have ${avail_kb3}" RED_B
+if [ -n "$avail_kb3" ] && [ "$avail_kb3" -lt $((need_kb3)) ]; then
+  echo_c "Not enough space on target partition for auroraboot. Need $((need_kb3-avail_kb3)) additional sectors." RED_B
   echo_c "$(du -sh "$auroraboot" | awk '{print $1}')" GEEN_B
   df -h "$root_amount"
   exit 1
@@ -250,8 +256,8 @@ else
 fi
 avail_kb4=$(( $(df --output=avail --block-size=1 "$root_bmount" | tail -n1 | tr -d ' ')/512 ))
 need_kb4=$(( $(du -s --block-size=1 "$rootfs" | awk '{print $1}')/512 ))
-if [ -n "$avail_kb4" ] && [ "$avail_kb4" -lt $((need_kb4 + 10240)) ]; then
-  echo_c "Not enough space on target partition for rootfs. Need ${need_kb4}, have ${avail_kb4}" RED_B
+if [ -n "$avail_kb4" ] && [ "$avail_kb4" -lt $((need_kb4)) ]; then
+  echo_c "Not enough space on target partition for rootfs. Need $((need_kb4-avail_kb4)) additional sectors." RED_B
   df -h "$root_bmount"
   exit 1
 fi
@@ -270,12 +276,15 @@ echo_c "Done. auroraboot: $(du -sh $auroraboot | awk '{print $1}')\n\n${BLUE_B}C
 trap - EXIT
 trap - ERR
 
+umount $auroraboot/etc/resolv.conf -l 2>/dev/null
+umount $rootfs/etc/resolv.conf -l 2>/dev/null
 umount "$statemount" "$root_amount" "$root_bmount"
 umount "$statemount" -l 2>/dev/null
 umount "$root_amount" -l 2>/dev/null
 umount "$root_bmount" -l 2>/dev/null
 
 squash_partitions $dev
+sync
 losetup -D
 rm -rf "$rootfs" "$auroraboot" "$statemount" "$root_amount" "$root_bmount"
 finalshim="${boardname}-aurora.bin"
