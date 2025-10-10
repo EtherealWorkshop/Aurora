@@ -179,17 +179,8 @@ shimboot() {
             if ! grep -q "rm -f /etc/resolv.conf" "$sh1mmerfile"; then
                 sed -i '/^#!\/bin\/bash$/a export PATH="/bin:/sbin:/usr/bin:/usr/sbin"\nrm -f /etc/resolv.conf\necho "nameserver 1.1.1.1" > /etc/resolv.conf' "$sh1mmerfile"
             fi
-            cp /usr/share/patches/sh1mmer/$version/bootstrap/noarch/init_sh1mmer.sh /stateful/bootstrap/noarch/init_sh1mmer.sh && echo "Successfully patched bootstrap"
-            cp /usr/share/patches/sh1mmer/$version/root/noarch/* -r /stateful/root/noarch/ && echo "Successfully patched root"
             chmod +x /stateful/bootstrap/noarch/init_sh1mmer.sh
-            for file in /usr/share/patches/payloads/*; do
-                [ -e "$file" ] || continue
-                filename=${file##*/}
-                rm /stateful/root/noarch/payloads/$filename
-                cp /usr/share/patches/payloads/$filename /stateful/root/noarch/payloads/$filename
-            done
             rm /stateful/root/noarch/payloads/autoupdate.sh
-            cp /usr/share/patches/payloads/autoupdate.sh /stateful/root/noarch/payloads/autoupdate.sh
             canwifi rm /stateful/root/noarch/payloads/mrchromebox.sh
             canwifi curl -sLk https://mrchromebox.tech/firmware-util.sh -o /stateful/root/noarch/payloads/mrchromebox.sh
             sync
@@ -220,11 +211,6 @@ shimboot() {
         clear
 
         mkdir -p /newroot/tmp/aurora
-        if [ -n "$specialshim" ]; then
-            rm -f /newroot/sbin/init
-            cp /usr/share/patches/sh1mmer/bootstrap/noarch/sbin/init /newroot/sbin/init
-            chmod +x /newroot/sbin/init
-        fi
         if [ -f "/newroot/bin/kvs" ]; then  
             chmod +x /newroot/bin/kvs
             cat <<EOF > /newroot/sbin/init
@@ -336,7 +322,6 @@ downloadshim() {
     else
         options_download+=(
             "Sh1mmer Legacy - AerialiteLabs/Sh1mmer/releases"
-            "Shimboot - AerialiteLabs/shimboot/releases"
             "Br0ker - ading2210/sh1mmer/releases"
             "Custom Shim from URL"
         )
@@ -349,8 +334,7 @@ downloadshim() {
         case "$download_choice" in
             0) FINALSHIM_URL="https://github.com/AerialiteLabs/sh67mmer/releases/download/v67/sh67mmer-${board_name}.bin" ;;
             1) FINALSHIM_URL="https://github.com/AerialiteLabs/sh1mmer/releases/download/v2.0.0/${board_name}.bin" ;;
-            2) FINALSHIM_URL="https://github.com/ading2210/shimboot/releases/download/v1.3.0/shimboot_${board_name}.zip" ;;
-            3) FINALSHIM_URL="https://gh-releases.ading2210.workers.dev/ading2210/sh1mmer/releases/download/2025.9.19/sh1mmer_${board_name}_broker.zip" ;;
+            2) FINALSHIM_URL="https://gh-releases.ading2210.workers.dev/ading2210/sh1mmer/releases/download/2025.9.19/sh1mmer_${board_name}_broker.zip" ;;
             *) tput cnorm
             stty echo
             read_center -d "Enter Shim URL: " FINALSHIM_URL ;;
@@ -358,8 +342,7 @@ downloadshim() {
     else
         case "$download_choice" in
             0) FINALSHIM_URL="https://github.com/AerialiteLabs/sh1mmer/releases/download/v2.0.0/${board_name}.bin" ;;
-            1) FINALSHIM_URL="https://github.com/ading2210/shimboot/releases/download/v1.3.0/shimboot_${board_name}.zip" ;;
-            2) FINALSHIM_URL="https://gh-releases.ading2210.workers.dev/ading2210/sh1mmer/releases/download/2025.9.19/sh1mmer_${board_name}_broker.zip" ;;
+            1) FINALSHIM_URL="https://gh-releases.ading2210.workers.dev/ading2210/sh1mmer/releases/download/2025.9.19/sh1mmer_${board_name}_broker.zip" ;;
             *) tput cnorm
             stty echo
             read_center -d "Enter Shim URL: " FINALSHIM_URL ;;
@@ -436,14 +419,12 @@ updateshim() {
 
     rsync -a --inplace --exclude="sbin/init" --exclude="usr/share/aurora/aurora.sh" --exclude="usr/share/aurora/functions" "$upd_dir/rootfs/" /
     mv -f "$upd_dir/etc.aurora.bak" /etc/aurora
-    rsync -a --delete /root/Aurora/patches/sh1mmer/ /usr/share/patches/sh1mmer/
     chmod +x /usr/share/aurora/* /usr/bin/* /sbin/init
     sync
     aurorabootmnt=$(mktemp -d)
     aurorabootdev=$(lsblk -pro NAME,PARTLABEL,MOUNTPOINT | awk '/AuroraBoot/ {print $1; exit}')
     mount "$aurorabootdev" "$aurorabootmnt"
     rsync -a --inplace /root/Aurora/auroraboot/ "$aurorabootmnt/"
-    rsync -a --inplace /root/Aurora/patches/shimboot/ "$aurorabootmnt/"
     chmod +x "$aurorabootmnt/bootstrap.sh" "$aurorabootmnt/sbin/init"
     sync
     umount $aurorabootmnt

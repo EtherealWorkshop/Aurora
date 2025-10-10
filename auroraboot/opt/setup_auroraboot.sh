@@ -8,6 +8,6 @@ https://dl-cdn.alpinelinux.org/alpine/edge/community
 https://dl-cdn.alpinelinux.org/alpine/edge/testing
 EOF
 
-apk add --no-cache e2fsprogs util-linux busybox parted >/dev/null 2>&1
+apk add --no-cache e2fsprogs parted >/dev/null 2>&1
 
-rm -rf /var/cache/apk/* || true
+rm -rf /var/cache/apk/* || truem

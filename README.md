@@ -65,16 +65,13 @@ Download a prebuilt, get the [Chromebook Recovery Utility](https://chromewebstor
 After flashing, do the normal steps to boot sh1mmer, then plug it into your chromebook. It will automatically extend the rootfs to fill the rest of the drive. On future boots if you're connected to the internet it will automatically update itself. 
 You can then either download recovery images or shims in Aurora itself, or put them on Aurora via mounting the 4th partition of the device on another linux/chromeos machine and copying them into the relevant directory inside `/usr/share/aurora/images` on the mounted drive (there's images/recovery, images/shims, and images/gurt [yo]).
 # Booting Other Shims
-- Here's a list of shims that are built in to not boot:
-  1. Raw shims  -  You don't need to boot a raw shim. The raw shim option in SH1MMER has also been removed when booted in Aurora.
-  2. Priism and IRS - Aurora is quite literally a merger of these two.
 - Here's a list of shims that we've tested and they work:
   1. SH1MMER (contains cryptosmite, icarus, and br0ker)
-  2. Shimboot (:3)
-  3. KVS
-  4. Aurora (great scott!)
+  2. KVS
+  3. Aurora (great scott!)
 - Here's a list of shims we're gonna make work and test:
-  1. Any future shims that are made
+  1. Shimboot (properly)
+  2. Any future shims that are made
 
 # Uploading Files via another computer
 1. Use AFT on page 2 (reccomended)

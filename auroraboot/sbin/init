@@ -1,18 +1,20 @@
 #!/bin/busybox sh
-clear
-export TTY1="/dev/tty1"
-[ -e /dev/pts/0 ] && export TTY1="/dev/pts/0"
+
+[ -e /dev/pts/0 ] && export TTY1="/dev/pts/0" || export TTY1="/dev/tty1"
+PATH="/usr/sbin:/usr/bin:/sbin:/bin"
 /bin/busybox --install /bin || true
 
-dev_partition=$(blkid | grep 'LABEL="Aurora"' | awk -F: '{print $1}' | head -n1 || true)
-chmod +x /resize
-if grep -q "setup=1" /auroraroot/etc/aurora; then
-    /resize < "$TTY1" >> "$TTY1" 2>&1
-fi
+export dev_partition=$(df -h | grep -w / | sed 's/3\(.*\)$/4\1/' | awk '{print $1}') # trust me its worth the extra megabyte of free space
+
 mkdir -p /auroraroot
 mount "$dev_partition" /auroraroot || sleep infinity
-if [ "$shimboot" = "true" ] || [ "$shimboot" = "1" ]; then
-    sed -i 's/shimboot=0/shimboot=1/' /auroraroot/etc/aurora
+
+if grep -q "setup=1" /auroraroot/etc/aurora; then
+  umount "$dev_partition" || sleep infinity
+  chmod +x /resize
+  /resize >/dev/null 2>&1
+  mount "$dev_partition" /auroraroot || sleep infinity
 fi
+
 chmod +x /auroraroot/sbin/init /auroraroot/usr/share/aurora/aurora.sh
 exec switch_root /auroraroot /sbin/init < "$TTY1" >> "$TTY1" 2>&1

@@ -1,5 +1,5 @@
 #!/bin/sh
-dev_partition=$(blkid | grep 'LABEL="Aurora"' | awk -F: '{print $1}')
+
 dev=$(printf '%s' "$dev_partition" | sed 's/[0-9]*$//' | sed 's/p$//')
 parted -fs "$dev" align-check opt 4
 parted -s "$dev" resizepart 4 100%
