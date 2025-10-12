@@ -157,6 +157,7 @@ shimboot() {
     mkdir -p $NEWROOT_MNT/tmp/aurora
     debug_run pivot_root $NEWROOT_MNT $NEWROOT_MNT/tmp/aurora || fail --fatal
     echo "Successfully switched root. Starting init..."
+    [ -f /bin/kvs ] && exec /bin/kvs
     exec /sbin/init || {
         echo "Failed to start init"
         echo "Bailing out, you are on your own. Good luck."
