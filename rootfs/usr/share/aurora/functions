@@ -491,6 +491,20 @@ pv_dircopy() {
 	tar -cf - -C "$1" . | pv -f -s "${apparent_bytes:-0}" | tar -xf - -C "$2"
 }
 
+patch_new_root() {
+    local NEWROOT_MNT="$1"
+    local REAL_USB_DEV="$2"
+    local bootstrap="${NEWROOT_MNT}/usr/sbin/factory_bootstrap.sh"
+    local flag="/tmp/bootstrap.failed"
+    if [ -x "${bootstrap}" ]; then
+        rm -f "${flag}"
+        "${bootstrap}" "${NEWROOT_MNT}" "${REAL_USB_DEV}"
+        if [ -e "${flag}" ]; then
+            return 1
+        fi
+    fi
+}
+
 setupuser() {
     read_center -d "Username: " username
     stty -echo

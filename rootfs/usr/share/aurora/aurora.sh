@@ -165,57 +165,56 @@ shimboot() {
         stateful="${loop}p1"
     fi
     echo_c "Found Stateful at $stateful" GEEN_B | center
-    if (( $skipshimboot == 0 )); then
-        mkdir -p /stateful
-        mkdir -p /newroot
-        mount -t tmpfs tmpfs /newroot -o "size=1024M" || fail "Failed to allocate 1GB to /newroot"
-        mount $stateful /stateful || fail "Failed to mount stateful!"
+    mkdir -p /stateful
+    mkdir -p /newroot
+    mount -t tmpfs tmpfs /newroot -o "size=1024M" || fail "Failed to allocate 1GB to /newroot"
+    mount $stateful /stateful || fail "Failed to mount stateful!"
 
-        copy_lsb
-        
-        echo "Copying rootfs to ram..." | center
-        pv_dircopy "$shimroot" /newroot
+    copy_lsb
+    
+    echo "Copying rootfs to ram..." | center
+    pv_dircopy "$shimroot" /newroot
 
-        mkdir -p "/newroot/dev" "/newroot/proc" "/newroot/sys" "/newroot/tmp" "/newroot/run"
-        mount -t tmpfs -o mode=1777 none /newroot/tmp
-        mount -t tmpfs -o mode=0555 run /newroot/run
-        mkdir -p -m 0755 /newroot/run/lock
+    mkdir -p "/newroot/dev" "/newroot/proc" "/newroot/sys" "/newroot/tmp" "/newroot/run"
+    mount -t tmpfs -o mode=1777 none /newroot/tmp
+    mount -t tmpfs -o mode=0555 run /newroot/run
+    mkdir -p -m 0755 /newroot/run/lock
 
-        for mnt in /dev /proc /sys; do
-            mount --move "$mnt" "/newroot$mnt"
-            umount -l "$mnt"
-        done
+    for mnt in /dev /proc /sys; do
+        mount --move "$mnt" "/newroot$mnt"
+        umount -l "$mnt"
+    done
 
-        if ! mountpoint -q /newroot/dev/pts; then
-            mount -t devpts devpts /newroot/dev/pts
-        fi
+    if ! mountpoint -q /newroot/dev/pts; then
+        mount -t devpts devpts /newroot/dev/pts
+    fi
 
-        echo "Done" | center
-        echo "About to switch root. If your screen goes black and the device reboots, please make a GitHub issue if you're sure your shim isn't corrupted" | center
-        echo "Switching root" | center
-        clear
+    echo "Done" | center
+    echo "About to switch root. If your screen goes black and the device reboots, please make a GitHub issue if you're sure your shim isn't corrupted" | center
+    echo "Switching root" | center
+    clear
 
-        mkdir -p /newroot/tmp/aurora
-        if [ -f "/newroot/bin/kvs" ]; then  
-            chmod +x /newroot/bin/kvs
-            cat <<EOF > /newroot/sbin/init
+    mkdir -p /newroot/tmp/aurora
+    if [ -f "/newroot/bin/kvs" ]; then  
+        chmod +x /newroot/bin/kvs
+        cat <<EOF > /newroot/sbin/init
 #!/bin/bash
 /bin/kvs
 EOF
-        fi
-        chmod +x /newroot/sbin/init
-        stty echo
-        tput cnorm
-        debug_run pivot_root /newroot /newroot/tmp/aurora
-        echo "Successfully switched root. Starting init..."
-        exec /sbin/init || {
-            echo "Failed to start init"
-            echo "Bailing out, you are on your own. Good luck."
-            echo "This shell has PID 1. Exit = panic"
-            echo $(/tmp/aurora/bin/uname -a)
-            exec /tmp/aurora/bin/sh
-        }
     fi
+    chmod +x /newroot/sbin/init
+    stty echo
+    tput cnorm
+    patch_new_root /newroot ${loop}
+    debug_run pivot_root /newroot /newroot/tmp/aurora
+    echo "Successfully switched root. Starting init..."
+    exec /sbin/init || {
+        echo "Failed to start init"
+        echo "Bailing out, you are on your own. Good luck."
+        echo "This shell has PID 1. Exit = panic"
+        echo $(/tmp/aurora/bin/uname -a)
+        exec /tmp/aurora/bin/sh
+    }
 }
 
 ##################
