@@ -478,7 +478,7 @@ wait_for_gpt_root() {
     local try kern_dev kern_num
     local root_dev root_num
     for try in $(seq 20); do
-        kern_dev="$(cgpt find -1 -u $KERN_ARG_KERN_GUID 2>/dev/null | uniq)"
+        kern_dev="$(cgpt find -l KERN-A ${USB_DEV})" || kern_dev="${USB_DEV}p2"
         kern_num=${kern_dev##[/a-z]*[/a-z]}
         for offset in 1 -1; do
         root_num=$(( kern_num + ${offset} ))
