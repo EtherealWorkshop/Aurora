@@ -132,9 +132,38 @@ shimboot() {
         done
 	fi
 
+    clear
     mkdir -p $shimroot
-    echo -e "Searching for ROOT-A on shim" | center
     loop=$(losetup -Pf --show $shim)
+    local INFO_TTY="$TTY2" LOG_TTY="$TTY3" DEBUG_TTY="$TTY4" USB_DEV="$loop"
+    echo "...:::||| Bootstrapping ChromeOS Factory Shim |||:::..."
+    echo "TTY: ${TTY}, LOG: ${LOG_TTY}, INFO: ${INFO_TTY}, DEBUG: ${DEBUG_TTY}"
+    export_args $(cat /proc/cmdline | sed -e 's/"[^"]*"/DROPPED/g')
+    echo "Kernel messages available in ${INFO_TTY}."
+    find_official_root
+
+    mount -n -t tmpfs tmpfs "$NEWROOT_MNT" -o "size=2048M"
+    tar -cf - -C "${USB_MNT}" . | pv -f 2>"${TTY}" | tar -xf - -C "${NEWROOT_MNT}"
+    patch_new_root
+    for mnt in /sys /proc /dev; do
+        mkdir -p "$NEWROOT_MNT$mnt"
+        mount -n -o move "$mnt" "$NEWROOT_MNT$mnt"
+    done
+    chmod +x /newroot/sbin/init
+    stty echo
+    tput cnorm
+    debug_run pivot_root /newroot /newroot/tmp/aurora
+    echo "Successfully switched root. Starting init..."
+    exec /sbin/init || {
+        echo "Failed to start init"
+        echo "Bailing out, you are on your own. Good luck."
+        echo "This shell has PID 1. Exit = panic"
+        echo $(/tmp/aurora/bin/uname -a)
+        exec /tmp/aurora/bin/sh
+    }
+
+    # old shimboot function below
+
     loop_root="$(cgpt find -l ROOT-A "$loop" | head -n1)"
     if [ -z "$loop_root" ]; then
             loop_root="$(cgpt find -t rootfs "$loop" | head -n1)"
@@ -205,7 +234,6 @@ EOF
     chmod +x /newroot/sbin/init
     stty echo
     tput cnorm
-    patch_new_root /newroot ${loop}
     debug_run pivot_root /newroot /newroot/tmp/aurora
     echo "Successfully switched root. Starting init..."
     exec /sbin/init || {

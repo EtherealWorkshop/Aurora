@@ -460,6 +460,71 @@ export_args() {
     echo ""
 }
 
+is_good_rootfs_partition() {
+  local root_dev="$1"
+  local sector_count
+  sector_count="$(cat "/sys/class/block/$(basename "${root_dev}")/size")"
+  local sector_count_threshold=1
+  [ "${sector_count}" -gt "${sector_count_threshold}" ]
+}
+
+strip_partition() {
+  local dev="${1%%[0-9]*}"
+  echo "${dev%p*}"
+}
+
+wait_for_gpt_root() {
+    [ -z "$KERN_ARG_KERN_GUID" ] && return 1
+    local try kern_dev kern_num
+    local root_dev root_num
+    for try in $(seq 20); do
+        kern_dev="$(cgpt find -1 -u $KERN_ARG_KERN_GUID 2>/dev/null | uniq)"
+        kern_num=${kern_dev##[/a-z]*[/a-z]}
+        for offset in 1 -1; do
+        root_num=$(( kern_num + ${offset} ))
+        root_dev="${kern_dev%${kern_num}}${root_num}"
+        if [ -b "${root_dev}" ] && is_good_rootfs_partition "${root_dev}"; then
+            USB_DEV="${root_dev}"
+            return 0
+        fi
+        done
+        sleep 1
+    done
+    return 1
+}
+
+mount_rootfs() {
+    local usb_dev
+    local kernel_command_line="$(cat /proc/cmdline)" USB_MNT="/usb"
+    usb_dev="${USB_DEV}"
+    for try in $(seq 20); do
+        if mount -n -o ro "$usb_dev" "$USB_MNT"; then
+        return 0
+        fi
+        sleep 1
+    done
+    return 1
+}
+
+patch_new_root() {
+  local bootstrap="${NEWROOT_MNT}/usr/sbin/factory_bootstrap.sh"
+  local flag="/tmp/bootstrap.failed"
+  if [ -x "${bootstrap}" ]; then
+    rm -f "${flag}"
+    "${bootstrap}" "${NEWROOT_MNT}" "${REAL_USB_DEV}"
+    if [ -e "${flag}" ]; then
+      return 1
+    fi
+  fi
+}
+
+find_official_root() {
+    wait_for_gpt_root
+    cgpt find -t rootfs "$(strip_partition "$USB_DEV")" || fail "An error has occured."
+    REAL_USB_DEV="$USB_DEV"
+    LOG_DEV="${USB_DEV%%[0-9]*}"1
+}
+
 copy_lsb() {
     echo "Copying lsb..."
 
@@ -489,20 +554,6 @@ pv_dircopy() {
 	apparent_bytes=$(du -sb "$1" | cut -f 1)
 	mkdir -p "$2"
 	tar -cf - -C "$1" . | pv -f -s "${apparent_bytes:-0}" | tar -xf - -C "$2"
-}
-
-patch_new_root() {
-    local NEWROOT_MNT="$1"
-    local REAL_USB_DEV="$2"
-    local bootstrap="${NEWROOT_MNT}/usr/sbin/factory_bootstrap.sh"
-    local flag="/tmp/bootstrap.failed"
-    if [ -x "${bootstrap}" ]; then
-        rm -f "${flag}"
-        "${bootstrap}" "${NEWROOT_MNT}" "${REAL_USB_DEV}"
-        if [ -e "${flag}" ]; then
-            return 1
-        fi
-    fi
 }
 
 setupuser() {
