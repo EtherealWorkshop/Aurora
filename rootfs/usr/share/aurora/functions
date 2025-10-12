@@ -450,7 +450,7 @@ export_args() {
     local key=
     local val=
     local acceptable_set='[A-Za-z0-9]_'
-    echo "Exporting kernel argument..." | center
+    echo "Exporting kernel argument..."
     for arg in "$@"; do
         key=$(echo "${arg%%=*}" | busybox tr 'a-z' 'A-Z' | busybox tr -dc "$acceptable_set" '_')
         val="${arg#*=}"
@@ -519,6 +519,7 @@ patch_new_root() {
 }
 
 find_official_root() {
+    set -x
     wait_for_gpt_root
     cgpt find -t rootfs "$(strip_partition "$USB_DEV")" || fail "An error has occured."
     REAL_USB_DEV="$USB_DEV"
