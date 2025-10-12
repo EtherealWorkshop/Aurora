@@ -9,8 +9,8 @@ clear
 if [ -f /root/firmware.tar.zst ]; then
     if [ ! -e /lib/firmware/.exists ]; then
         mkdir -p /lib/firmware/
-        zstd -d -c /root/firmware.tar.zst | tar -C / -xf -
-        rm -f /root/firmware.tar.zst
+        zstd -d -c /root/firmware.tar.zst | tar -C /lib/ -xf -
+        ! find /lib/firmware/ -maxdepth 0 -empty -quit && rm -f /root/firmware.tar.zst
     fi
 fi
 export TTY1="/dev/tty1"

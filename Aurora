@@ -65,7 +65,7 @@ fi
 verify_syntax auroraboot/opt/setup_auroraboot.sh auroraboot/sbin/init auroraboot/resize
 verify_syntax rootfs/etc/profile rootfs/opt/setup_rootfs.sh rootfs/sbin/init rootfs/sbin/init $(ls rootfs/usr/bin/*) rootfs/usr/share/aurora/aurora.sh rootfs/usr/share/aurora/functions
 rm -f "$aurorashim"
-kb=198497
+kb=198496
 if [ -z "$shims" ] && [ -z "$recovery" ] && [ -z "$shimsize" ]; then
   echo_c "Creating shim with size ${kb}KB" GEEN_B
   truncate -s ${kb}K "$aurorashim"
@@ -134,13 +134,15 @@ cp -r rootfs/. "$rootfs/"
 chroot "$rootfs" /bin/sh -c "export PATH=/sbin:/bin:/usr/sbin:/usr/bin && chmod +x /opt/setup_rootfs.sh && /opt/setup_rootfs.sh $arch"
 $krill && sed -i 's/shrimp=0/shrimp=1/' $rootfs/etc/aurora
 sed -i "s/origin=alpine/origin=$(git branch --show-current)/" $rootfs/etc/aurora
+sed -i "s/setup=0/setup=1/" $rootfs/etc/aurora
 rm -f $rootfs/opt/setup_rootfs.sh
 echo_c "Done. Rootfs: $(du -sh $rootfs | awk '{print $1}')\n\n${BLUE_B}Downloading firmware..." GEEN_B
 [ ! -d linux-firmware ] && git clone --depth=1 https://chromium.googlesource.com/chromiumos/third_party/linux-firmware
 cp -r linux-firmware/* $rootfs/lib/firmware/
 find "$rootfs/lib/firmware" -type f -not \( -path "*wifi*" -o -path "*rt*" -o -path "*ath*" -o -path "*mediatek*" \) -exec rm -rf {} + >/dev/null 2>&1
 touch "$rootfs/lib/firmware/.exists"
-tar -C "$(dirname "$rootfs/lib/firmware")" -cf - "$(basename "$rootfs/lib/firmware")" | sh -c "zstd -T0 -19 > '$rootfs/root/firmware.tar.zst'"
+echo_c "Done. Rootfs: $(du -sh $rootfs | awk '{print $1}')\n\n${BLUE_B}Compressing firmware..." GEEN_B
+tar -C "$(dirname "$rootfs/lib/firmware")" -cf - "$(basename "$rootfs/lib/firmware")" | zstd -T0 --ultra -22 > "$rootfs/root/firmware.tar.zst"
 rm -rf "$rootfs/lib/firmware"
 mkdir -p "$rootfs/lib/firmware"
 cp "./lib/$arch/frecon-lite" $rootfs/usr/bin/frecon-lite
@@ -200,8 +202,8 @@ echo_c "Done. Rootfs: $(du -sh $rootfs | awk '{print $1}')\n\n${BLUE_B}Partition
 sgdisk --zap-all "$dev"
 sgdisk -n 1:2048:10239 -c 1:"STATE" "$dev"
 sgdisk -n 2:10240:75775 "$dev"
-sgdisk -n 3:75776:104495 -c 3:"AuroraBoot" "$dev"
-sgdisk -n 4:104496:0 -c 4:"Aurora" "$dev"
+sgdisk -n 3:75776:105945 -c 3:"AuroraBoot" "$dev"
+sgdisk -n 4:105946:0 -c 4:"Aurora" "$dev"
 sgdisk -t 3:3CB8E202-3B7E-47DD-8A3C-7FF2A13CFCEC "$dev"
 sgdisk -t 4:8300 "$dev"
 sgdisk -p "$dev"

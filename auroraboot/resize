@@ -1,5 +1,6 @@
 #!/bin/sh
 
+set -x
 dev=$(printf '%s' "$dev_partition" | sed 's/[0-9]*$//' | sed 's/p$//')
 parted -fs "$dev" align-check opt 4
 parted -s "$dev" resizepart 4 100%

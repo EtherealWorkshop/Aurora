@@ -8,7 +8,7 @@ https://dl-cdn.alpinelinux.org/alpine/edge/community
 https://dl-cdn.alpinelinux.org/alpine/edge/testing
 EOF
 
-apk add --no-cache jq rsync cgpt unzip fastfetch lsblk wpa_supplicant curl coreutils bash openrc dbus ca-certificates sudo iw sfdisk wget tar xz losetup zstd >/dev/null
+apk add --no-cache ncurses jq rsync cgpt unzip fastfetch lsblk wpa_supplicant curl coreutils bash openrc dbus ca-certificates sudo iw sfdisk wget tar xz losetup zstd >/dev/null
 modules="$(ls /etc/modules-load.d)"
 for module in $modules; do
   cat "/etc/modules-load.d/$module" >> /etc/modules

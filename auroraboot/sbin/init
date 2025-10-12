@@ -1,20 +1,29 @@
 #!/bin/busybox sh
 
+shell() {
+  echo "Exited with error code $?. Fallback shell..."
+  set +x
+  /bin/busybox sh < "$TTY1" >> "$TTY1" 2>&1
+  exit 1
+}
+
+set -x
+
 [ -e /dev/pts/0 ] && export TTY1="/dev/pts/0" || export TTY1="/dev/tty1"
 PATH="/usr/sbin:/usr/bin:/sbin:/bin"
 /bin/busybox --install /bin || true
 
-export dev_partition=$(df -h | grep -w / | sed 's/3\(.*\)$/4\1/' | awk '{print $1}') # trust me its worth the extra megabyte of free space
+export dev_partition=$(blkid | grep 'LABEL="Aurora"' | awk -F: '{print $1}' | head -n1 || true)
 
 mkdir -p /auroraroot
-mount "$dev_partition" /auroraroot || sleep infinity
-
-if grep -q "setup=1" /auroraroot/etc/aurora; then
-  umount "$dev_partition" || sleep infinity
-  chmod +x /resize
-  /resize >/dev/null 2>&1
-  mount "$dev_partition" /auroraroot || sleep infinity
-fi
+chmod +x /resize
+/resize
+mount "$dev_partition" /auroraroot || shell
 
 chmod +x /auroraroot/sbin/init /auroraroot/usr/share/aurora/aurora.sh
-exec switch_root /auroraroot /sbin/init < "$TTY1" >> "$TTY1" 2>&1
+mkdir -p /auroraroot/tmp/auroraboot
+for dir in dev proc sys; do
+  mount -n -o move /$dir /auroraroot/$dir
+done
+pivot_root /auroraroot /auroraroot/tmp/auroraboot
+exec /sbin/init

@@ -584,7 +584,7 @@ menu1_options=(
 )
 
 menu1_actions=(
-    "clear && script -qfc 'stty sane && stty erase '^H' && exec bash -l || exec busybox sh -l' /dev/null"
+    "clear && bash -c 'stty sane && stty erase '^H' && exec bash -l || exec busybox sh -l'"
     "clear && installcros"
 )
 
@@ -616,7 +616,7 @@ menu2_options=(
     "4. Set Kernver"
 )
 menu2_actions=(
-    "clear && script -qfc 'stty sane && stty erase '^H' && exec bash -l || exec busybox sh -l' /dev/null"
+    "clear && bash -c 'stty sane && stty erase '^H' && exec bash -l || exec busybox sh -l'"
     "canwifi aftggp"
     "clear && canwifi aurorabuildenv"
     "clear && set-kernver"
