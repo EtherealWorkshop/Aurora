@@ -470,7 +470,6 @@ is_good_rootfs_partition() {
 
 strip_partition() {
     local dev="${1%p[0-9]*}"
-    dev="${dev%[0-9]}"
     echo "$dev"
 }
 
