@@ -227,6 +227,7 @@ fail() {
 term_login() {
     clear
     cat /etc/motd
+    echo
     for attempt in 1 2 3; do
         stty intr '' erase '^H'
         read -p "$(hostname) login: " username
