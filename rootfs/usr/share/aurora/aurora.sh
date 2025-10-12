@@ -156,7 +156,7 @@ shimboot() {
     set +x
     debug_run pivot_root $NEWROOT_MNT $NEWROOT_MNT/tmp/aurora
     echo "Successfully switched root. Starting init..."
-    /bootstrap/busybox sleep 10
+    /tmp/aurora/bin/busybox sleep 10
     exec /sbin/init || {
         echo "Failed to start init"
         echo "Bailing out, you are on your own. Good luck."
