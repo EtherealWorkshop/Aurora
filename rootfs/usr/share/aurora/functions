@@ -524,9 +524,7 @@ find_official_root() {
     cgpt find -t rootfs "$(strip_partition "$USB_DEV")" || fail "An error has occured."
     REAL_USB_DEV="$USB_DEV"
     LOG_DEV="${USB_DEV%p[0-9]*}p1"
-    /bin/bash
     mount_rootfs
-    /bin/bash
 }
 
 copy_lsb() {
