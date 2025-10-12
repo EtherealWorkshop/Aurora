@@ -197,7 +197,6 @@ for payload in $payloads; do
   [ -e "$payload" ] && cp $payload $rootfs/usr/share/aurora/payloads/
 done
 rm -f "$rootfs/sbin/init"
-cp -ar rootfs/. "$rootfs"
 echo_c "Done. Rootfs: $(du -sh $rootfs | awk '{print $1}')\n\n${BLUE_B}Partitioning shim..." "GEEN_B"
 sgdisk --zap-all "$dev"
 sgdisk -n 1:2048:10239 -c 1:"STATE" "$dev"
