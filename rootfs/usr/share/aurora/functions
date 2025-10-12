@@ -482,7 +482,7 @@ pv_dircopy() {
 	local apparent_bytes
 	apparent_bytes=$(du -sb "$1" | cut -f 1)
 	mkdir -p "$2"
-	tar -C /shimroot -cf - . | tar -C /newroot -xf -
+	tar -cf - -C "$1" . | pv -f -s "${apparent_bytes:-0}" | tar -xf - -C "$2"
 }
 
 setupuser() {
