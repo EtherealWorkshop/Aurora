@@ -38,6 +38,12 @@ debug_run() {
     fi
 }
 
+debug_msg() {
+  if $debug; then
+    echo_c $@
+  fi
+}
+
 get_largest_cros_blockdev() {
 	local largest size dev_name tmp_size remo
 	size=0
