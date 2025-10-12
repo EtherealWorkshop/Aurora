@@ -150,10 +150,10 @@ shimboot() {
         mkdir -p "$NEWROOT_MNT$mnt"
         mount -n -o move "$mnt" "$NEWROOT_MNT$mnt"
     done
-    chmod +x /newroot/sbin/init
+    chmod +x $NEWROOT_MNT/sbin/init
     stty echo
     tput cnorm
-    debug_run pivot_root /newroot /newroot/tmp/aurora
+    debug_run pivot_root $NEWROOT_MNT $NEWROOT_MNT/tmp/aurora
     echo "Successfully switched root. Starting init..."
     exec /sbin/init || {
         echo "Failed to start init"
