@@ -525,6 +525,7 @@ find_official_root() {
     REAL_USB_DEV="$USB_DEV"
     LOG_DEV="${USB_DEV%%[0-9]*}"1
     mount_rootfs
+    /bin/bash
 }
 
 copy_lsb() {
