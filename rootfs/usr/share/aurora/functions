@@ -455,25 +455,26 @@ export_args() {
 }
 
 copy_lsb() {
-    echo "Copying lsb..." | center
-    local src_path="/stateful/dev_image/etc/lsb-factory"
-    local dest_path="/newroot/etc/lsb-factory"
+    echo "Copying lsb..."
 
+    local lsb_file="dev_image/etc/lsb-factory"
+    local dest_path="/newroot/mnt/stateful_partition/${lsb_file}"
+    local src_path="/stateful/${lsb_file}"
+    
     mkdir -p "$(dirname "${dest_path}")"
-
+    
+    local ret=0
     if [ -f "${src_path}" ]; then
-        echo "Found ${src_path}." | center
-        cp "${src_path}" "${dest_path}" || fail "failed with $?"
-        if cgpt find -l SH1MMER "${loop}" | head -n 1 | grep --color=never -q /dev/; then
-            export specialshim="sh1mmer"
-            echo "STATEFUL_DEV=${loop}p1" >> "${dest_path}"
-        fi
-        echo "REAL_USB_DEV=${loop}p3" >> "${dest_path}"
-        echo "KERN_ARG_KERN_GUID=$(echo "${KERN_ARG_KERN_GUID}" | tr '[:lower:]' '[:upper:]')" >> "${dest_path}"
-        echo "Copied lsb-factory to ${dest_path}" | center
+        local kern_guid=$(echo "${KERN_ARG_KERN_GUID}" | tr '[:lower:]' '[:upper:]')
+        echo "Found ${src_path}"
+        cp -a "${src_path}" "${dest_path}"
+        echo "REAL_USB_DEV=${loop}p3" >>"${dest_path}"
+        echo "KERN_ARG_KERN_GUID=${kern_guid}" >>"${dest_path}"
     else
-        fail "Missing ${src_path}!"
+        echo "Failed to find ${src_path}!!"
+        ret=1
     fi
+    return "${ret}"
 }
 
 pv_dircopy() {

@@ -83,10 +83,10 @@ installcros() {
     fi
     stateful="$(cgpt find -l STATE ${loop} | head -n 1 | grep --color=never /dev/)" || fail "Failed to find stateful on ${loop}!"
     mkdir -p /mnt/stateful_partition
-    mount "$stateful" /mnt/stateful_partition || fail "Failed to mount stateful!"
+    mount $stateful /mnt/stateful_partition || fail "Failed to mount stateful!"
     cd $recoroot
     d=""
-    for d in /proc /dev /sys /tmp /run /var; do
+    for d in /proc /dev /sys /tmp /run /var /mnt/stateful_partition; do
         mount -n --bind "${d}" "./${d}"
         mount --make-slave "./${d}"
     done
@@ -170,22 +170,6 @@ shimboot() {
         mkdir -p /newroot
         mount -t tmpfs tmpfs /newroot -o "size=1024M" || fail "Failed to allocate 1GB to /newroot"
         mount $stateful /stateful || fail "Failed to mount stateful!"
-        sh1mmerfile="/stateful/root/noarch/usr/sbin/sh1mmer_main.sh"
-        version="legacy"
-        if [ -f /stateful/root/noarch/usr/sbin/sh1mmer_gui.sh ]; then
-            version="bw"
-        fi
-        if lsblk -o PARTLABEL $loop | grep "SH1MMER"; then
-            if ! grep -q "rm -f /etc/resolv.conf" "$sh1mmerfile"; then
-                sed -i '/^#!\/bin\/bash$/a export PATH="/bin:/sbin:/usr/bin:/usr/sbin"\nrm -f /etc/resolv.conf\necho "nameserver 1.1.1.1" > /etc/resolv.conf' "$sh1mmerfile"
-            fi
-            chmod +x /stateful/bootstrap/noarch/init_sh1mmer.sh
-            rm /stateful/root/noarch/payloads/autoupdate.sh
-            canwifi rm /stateful/root/noarch/payloads/mrchromebox.sh
-            canwifi curl -sLk https://mrchromebox.tech/firmware-util.sh -o /stateful/root/noarch/payloads/mrchromebox.sh
-            sync
-            chmod +x $sh1mmerfile
-        fi
 
         copy_lsb
         
