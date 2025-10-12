@@ -135,7 +135,7 @@ shimboot() {
     clear
     mkdir -p $shimroot
     loop=$(losetup -Pf --show $shim)
-    local INFO_TTY="$TTY2" LOG_TTY="$TTY3" DEBUG_TTY="$TTY4" USB_DEV="$loop" NEWROOT_MNT="/newroot"
+    export INFO_TTY="$TTY2" LOG_TTY="$TTY3" DEBUG_TTY="$TTY4" USB_DEV="$loop" NEWROOT_MNT="/newroot"
     echo "...:::||| Bootstrapping ChromeOS Factory Shim |||:::..."
     echo "TTY: ${TTY}, LOG: ${LOG_TTY}, INFO: ${INFO_TTY}, DEBUG: ${DEBUG_TTY}"
     export_args $(cat /proc/cmdline | sed -e 's/"[^"]*"/DROPPED/g')
