@@ -181,9 +181,6 @@ shimboot() {
         mount -t tmpfs -o mode=0555 run /newroot/run
         mkdir -p -m 0755 /newroot/run/lock
 
-        umount -l /dev/pts
-        umount -f /dev/pts
-
         for mnt in /dev /proc /sys; do
             mount --move "$mnt" "/newroot$mnt"
             umount -l "$mnt"
