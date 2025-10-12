@@ -18,7 +18,6 @@ export dev_partition=$(blkid | grep 'LABEL="Aurora"' | awk -F: '{print $1}' | he
 mkdir -p /auroraroot
 chmod +x /resize
 /resize
-shell
 mount "$dev_partition" /auroraroot || shell
 
 chmod +x /auroraroot/sbin/init /auroraroot/usr/share/aurora/aurora.sh
