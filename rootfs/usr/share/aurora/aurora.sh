@@ -206,8 +206,9 @@ EOF
         chmod +x /newroot/sbin/init
         stty echo
         tput cnorm
-        debug_msg "$(lsblk)" "GEEN_B"
         debug_run pivot_root /newroot /newroot/tmp/aurora
+        lsblk
+        read
         echo "Successfully switched root. Starting init..."
         exec /sbin/init || {
             echo "Failed to start init"
