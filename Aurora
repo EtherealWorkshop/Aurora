@@ -133,7 +133,7 @@ echo_c "Done. Auroraboot: $(du -sh $auroraboot | awk '{print $1}')\n\n${BLUE_B}I
 cp -r rootfs/. "$rootfs/"
 chroot "$rootfs" /bin/sh -c "export PATH=/sbin:/bin:/usr/sbin:/usr/bin && chmod +x /opt/setup_rootfs.sh && /opt/setup_rootfs.sh $arch"
 $krill && sed -i 's/shrimp=0/shrimp=1/' $rootfs/etc/aurora
-sed -i "s/origin=alpine/origin=$(git branch --show-current)/" $rootfs/etc/aurora
+sed -i "s/origin=alpine/origin=$(git branch --show-current)/" $rootfs/etc/aurora && debug_msg $(echo "/etc/aurora:" && cat $rootfs/etc/aurora && echo)
 sed -i "s/setup=0/setup=1/" $rootfs/etc/aurora
 rm -f $rootfs/opt/setup_rootfs.sh
 echo_c "Done. Rootfs: $(du -sh $rootfs | awk '{print $1}')\n\n${BLUE_B}Downloading firmware..." GEEN_B

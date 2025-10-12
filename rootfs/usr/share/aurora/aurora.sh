@@ -425,7 +425,7 @@ updateshim() {
     aurorabootdev=$(lsblk -pro NAME,PARTLABEL,MOUNTPOINT | awk '/AuroraBoot/ {print $1; exit}')
     mount "$aurorabootdev" "$aurorabootmnt"
     rsync -a --inplace /root/Aurora/auroraboot/ "$aurorabootmnt/"
-    chmod +x "$aurorabootmnt/bootstrap.sh" "$aurorabootmnt/sbin/init"
+    chmod +x "$aurorabootmnt/sbin/init"
     sync
     umount $aurorabootmnt
     if [ "$updated" = "1" ]; then
