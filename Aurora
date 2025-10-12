@@ -50,6 +50,7 @@ lsbval() {
 }
 
 . checks $@
+
 verbose="${verbose:=false}"
 krill="${krill:=false}"
 $verbose && set -x
@@ -65,7 +66,7 @@ fi
 verify_syntax auroraboot/opt/setup_auroraboot.sh auroraboot/sbin/init auroraboot/resize
 verify_syntax rootfs/etc/profile rootfs/opt/setup_rootfs.sh rootfs/sbin/init rootfs/sbin/init $(ls rootfs/usr/bin/*) rootfs/usr/share/aurora/aurora.sh rootfs/usr/share/aurora/functions
 rm -f "$aurorashim"
-kb=191881
+kb=191969 # i want to thank you all for this opportunity. it has brought me great joy to work on this number. i will probably have to change it in 5 minutes.
 if [ -z "$shims" ] && [ -z "$recovery" ] && [ -z "$shimsize" ]; then
   echo_c "Creating shim with size ${kb}KB" GEEN_B
   truncate -s ${kb}K "$aurorashim"
