@@ -154,9 +154,9 @@ shimboot() {
     stty echo
     tput cnorm
     set +x
-    debug_run pivot_root $NEWROOT_MNT $NEWROOT_MNT/tmp/aurora
+    mkdir -p $NEWROOT_MNT/tmp/aurora
+    debug_run pivot_root $NEWROOT_MNT $NEWROOT_MNT/tmp/aurora || fail --fatal
     echo "Successfully switched root. Starting init..."
-    sleep 10 || read || :
     exec /sbin/init || {
         echo "Failed to start init"
         echo "Bailing out, you are on your own. Good luck."
