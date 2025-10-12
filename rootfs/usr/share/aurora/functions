@@ -461,16 +461,16 @@ export_args() {
 }
 
 is_good_rootfs_partition() {
-  local root_dev="$1"
-  local sector_count
-  sector_count="$(cat "/sys/class/block/$(basename "${root_dev}")/size")"
-  local sector_count_threshold=1
-  [ "${sector_count}" -gt "${sector_count_threshold}" ]
+    local root_dev="$1"
+    local sector_count
+    sector_count="$(cat "/sys/class/block/$(basename "${root_dev}")/size")"
+    local sector_count_threshold=1
+    [ "${sector_count}" -gt "${sector_count_threshold}" ]
 }
 
 strip_partition() {
-  local dev="${1%%[0-9]*}"
-  echo "${dev%p*}"
+    local dev="${1%%[0-9]*}"
+    echo "$dev"
 }
 
 wait_for_gpt_root() {
