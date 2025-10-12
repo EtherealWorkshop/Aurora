@@ -65,7 +65,7 @@ fi
 verify_syntax auroraboot/opt/setup_auroraboot.sh auroraboot/sbin/init auroraboot/resize
 verify_syntax rootfs/etc/profile rootfs/opt/setup_rootfs.sh rootfs/sbin/init rootfs/sbin/init $(ls rootfs/usr/bin/*) rootfs/usr/share/aurora/aurora.sh rootfs/usr/share/aurora/functions
 rm -f "$aurorashim"
-kb=198496
+kb=191881
 if [ -z "$shims" ] && [ -z "$recovery" ] && [ -z "$shimsize" ]; then
   echo_c "Creating shim with size ${kb}KB" GEEN_B
   truncate -s ${kb}K "$aurorashim"
@@ -196,7 +196,6 @@ for payload in $payloads; do
   mkdir -p $rootfs/usr/share/aurora/payloads
   [ -e "$payload" ] && cp $payload $rootfs/usr/share/aurora/payloads/
 done
-rm -f "$rootfs/sbin/init"
 echo_c "Done. Rootfs: $(du -sh $rootfs | awk '{print $1}')\n\n${BLUE_B}Partitioning shim..." "GEEN_B"
 sgdisk --zap-all "$dev"
 sgdisk -n 1:2048:10239 -c 1:"STATE" "$dev"
