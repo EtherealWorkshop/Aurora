@@ -207,7 +207,7 @@ EOF
         stty echo
         tput cnorm
         debug_run pivot_root /newroot /newroot/tmp/aurora
-        lsblk
+        fdisk -l && mount
         read
         echo "Successfully switched root. Starting init..."
         exec /sbin/init || {
