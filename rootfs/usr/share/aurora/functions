@@ -495,7 +495,7 @@ wait_for_gpt_root() {
 
 mount_rootfs() {
     local usb_dev
-    local kernel_command_line="$(cat /proc/cmdline)" USB_MNT="/usb"
+    local kernel_command_line="$(cat /proc/cmdline)"
     usb_dev="${USB_DEV}"
     for try in $(seq 20); do
         if mount -n -o ro "$usb_dev" "$USB_MNT"; then
