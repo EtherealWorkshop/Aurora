@@ -83,10 +83,10 @@ installcros() {
     fi
     stateful="$(cgpt find -l STATE ${loop} | head -n 1 | grep --color=never /dev/)" || fail "Failed to find stateful on ${loop}!"
     mkdir -p /mnt/stateful_partition
-    mount $stateful /mnt/stateful_partition || fail "Failed to mount stateful!"
+    mount "$stateful" /mnt/stateful_partition || fail "Failed to mount stateful!"
     cd $recoroot
     d=""
-    for d in /proc /dev /sys /tmp /run /var /mnt/stateful_partition; do
+    for d in /proc /dev /sys /tmp /run /var; do
         mount -n --bind "${d}" "./${d}"
         mount --make-slave "./${d}"
     done
