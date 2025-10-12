@@ -176,13 +176,17 @@ shimboot() {
         echo "Copying rootfs to ram..." | center
         pv_dircopy "$shimroot" /newroot
 
-        mkdir -p /newroot/dev/pts /newroot/proc /newroot/sys /newroot/tmp /newroot/run
+        mkdir -p "/newroot/dev" "/newroot/proc" "/newroot/sys" "/newroot/tmp" "/newroot/run"
         mount -t tmpfs -o mode=1777 none /newroot/tmp
         mount -t tmpfs -o mode=0555 run /newroot/run
         mkdir -p -m 0755 /newroot/run/lock
 
+        umount -l /dev/pts
+        umount -f /dev/pts
+
         for mnt in /dev /proc /sys; do
-            mount --move "$mnt" "/newroot$mnt" || fail "Failed to mount $mnt"
+            mount --move "$mnt" "/newroot$mnt"
+            umount -l "$mnt"
         done
 
         if ! mountpoint -q /newroot/dev/pts; then
