@@ -1,0 +1,39 @@
+#!/bin/bash
+
+apk add pcre-tools
+
+if [ ! -f /usr/sbin/setup-xorg-base ] && [ ! -f /usr/sbin/setup-devd ]; then
+    mkdir -p "/tmp/apk-tools-static"
+    wget -q --show-progress "https://dl-cdn.alpinelinux.org/alpine/latest-stable/main/$(uname -m)/$(echo "$(wget -qO- --show-progress "https://dl-cdn.alpinelinux.org/alpine/latest-stable/main/$(uname -m)/" | grep "apk-tools-static")" | pcregrep -o1 '"(.+?.apk)"')" -O "/tmp/apk-tools-static/pkg.apk"
+    tar --warning=no-unknown-keyword -xzf "/tmp/apk-tools-static/pkg.apk" -C "/tmp/apk-tools-static"
+    chmod +x /tmp/apk-tools-static/sbin/apk.static
+    /tmp/apk-tools-static/sbin/apk.static --arch $(uname -m) \
+        -X http://dl-cdn.alpinelinux.org/alpine/edge/main/ \
+        -X http://dl-cdn.alpinelinux.org/alpine/edge/community/ \
+        -X http://dl-cdn.alpinelinux.org/alpine/edge/testing/ \
+        -U --allow-untrusted --root "/" --initdb add alpine-base
+    sync
+fi
+
+setup-xorg-base openbox hsetroot gvfs alsa-utils font-dejavu extremetuxracer
+
+rc-update add dbus sysinit
+rc-update add alsa sysinit
+openrc sysinit
+
+rm -f ~/.xinitrc
+cat <<EOF > ~/.xinitrc
+alsactl init 2>/dev/null || true
+amixer sset Master unmute 2>/dev/null || true
+amixer sset Master 80% 2>/dev/null || true
+openbox &
+hsetroot -cover /usr/share/aurora/assets/bg.png &
+while true; do
+    extremetuxracer -f
+    sleep 1
+done
+EOF
+
+# Start graphical session
+killall frecon-lite 2>/dev/null || true
+startx
