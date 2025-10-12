@@ -153,6 +153,7 @@ shimboot() {
     chmod +x $NEWROOT_MNT/sbin/init
     stty echo
     tput cnorm
+    /bin/bash
     debug_run pivot_root $NEWROOT_MNT $NEWROOT_MNT/tmp/aurora
     echo "Successfully switched root. Starting init..."
     exec /sbin/init || {
