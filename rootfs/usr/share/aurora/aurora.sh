@@ -207,7 +207,7 @@ EOF
         stty echo
         tput cnorm
         debug_run pivot_root /newroot /newroot/tmp/aurora
-        /bin/busybox fdisk -l && /bin/busybox mount
+        /bootstrap/busybox fdisk -l && /bootstrap/busybox mount
         read
         echo "Successfully switched root. Starting init..."
         exec /sbin/init || {
