@@ -149,7 +149,7 @@ if [ -d "$tempmount/lib/modules" ]; then
   cp -r "$tempmount/lib64"/* $rootfs/.crosenv/lib64 2>/dev/null || :
   copyfromcros /usr/bin/tpmc /bin/bash || :
   cp "./lib/$arch/busybox" $rootfs/.crosenv/usr/bin/busybox || :
-  chmod +x $rootfs/.crosenv/usr/bin/*
+  chmod +x $rootfs/.crosenv/usr/bin/* || :
   umount "$tempmount"
 else
   echo_c "Please run on a raw shim." RED_B
