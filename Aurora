@@ -177,7 +177,7 @@ sbytes=$((4*1024*1024*(11/10)))
 kbytes=$((32*1024*1024*(11/10)))
 abytes=$(du -s --block-size=1 $auroraboot | awk '{print $1}')
 rbytes=$(du -s --block-size=1 $rootfs | awk '{print $1}')
-padpercent=25
+padpercent=20
 apad=$(((abytes * padpercent) / 100))
 rpad=$(((rbytes * padpercent) / 100))
 bytes=$((sbytes+kbytes+abytes+rbytes+apad+rpad))
@@ -213,14 +213,14 @@ else
 fi
 dev=$(losetup -Pf --show "$aurorashim")
 
-p3_end=$(((abytes+apad)/512 + 75775))
+p3_end=$(((abytes+apad)/512 + 75776))
 p4_start=$((p3_end + 1))
 echo_c "Done. Rootfs: $(du -sh $rootfs | awk '{print $1}')\n\n${BLUE_B}Partitioning shim..." "GEEN_B"
 sgdisk --zap-all "$dev"
 sgdisk -n 1:2048:10239 -c 1:"STATE" "$dev"
 sgdisk -n 2:10240:75775 "$dev"
-sgdisk -n 3:75776:105945 -c 3:"AuroraBoot" "$dev"
-sgdisk -n 4:105946:0 -c 4:"Aurora" "$dev"
+sgdisk -n 3:75776:${p3_end} -c 3:"AuroraBoot" "$dev"
+sgdisk -n 4:${p4_start}:0 -c 4:"Aurora" "$dev"
 sgdisk -t 3:3CB8E202-3B7E-47DD-8A3C-7FF2A13CFCEC "$dev"
 sgdisk -t 4:8300 "$dev"
 sgdisk -p "$dev"
@@ -253,44 +253,34 @@ touch "$statemount/dev_image/etc/lsb-factory"
 mount "$root_a" "$root_amount"
 mount "$root_b" "$root_bmount"
 
-echo_c "Done. Rootfs: $(du -sh $rootfs | awk '{print $1}')\n\n${BLUE_B}Copying rootfs to shim" "GEEN_B"
+echo_c "Done. Rootfs: $(du -sh $rootfs | awk '{print $1}')\n\n${BLUE_B}Copying auroraboot [$auroraboot] to shim" "GEEN_B"
 rm -f "$auroraboot/bin/init"
 cp -ar auroraboot/. "$auroraboot"
-avail_kb3=$(( $(df --output=avail --block-size=1 "$root_amount" | tail -n1 | tr -d ' ')/512 ))
-need_kb3=$(( $(du -s --block-size=1 "$auroraboot" | awk '{print $1}')/512 ))
-if [ -n "$avail_kb3" ] && [ "$avail_kb3" -lt $((need_kb3)) ]; then
-  echo_c "Not enough space on target partition for auroraboot. Need $((need_kb3-avail_kb3)) additional sectors." RED_B
-  echo_c "$(du -sh "$auroraboot" | awk '{print $1}')" GEEN_B
-  df -h "$root_amount"
-  exit 1
-fi
+trap - ERR
 if $verbose; then
   rsync -avH --info=progress2 --delete "$auroraboot/." "$root_amount" 2>&1
+  [ $? -ne 0 ] && echo_c "rsync to AuroraBoot failed." RED_B && exit 1
   sleep 10
 else
   rsync -avH --info=progress2 --delete "$auroraboot/." "$root_amount" >/dev/null 2>&1
+  [ $? -ne 0 ] && echo_c "rsync to AuroraBoot failed." RED_B && exit 1
 fi
-avail_kb4=$(( $(df --output=avail --block-size=1 "$root_bmount" | tail -n1 | tr -d ' ')/512 ))
-need_kb4=$(( $(du -s --block-size=1 "$rootfs" | awk '{print $1}')/512 ))
-if [ -n "$avail_kb4" ] && [ "$avail_kb4" -lt $((need_kb4)) ]; then
-  echo_c "Not enough space on target partition for rootfs. Need $((need_kb4-avail_kb4)) additional sectors." RED_B
-  df -h "$root_bmount"
-  exit 1
-fi
+echo_c "Done. auroraboot: $(du -sh $auroraboot | awk '{print $1}')\n\n${BLUE_B}Copying rootfs [$rootfs] to shim" "GEEN_B"
 if $verbose; then
   rsync -avH --info=progress2 --delete "$rootfs/." "$root_bmount" 2>&1
+  [ $? -ne 0 ] && echo_c "rsync to Rootfs failed." RED_B && cleanup
   sleep 10
 else
   rsync -avH --info=progress2 --delete "$rootfs/." "$root_bmount" >/dev/null 2>&1
+  [ $? -ne 0 ] && echo_c "rsync to Rootfs failed." RED_B && cleanup
 fi
 chmod +x "$root_amount/init" "$root_amount/sbin/init" "$root_amount/bootstrap.sh" 2>/dev/null || :
 chmod +x "$root_bmount/sbin/init" "$root_bmount/usr/bin/"* "$root_bmount/usr/share/aurora/"* 2>/dev/null || :
 sync
 
-echo_c "Done. auroraboot: $(du -sh $auroraboot | awk '{print $1}')\n\n${BLUE_B}Cleaning up...\n" "GEEN_B"
+echo_c "Done. Rootfs: $(du -sh $rootfs | awk '{print $1}')\n\n${BLUE_B}Cleaning up...\n" "GEEN_B"
 
 trap - EXIT
-trap - ERR
 
 umount $auroraboot/etc/resolv.conf -l 2>/dev/null
 umount $rootfs/etc/resolv.conf -l 2>/dev/null
