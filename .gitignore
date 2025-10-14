@@ -4,3 +4,4 @@ alpine-minirootfs.tar.gz
 *yamlmaker.sh
 testdir
 linux-firmware
+firmware.tar.zst

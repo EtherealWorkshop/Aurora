@@ -66,37 +66,8 @@ fi
 verify_syntax auroraboot/opt/setup_auroraboot.sh auroraboot/sbin/init auroraboot/resize
 verify_syntax rootfs/etc/profile rootfs/opt/setup_rootfs.sh rootfs/sbin/init rootfs/sbin/init $(ls rootfs/usr/bin/*) rootfs/usr/share/aurora/aurora.sh rootfs/usr/share/aurora/functions
 rm -f "$aurorashim"
-kb=191969 # i want to thank you all for this opportunity. it has brought me great joy to work on this number. i will probably have to change it in 5 minutes.
-if [ -z "$shims" ] && [ -z "$recovery" ] && [ -z "$shimsize" ]; then
-  echo_c "Creating shim with size ${kb}KB" GEEN_B
-  truncate -s ${kb}K "$aurorashim"
-elif [ -n "$shims" ] || [ -n "$recovery" ] && [ $(df --output=avail / | tail -1) -gt $((15*1024*1024)) ]; then
-  shimsize="$kb"
-  recovery=${recovery:=""}
-  shims=${shims:=""}
-  for image in $shims $recovery; do
-    [ -e "$image" ] || {
-      echo_c "$image not found. Skipping..." RED_B
-      continue
-    }
-    image_kilobytes=$(du -sk $image | awk '{print $1}')
-    shimsize=$((shimsize+image_kilobytes+4096))
-  done
-  echo_c "Building Aurora with size $(echo "scale=1; $shimsize/1024/1024" | bc)GB" GEEN_B
-  debug_msg "[${shimsize}KB]" RED_B
-  echo_c "Recovery Images: ${recovery:="None"}" GEEN_B
-  echo_c "Shims: ${shims:="None"}" GEEN_B
-  echo_c "Extra payloads: ${payloads:="None"}" GEEN_B
-  truncate -s ${shimsize}K "$aurorashim"
-elif [ -n "$shimsize" ] && [ "$shimsize" -gt "204800" ] && [ $(df --output=avail / | tail -1) -gt $shimsize ]; then
-  echo_c "Creating shim with size $(echo "scale=1; $shimsize/1024/1024" | bc)GB" GEEN_B
-  truncate -s ${shimsize}K "$aurorashim"
-else
-  echo_c "Not enough free space on disk. Available:$(df -h --output=avail / | tail -1)" RED_B
-  exit 1
-fi
 
-echo_c "\nBootstrapping Alpine" BLUE_B
+echo_c "Bootstrapping Alpine" BLUE_B
 [ ! -f alpine-minirootfs.tar.gz ] && wget -q --show-progress "https://dl-cdn.alpinelinux.org/alpine/v3.22/releases/$arch/alpine-minirootfs-3.22.0-$arch.tar.gz" -O alpine-minirootfs.tar.gz 
 
 tar -xf alpine-minirootfs.tar.gz -C "$rootfs"
@@ -143,7 +114,12 @@ cp -r linux-firmware/* $rootfs/lib/firmware/
 find "$rootfs/lib/firmware" -type f -not \( -path "*wifi*" -o -path "*rt*" -o -path "*ath*" -o -path "*mediatek*" \) -exec rm -rf {} + >/dev/null 2>&1
 touch "$rootfs/lib/firmware/.exists"
 echo_c "Done. Rootfs: $(du -sh $rootfs | awk '{print $1}')\n\n${BLUE_B}Compressing firmware..." GEEN_B
-tar -C "$(dirname "$rootfs/lib/firmware")" -cf - "$(basename "$rootfs/lib/firmware")" | zstd -T0 --ultra -22 > "$rootfs/root/firmware.tar.zst"
+if [ -f firmware.tar.zst ]; then
+  cp firmware.tar.zst "$rootfs/root/firmware.tar.zst"
+else
+  tar -C "$(dirname "$rootfs/lib/firmware")" -cf - "$(basename "$rootfs/lib/firmware")" | zstd -T0 --ultra -22 > "$rootfs/root/firmware.tar.zst"
+fi
+$firmware && cp $rootfs/root/firmware.tar.zst .
 rm -rf "$rootfs/lib/firmware"
 mkdir -p "$rootfs/lib/firmware"
 cp "./lib/$arch/frecon-lite" $rootfs/usr/bin/frecon-lite
@@ -153,7 +129,6 @@ echo_c "Done. Rootfs: $(du -sh $rootfs | awk '{print $1}')\n\n${BLUE_B}Building 
 mkdir -p "$auroraboot"
 
 shimdev=$(losetup -Pf --show "$shim")
-dev=$(losetup -Pf --show "$aurorashim")
 copyfromcros() {
   for path in $@; do
     cp -a ${tempmount}${path} $rootfs/.crosenv/usr/bin/
@@ -197,6 +172,49 @@ for payload in $payloads; do
   mkdir -p $rootfs/usr/share/aurora/payloads
   [ -e "$payload" ] && cp $payload $rootfs/usr/share/aurora/payloads/
 done
+
+sbytes=$((4*1024*1024*(11/10)))
+kbytes=$((32*1024*1024*(11/10)))
+abytes=$(du -s --block-size=1 $auroraboot | awk '{print $1}')
+rbytes=$(du -s --block-size=1 $rootfs | awk '{print $1}')
+padpercent=22
+apad=$(((abytes * padpercent) / 100))
+rpad=$(((rbytes * padpercent) / 100))
+bytes=$((sbytes+kbytes+abytes+rbytes+apad+rpad))
+kb=$(( (bytes/1024) + 1024 ))
+
+if [ -z "$shims" ] && [ -z "$recovery" ] && [ -z "$shimsize" ]; then
+  echo_c "Done. Rootfs: $(du -sh $rootfs | awk '{print $1}')\n\n${BLUE_B}Creating shim with ${kb}KB..." "GEEN_B"
+  truncate -s ${kb}K "$aurorashim"
+elif [ -n "$shims" ] || [ -n "$recovery" ] && [ $(df --output=avail / | tail -1) -gt $((15*1024*1024)) ]; then
+  shimsize="$kb"
+  recovery=${recovery:=""}
+  shims=${shims:=""}
+  for image in $shims $recovery; do
+    [ -e "$image" ] || {
+      echo_c "$image not found. Skipping..." RED_B
+      continue
+    }
+    image_kilobytes=$(du -sk $image | awk '{print $1}')
+    shimsize=$((shimsize+image_kilobytes+4096))
+  done
+  echo_c "Building Aurora with size $(echo "scale=1; $shimsize/1024/1024" | bc)GB" GEEN_B
+  debug_msg "[${shimsize}KB]" RED_B
+  echo_c "Recovery Images: ${recovery:="None"}" GEEN_B
+  echo_c "Shims: ${shims:="None"}" GEEN_B
+  echo_c "Extra payloads: ${payloads:="None"}" GEEN_B
+  truncate -s ${shimsize}K "$aurorashim"
+elif [ -n "$shimsize" ] && [ "$shimsize" -gt "204800" ] && [ $(df --output=avail / | tail -1) -gt $shimsize ]; then
+  echo_c "Creating shim with size $(echo "scale=1; $shimsize/1024/1024" | bc)GB" GEEN_B
+  truncate -s ${shimsize}K "$aurorashim"
+else
+  echo_c "Not enough free space on disk. Available:$(df -h --output=avail / | tail -1)" RED_B
+  exit 1
+fi
+dev=$(losetup -Pf --show "$aurorashim")
+
+p3_end=$(((abytes+apad)/512 + 75775))
+p4_start=$((p3_end + 1))
 echo_c "Done. Rootfs: $(du -sh $rootfs | awk '{print $1}')\n\n${BLUE_B}Partitioning shim..." "GEEN_B"
 sgdisk --zap-all "$dev"
 sgdisk -n 1:2048:10239 -c 1:"STATE" "$dev"
