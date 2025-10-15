@@ -255,7 +255,6 @@ if $verbose; then
   sleep 10
 else
   rsync -avH --info=progress2 --delete "$auroraboot/." "$root_amount" >/dev/null 2>&1
-  df -h $root_amount
   [ $? -ne 0 ] && echo_c "rsync to AuroraBoot failed." RED_B && exit 1
 fi
 echo_c "Done. auroraboot: $(du -sh $auroraboot | awk '{print $1}')\n\n${BLUE_B}Copying rootfs [$rootfs] to shim" "GEEN_B"
