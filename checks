@@ -13,6 +13,16 @@ debug_msg() {
   fi
 }
 
+lsbval() {
+  local key="$1" lsbfile="${2:-$rootfs/etc/lsb-release}"
+  echo "$key" | grep -Eq '^[a-zA-Z0-9_]+$' || return 1
+  sed -E -n -e "/^[[:space:]]*${key}[[:space:]]*=/{
+    s:^[^=]+=[[:space:]]*::
+    s:[[:space:]]+$::
+    p
+  }" "$lsbfile"
+}
+
 verify_syntax() {
     for script in $@; do
         bash -n "$script" || { echo_c "Syntax error in $script. Please create an issue at https://github.com/AerialiteLabs/Aurora/issues" RED_B; exit 1; }
@@ -87,6 +97,7 @@ if [ -f "$temproot/bin/bash" ]; then
         *aarch64* | *armv8* | *arm*) arch=aarch64 ;;
     esac
 fi
+boardname=$(lsbval CHROMEOS_RELEASE_BOARD $temproot/etc/lsb-release)
 
 umount "$temproot"
 losetup -d $loopdev

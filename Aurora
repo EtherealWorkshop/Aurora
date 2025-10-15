@@ -39,16 +39,6 @@ cleanup() {
   exit 1
 }
 
-lsbval() {
-  local key="$1" lsbfile="${2:-$rootfs/etc/lsb-release}"
-  echo "$key" | grep -Eq '^[a-zA-Z0-9_]+$' || return 1
-  sed -E -n -e "/^[[:space:]]*${key}[[:space:]]*=/{
-    s:^[^=]+=[[:space:]]*::
-    s:[[:space:]]+$::
-    p
-  }" "$lsbfile"
-}
-
 . checks $@
 
 verbose="${verbose:=false}"
@@ -114,12 +104,12 @@ cp -r linux-firmware/* $rootfs/lib/firmware/
 find "$rootfs/lib/firmware" -type f -not \( -path "*wifi*" -o -path "*rt*" -o -path "*ath*" -o -path "*mediatek*" \) -exec rm -rf {} + >/dev/null 2>&1
 touch "$rootfs/lib/firmware/.exists"
 echo_c "Done. Rootfs: $(du -sh $rootfs | awk '{print $1}')\n\n${BLUE_B}Compressing firmware..." GEEN_B
-if [ -f firmware.tar.zst ]; then
-  cp firmware.tar.zst "$rootfs/root/firmware.tar.zst"
+if [ -f $boardname-firmware.tar.zst ]; then
+  cp $boardname-firmware.tar.zst "$rootfs/root/firmware.tar.zst"
 else
   tar -C "$(dirname "$rootfs/lib/firmware")" -cf - "$(basename "$rootfs/lib/firmware")" | zstd -T0 --ultra -22 > "$rootfs/root/firmware.tar.zst"
 fi
-$firmware && cp $rootfs/root/firmware.tar.zst .
+$firmware && cp $rootfs/root/firmware.tar.zst .$boardname-firmware.tar.zst
 rm -rf "$rootfs/lib/firmware"
 mkdir -p "$rootfs/lib/firmware"
 cp "./lib/$arch/frecon-lite" $rootfs/usr/bin/frecon-lite
