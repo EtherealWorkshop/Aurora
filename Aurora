@@ -105,11 +105,11 @@ find "$rootfs/lib/firmware" -type f -not \( -path "*wifi*" -o -path "*rt*" -o -p
 touch "$rootfs/lib/firmware/.exists"
 echo_c "Done. Rootfs: $(du -sh $rootfs | awk '{print $1}')\n\n${BLUE_B}Compressing firmware..." GEEN_B
 if [ -f $boardname-firmware.tar.zst ]; then
-  cp $boardname-firmware.tar.zst "$rootfs/root/firmware.tar.zst"
+  cp ./$boardname-firmware.tar.zst "$rootfs/root/firmware.tar.zst"
 else
   tar -C "$(dirname "$rootfs/lib/firmware")" -cf - "$(basename "$rootfs/lib/firmware")" | zstd -T0 --ultra -22 > "$rootfs/root/firmware.tar.zst"
 fi
-$firmware && cp $rootfs/root/firmware.tar.zst .$boardname-firmware.tar.zst
+$firmware && cp $rootfs/root/firmware.tar.zst ./$boardname-firmware.tar.zst
 rm -rf "$rootfs/lib/firmware"
 mkdir -p "$rootfs/lib/firmware"
 cp "./lib/$arch/frecon-lite" $rootfs/usr/bin/frecon-lite
@@ -131,9 +131,11 @@ echo_c "Done. Rootfs: $(du -sh $rootfs | awk '{print $1}')\n\n${BLUE_B}Copying M
 mount -o ro "$chromeos" "$tempmount"
 if [ -d "$tempmount/lib/modules" ]; then
   cp -ar "$tempmount/lib/modules" $rootfs/lib/
+  rm -rf "$rootfs/lib/firmware"
   cp -ar "$tempmount/etc/lsb-release" $rootfs/etc/lsb-release
   boardname=$(lsbval CHROMEOS_RELEASE_BOARD)
-  mkdir -p $rootfs/.crosenv/usr/bin $rootfs/.crosenv/lib64
+  mkdir -p $rootfs/.crosenv/usr/bin $rootfs/.crosenv/lib64 $rootfs/.crosenv/lib
+  cp -ar "$tempmount/lib/"* $rootfs/.crosenv/lib/
   cp "$tempmount/usr/lib64/libpcre2-8.so*" $rootfs/.crosenv/lib64 2>/dev/null || :
   cp "$tempmount/usr/lib64/libreadline.so"* $rootfs/.crosenv/lib64 2>/dev/null || :
   cp -r "$tempmount/lib64"/* $rootfs/.crosenv/lib64 2>/dev/null || :
@@ -146,8 +148,8 @@ else
   exit
 fi
 
-rm -f $rootfs/usr/bin/qemu-$arch-static
-rm -f $auroraboot/usr/bin/qemu-$arch-static
+! $qemu && rm -f $rootfs/usr/bin/qemu-$arch-static
+! $qemu && rm -f $auroraboot/usr/bin/qemu-$arch-static
 
 echo_c "Done. Rootfs: $(du -sh $rootfs | awk '{print $1}')\n\n${BLUE_B}Copying Recovery Images, Shims, and Payloads..." GEEN_B
 for shim in $shims; do
@@ -259,7 +261,6 @@ fi
 echo_c "Done. auroraboot: $(du -sh $auroraboot | awk '{print $1}')\n\n${BLUE_B}Copying rootfs [$rootfs] to shim" "GEEN_B"
 if $verbose; then
   rsync -avH --info=progress2 --delete "$rootfs/." "$root_bmount" 2>&1
-  df -h $root_bmount
   [ $? -ne 0 ] && echo_c "rsync to Rootfs failed." RED_B && cleanup
   sleep 10
 else
