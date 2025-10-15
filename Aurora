@@ -131,11 +131,11 @@ echo_c "Done. Rootfs: $(du -sh $rootfs | awk '{print $1}')\n\n${BLUE_B}Copying M
 mount -o ro "$chromeos" "$tempmount"
 if [ -d "$tempmount/lib/modules" ]; then
   cp -ar "$tempmount/lib/modules" $rootfs/lib/
-  rm -rf "$rootfs/lib/firmware"
   cp -ar "$tempmount/etc/lsb-release" $rootfs/etc/lsb-release
   boardname=$(lsbval CHROMEOS_RELEASE_BOARD)
   mkdir -p $rootfs/.crosenv/usr/bin $rootfs/.crosenv/lib64 $rootfs/.crosenv/lib
   cp -ar "$tempmount/lib/"* $rootfs/.crosenv/lib/
+  rm -rf "$rootfs/.crosenv/lib/firmware" "$rootfs/.crosenv/lib/modules"
   cp "$tempmount/usr/lib64/libpcre2-8.so*" $rootfs/.crosenv/lib64 2>/dev/null || :
   cp "$tempmount/usr/lib64/libreadline.so"* $rootfs/.crosenv/lib64 2>/dev/null || :
   cp -r "$tempmount/lib64"/* $rootfs/.crosenv/lib64 2>/dev/null || :
