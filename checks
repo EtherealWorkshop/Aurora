@@ -34,7 +34,7 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
-. rootfs/usr/bin/parse_flags "q,qemu,0 k,shrimp,krill,0 v,verbose,0 h,help,0 f,firmware,0 i,!board,image,shim,1 b,!shim,board,1 m,shimsize,1 s,shims,2 r,recovery,2 p,payloads,2" $@ || exit 1
+. rootfs/usr/bin/parse_flags "t,tree,0 q,qemu,0 k,shrimp,krill,0 v,verbose,0 h,help,0 f,firmware,0 i,!board,image,shim,1 b,!shim,board,1 m,shimsize,1 s,shims,2 r,recovery,2 p,payloads,2" $@ || exit 1
 
 if [ -z "$board" ] && [ -z "$shim" ]; then
     echo "Usage: sudo bash Aurora [-i /path/to/shim.bin]/[-b <board>]"

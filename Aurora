@@ -277,6 +277,9 @@ trap - EXIT
 
 umount $auroraboot/etc/resolv.conf -l 2>/dev/null
 umount $rootfs/etc/resolv.conf -l 2>/dev/null
+$tree && clear
+$tree && tree -L 3 -a -h -C "$root_amount"
+$tree && tree -L 3 -a -h -C "$root_bmount"
 umount "$statemount" "$root_amount" "$root_bmount"
 umount "$statemount" -l 2>/dev/null
 umount "$root_amount" -l 2>/dev/null
