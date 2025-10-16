@@ -8,6 +8,7 @@ https://dl-cdn.alpinelinux.org/alpine/edge/community
 https://dl-cdn.alpinelinux.org/alpine/edge/testing
 EOF
 
-apk add --no-cache e2fsprogs e2fsprogs-extra parted
+apk update --no-cache >/dev/null 2>&1
+apk add --no-cache e2fsprogs e2fsprogs-extra parted >/dev/null 2>&1
 
 rm -rf /var/cache/apk/* || true
