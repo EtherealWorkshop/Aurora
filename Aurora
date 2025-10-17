@@ -248,6 +248,7 @@ else
 fi
 
 dev=$(losetup -Pf --show "$aurorashim")
+shimdev=$(losetup -Pf --show "$shim")
 
 p3_end=$((p3_end + 75776))
 p4_start=$((p3_end + 1))
@@ -260,16 +261,18 @@ sgdisk -n 3:75776:${p3_end} -c 3:"AuroraBoot" "$dev" >/dev/null 2>&1
 sgdisk -n 4:${p4_start}:${p4_end} -c 4:"Aurora" "$dev" >/dev/null 2>&1
 sgdisk -t 3:3CB8E202-3B7E-47DD-8A3C-7FF2A13CFCEC "$dev" >/dev/null 2>&1
 sgdisk -t 4:8300 "$dev" >/dev/null 2>&1
-sgdisk -p "$dev"
 
 kernelpartition="${dev}p2"
-skpart=$(cgpt find -l KERN-A "$shimdev" | head -n 1)
-skpartnum="${skpart##*p}"
-sgdisk -i "$skpartnum" "$shimdev"
+skpart="${shimdev}p2"
+skpartnum="2"
+sgdisk -i "$skpartnum" "$shimdev" >/dev/null 2>&1
+[ ! -f $skpart ] && echo_c "Failed to find kernel partition on shim." RED_B && cleanup
 dd if="$skpart" of="$kernelpartition" status=none
 
-sgdisk --partition-guid=2:B5BAF579-07EF-A747-858B-87C0E507CD29 "$dev"
+sgdisk --partition-guid=2:B5BAF579-07EF-A747-858B-87C0E507CD29 "$dev" >/dev/null 2>&1
 cgpt add -i 2 -t "$(cgpt show -i "$skpartnum" -t "$shimdev")" -l "$(cgpt show -i "$skpartnum" -l "$shimdev")" -P 15 -T 15 -S 1 "$dev" >/dev/null
+
+sgdisk -p "$dev"
 
 state="${dev}p1"
 root_a="${dev}p3"
