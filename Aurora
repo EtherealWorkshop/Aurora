@@ -193,6 +193,7 @@ until [ "$afree" -gt "$abytes" ] && cp -r "$auroraboot"/* "$tempmnt"; do
 done
 df -h $tempmnt
 umount "$tempmnt" -f 2>/dev/null || :
+sgdisk -p "$tempdev"
 abytes=$afree
 
 sgdisk --zap-all "$tempdev"
@@ -213,6 +214,7 @@ until [ "$rfree" -gt "$rbytes" ] && cp -r "$rootfs"/* "$tempmnt"; do
 done
 df -h $tempmnt
 umount "$tempmnt" -f 2>/dev/null || :
+sgdisk -p "$tempdev"
 rbytes=$rfree
 
 bytes=$((abytes+rbytes))
