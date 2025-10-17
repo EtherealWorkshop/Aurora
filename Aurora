@@ -251,7 +251,7 @@ dev=$(losetup -Pf --show "$aurorashim")
 
 p3_end=$((p3_end + 75776))
 p4_start=$((p3_end + 1))
-p4_end=$((p4_start + p4_end))
+p4_end=$((p4_start + p4_end + 2048))
 echo_c "Done. Sectors: $((bytes/512))\n\n${BLUE_B}Partitioning shim..." "GEEN_B"
 sgdisk --zap-all "$dev" >/dev/null 2>&1
 sgdisk -n 1:2048:10239 -c 1:"STATE" "$dev" >/dev/null 2>&1
