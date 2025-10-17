@@ -183,7 +183,7 @@ p3_end=$((abytes/512))
 until [ "$afree" -gt "$abytes" ] && cp -r "$auroraboot"/* "$tempmnt"; do
   umount "$tempmnt" -f 2>/dev/null || :
   [ -b "${tempdev}p1" ] && sgdisk -d 1 "$tempdev" >/dev/null 2>&1 && p3_end=$((p3_end+512))
-  sgdisk -n 1:2048:${p3_end} "$tempdev" >/dev/null 2>&1
+  sgdisk -n 1:2048:${p3_end} -c 1:"AuroraBoot"  "$tempdev" >/dev/null 2>&1
   sgdisk -t 1:3CB8E202-3B7E-47DD-8A3C-7FF2A13CFCEC "$tempdev" >/dev/null 2>&1
   mkfs.ext4 -F "${tempdev}p1" >/dev/null 2>&1
   mount "${tempdev}p1" "$tempmnt"
@@ -203,8 +203,8 @@ p4_end=$((rbytes/512))
 until [ "$rfree" -gt "$rbytes" ] && cp -r "$rootfs"/* "$tempmnt"; do
   umount "$tempmnt" -f 2>/dev/null || :
   [ -b "${tempdev}p1" ] && sgdisk -d 1 "$tempdev" >/dev/null 2>&1 && p4_end=$((p4_end+512))
-  sgdisk -n 1:2048:${p4_end} "$tempdev" >/dev/null 2>&1
-  sgdisk -t 1:3CB8E202-3B7E-47DD-8A3C-7FF2A13CFCEC "$tempdev" >/dev/null 2>&1
+  sgdisk -n 1:2048:${p4_end} -c 1:"Aurora"  "$tempdev" >/dev/null 2>&1
+  sgdisk -t 1:8300 "$tempdev" >/dev/null 2>&1
   mkfs.ext4 -F "${tempdev}p1" >/dev/null 2>&1
   mount "${tempdev}p1" "$tempmnt"
   rfree=$(df --output=avail --block-size=1 $tempmnt | tail -1)
@@ -251,7 +251,7 @@ dev=$(losetup -Pf --show "$aurorashim")
 
 p3_end=$((p3_end + 75776))
 p4_start=$((p3_end + 1))
-p4_end=$((p4_start + p4_end + 2048))
+p4_end=$((p4_start + p4_end))
 echo_c "Done. Sectors: $((bytes/512))\n\n${BLUE_B}Partitioning shim..." "GEEN_B"
 sgdisk --zap-all "$dev" >/dev/null 2>&1
 sgdisk -n 1:2048:10239 -c 1:"STATE" "$dev" >/dev/null 2>&1
