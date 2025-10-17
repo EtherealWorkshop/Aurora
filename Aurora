@@ -262,6 +262,15 @@ sgdisk -t 3:3CB8E202-3B7E-47DD-8A3C-7FF2A13CFCEC "$dev" >/dev/null 2>&1
 sgdisk -t 4:8300 "$dev" >/dev/null 2>&1
 sgdisk -p "$dev"
 
+kernelpartition="${dev}p2"
+skpart=$(cgpt find -l KERN-A "$shimdev" | head -n 1)
+skpartnum="${skpart##*p}"
+sgdisk -i "$skpartnum" "$shimdev"
+dd if="$skpart" of="$kernelpartition" status=none
+
+sgdisk --partition-guid=2:B5BAF579-07EF-A747-858B-87C0E507CD29 "$dev"
+cgpt add -i 2 -t "$(cgpt show -i "$skpartnum" -t "$shimdev")" -l "$(cgpt show -i "$skpartnum" -l "$shimdev")" -P 15 -T 15 -S 1 "$dev" >/dev/null
+
 state="${dev}p1"
 root_a="${dev}p3"
 root_b="${dev}p4"
