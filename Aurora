@@ -266,7 +266,7 @@ kernelpartition="${dev}p2"
 skpart="${shimdev}p2"
 skpartnum="2"
 sgdisk -i "$skpartnum" "$shimdev" >/dev/null 2>&1
-[ ! -f $skpart ] && echo_c "Failed to find kernel partition on shim." RED_B && cleanup
+[ ! -f $shimdev ] && echo_c "Failed to find kernel partition on shim." RED_B && cleanup
 dd if="$skpart" of="$kernelpartition" status=none
 
 sgdisk --partition-guid=2:B5BAF579-07EF-A747-858B-87C0E507CD29 "$dev" >/dev/null 2>&1
