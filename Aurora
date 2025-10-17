@@ -248,7 +248,6 @@ else
 fi
 
 dev=$(losetup -Pf --show "$aurorashim")
-shimdev=$(losetup -Pf --show "$shim")
 
 p3_end=$((p3_end + 75776))
 p4_start=$((p3_end + 1))
@@ -262,11 +261,12 @@ sgdisk -n 4:${p4_start}:${p4_end} -c 4:"Aurora" "$dev" >/dev/null 2>&1
 sgdisk -t 3:3CB8E202-3B7E-47DD-8A3C-7FF2A13CFCEC "$dev" >/dev/null 2>&1
 sgdisk -t 4:8300 "$dev" >/dev/null 2>&1
 
+shimdev=$(losetup -Pf --show "$shim")
+[ ! -f $shimdev ] && echo_c "Failed to find shim device." RED_B && cleanup
 kernelpartition="${dev}p2"
 skpart="${shimdev}p2"
 skpartnum="2"
 sgdisk -i "$skpartnum" "$shimdev" >/dev/null 2>&1
-[ ! -f $shimdev ] && echo_c "Failed to find kernel partition on shim." RED_B && cleanup
 dd if="$skpart" of="$kernelpartition" status=none
 
 sgdisk --partition-guid=2:B5BAF579-07EF-A747-858B-87C0E507CD29 "$dev" >/dev/null 2>&1
