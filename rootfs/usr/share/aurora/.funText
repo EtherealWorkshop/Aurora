@@ -76,6 +76,7 @@ funText() {
 		"${PURPLE_B}\”meal\” -TN Proxy bot"
 		"${YELLOW_B}Law Vegas"
 		"bender harkens"
+		"This cancer is known to the state of channel to cause California."
         ) #              cen-><-ter" 
 
   	selectedSplashText=${splashText[$RANDOM % ${#splashText[@]}]}
