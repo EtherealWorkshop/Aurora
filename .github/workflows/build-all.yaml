@@ -29,7 +29,6 @@ jobs:
           - edgar
           - elm
           - enguarde
-          - fizz
           - glimmer
           - grunt
           - hana
