@@ -531,7 +531,7 @@ menu1_options+=(
     "$( [ $pid1 = false ] && echo "3" || echo "4" ). Connect to WiFi"
     "$( [ $pid1 = false ] && echo "4" || echo "5" ). Download a ChromeOS recovery image/shim"
     "$( [ $pid1 = false ] && echo "5" || echo "6" ). Update shim"
-    "$( [ $pid1 = false ] && echo "6" || echo "7" ). Payloads"
+    "$( [ $pid1 = false ] && echo "6" || echo "7" ). Settings"
     "$( [ $pid1 = false ] && echo "7" || echo "8" ). Exit and Reboot"
 )
 
@@ -539,18 +539,20 @@ menu1_actions+=(
     "clear && wifi"
     "canwifi clear && download"
     "canwifi updateshim && sync"
-    "clear && payloads"
+    "clear && asettings"
     "reboot -f"
 )
 
 menu2_options=(
     "1. Open Terminal"
-    "2. AFTGGP [Aurora File Transfer]"
-    "3. Build Environment"
-    "4. Set Kernver"
+    "2. Payloads"
+    "3. AFTGGP [Aurora File Transfer]"
+    "4. Build Environment"
+    "5. Set Kernver"
 )
 menu2_actions=(
     "clear && bash -c 'stty sane && stty erase '^H' && exec bash -l || exec busybox sh -l'"
+    "clear && payloads"
     "canwifi aftggp"
     "clear && canwifi aurorabuildenv"
     "clear && set-kernver"
@@ -637,7 +639,7 @@ fi
 release_board=$(lsbval CHROMEOS_RELEASE_BOARD 2>$TTY4)
 board_name=${release_board%%-*}
 
-for chmod in /usr/bin/aurorabuildenv; do
+for chmod in /usr/bin/aurorabuildenv /usr/bin/asettings; do
     chmod +x $chmod
 done
 clear
