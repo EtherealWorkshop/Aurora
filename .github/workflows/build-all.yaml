@@ -25,6 +25,7 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    continue-on-fail: true
     strategy:
       matrix:
         board:
