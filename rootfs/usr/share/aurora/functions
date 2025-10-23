@@ -99,12 +99,16 @@ echo_c() {
     echo -e "${color}${text}${COLOR_RESET}"
 }
 
-errormessage() {
-    if [ -n "$errormsg" ]; then 
+announcement() {
+    if [ -n "$errormsg" ]; then
         echo -en "${RED_B}"
         echo "Error: ${errormsg}" | center
+        echo -e "${COLOR_RESET}"
+    elif [ -e "/etc/aurorannouncement" ]; then
+        echo -en "${GEEN_B}"
+        cat /etc/aurorannouncement 2>/dev/null | center
+        echo -e "${COLOR_RESET}"
     fi
-    echo -e "${COLOR_RESET}"
 }
 
 center() {

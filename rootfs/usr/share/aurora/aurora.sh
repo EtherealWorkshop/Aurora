@@ -668,7 +668,7 @@ while true; do
     hostname $(cat /etc/hostname)
     export wifidevice=$(ip link 2>$TTY4 | grep -E "^[0-9]+: " | grep -oE '^[0-9]+: [^:]+' | awk '{print $2}' | grep -E '^wl' | head -n1)
     splash
-    errormessage
+    announcement
     export errormsg=""
     export login=""
     declare -n current_actions="menu${page}_actions"
