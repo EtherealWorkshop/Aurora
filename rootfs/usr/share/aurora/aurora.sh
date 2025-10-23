@@ -90,7 +90,18 @@ installcros() {
         mount -n --bind "${d}" "./${d}"
         mount --make-slave "./${d}"
     done
-    chroot ./ /usr/sbin/chromeos-install --payload_image="${loop}" --yes || fail "Failed during chroot!" --fatal
+    read_center -d "Block ChromeOS and Kernel Updates? (Y/n): " block
+    case $block in
+        n|N) chroot ./ /usr/sbin/chromeos-install --payload_image="${loop}" --yes || fail "Failed during chroot!" --fatal ;;
+        *) echo_c "Blocking Updates" GEEN_B | center
+           cp ./usr/sbin/write_gpt.sh /usr/share/aurora/assets/write_gpt.sh
+           sed -i -E "s/.*add -i (4|5|6|7).*target\}//" /usr/share/aurora/assets/write_gpt.sh
+           mount -n --bind /usr/share/aurora/assets/write_gpt.sh ./usr/sbin/write_gpt.sh
+           mount -n --bind /usr/share/aurora/assets/chromeos-install.sh ./usr/sbin/chromeos-install.sh || mount -n --bind /usr/share/aurora/assets/chromeos-install ./usr/sbin/chromeos-install
+           debug_run chroot ./ /usr/sbin/chromeos-install --payload_image="${loop}" --yes --minimal_copy || fail "Failed during chroot!" --fatal 
+           umount ./usr/sbin/chromeos-install.sh
+           ;;
+    esac # see, "case" spelled backwards is "esac", which is funny because until i've had my "case", i don't give "esac" about anything.
     get_partitions
     cgpt add -i 2 $cros_root_a -P 15 -T 15 -S 1 -R 1 || echo -e "${YELLOW_B}Failed to set kernel priority! Continuing anyway${COLOR_RESET}"
     clear
