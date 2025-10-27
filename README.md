@@ -39,7 +39,7 @@ Run the next command with a **raw** shim and the architecture of the chromebook 
 ```bash
 sudo bash Aurora /path/to/shim.bin
 ```
-Alternatively, you can automatically download a nanoshim and build it with the following command:
+Alternatively, you can automatically download a nanoshim and build with it with the following command:
 ```bash
 sudo bash Aurora <board> --auto
 ```
@@ -77,7 +77,7 @@ You can then either download recovery images or shims in Aurora itself, or put t
   1. Any future shims that are made
 
 # Uploading Files via another computer
-1. Use AFT on page 2 (recommended)
+1. Use AFT on page 2 (reccomended)
 2. Use a linux computer with **ROOT ACCESS**<br></br>
 ChromeOS Files will NOT WORK! Use VT2 or Crostini USB passthrough if you only have a chromebook.
 
