@@ -11,7 +11,7 @@ on:
       branch:
         description: 'Git branch'
         required: true
-        default: 'alpine'
+        default: '2.0'
         type: string
       ranch:
         description: 'Ranch'
