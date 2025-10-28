@@ -35,11 +35,11 @@ apk add curl wget bash e2fsprogs gptfdisk sgdisk cgpt rsync
 git clone --recursive https://github.com/AerialiteLabs/Aurora.git
 cd Aurora
 ```
-Run the next command with a **raw** shim and the architecture of the chromebook you have.
+Run the following command with a **raw** shim and the architecture of the Chromebook you have.
 ```bash
 sudo bash Aurora /path/to/shim.bin
 ```
-Alternatively, you can automatically download a nanoshim and build with it with the following command:
+Alternatively, you can automatically download a nanoshim and build it with the following command:
 ```bash
 sudo bash Aurora <board> --auto
 ```
@@ -47,12 +47,12 @@ If you don't want to build a shim yourself (or aren't able to), prebuilts are av
 ## Flashing
 ### Linux/FreeBSD:
 Assuming you're still in the `Aurora/` directory and have just built it:<br></br>
-First run `lsblk` and look for the usb's identifier (the letter after sd), replace "X" with it.
+First, run `lsblk` and look for the USB's identifier (the letter after `sd`); replace "X" with it.
 ```bash
 sudo dd if=<board>-aurora.bin of=/dev/sdX bs=1M status=progress
 ```
 Otherwise, do `if=/path/to/<board>-aurora.bin` if you aren't working in the same directory as the prebuilt.<br></br>
-Replace sudo with your privilege escalation tool of choice.
+Replace `sudo` with your privilege-escalation tool of choice.
 ### Windows:
 Download Rufus, select your USB, select board-aurora.bin (download from prebuilts, or try to build with WSL). 
 
@@ -62,8 +62,8 @@ Download Balena Etcher, select your USB, select board-aurora.bin.
 ### ChromeOS (personal/unenrolled device)
 Download a prebuilt, get the [Chromebook Recovery Utility](https://chromewebstore.google.com/detail/chromebook-recovery-utili/pocpnlppkickgojjlmhdmidojbmbodfm). Start CRU and click the gear icon in the top right, press "use local image" and navigate to the prebuilt. Select your USB, and let it do its thing. 
 # Booting
-After flashing, do the normal steps to boot sh1mmer, then plug it into your chromebook. It will automatically extend the rootfs to fill the rest of the drive. On future boots if you're connected to the internet it will automatically update itself. 
-You can then either download recovery images or shims in Aurora itself, or put them on Aurora via mounting the 4th partition of the device on another linux/chromeos machine and copying them into the relevant directory inside `/usr/share/aurora/images` on the mounted drive (there's images/recovery, images/shims, and images/gurt [yo]).
+After flashing, do the normal steps to boot sh1mmer, then plug it into your Chromebook. It will automatically extend the rootfs to fill the rest of the drive. On future boots, if you're connected to the Internet, it will automatically update itself. 
+You can then either download recovery images or shims in Aurora itself, or put them on Aurora by mounting the 4th partition of the device on another Linux/ChromeOS machine and copying them into the relevant directory inside `/usr/share/aurora/images` on the mounted drive (there's images/recovery, images/shims, and images/gurt [yo]).
 # Booting Other Shims
 - Here's a list of shims that we've tested and they work:
   1. SH1MMER (contains cryptosmite, icarus, and br0ker)
@@ -74,9 +74,9 @@ You can then either download recovery images or shims in Aurora itself, or put t
   2. Any future shims that are made
 
 # Uploading Files via another computer
-1. Use AFT on page 2 (reccomended)
-2. Use a linux computer with **ROOT ACCESS**<br></br>
-ChromeOS Files will NOT WORK! Use VT2 or Crostini USB passthrough if you only have a chromebook.
+1. Use AFT on page 2 (recommended)
+2. Use a Linux computer with **ROOT ACCESS**<br></br>
+ChromeOS Files will NOT WORK! Use VT2 or Crostini USB passthrough if you only have a Chromebook.
 
 # Credits
 - [Sophia](https://github.com/soap-phia) - Lead developer of Aurora, Got Wifi
@@ -86,4 +86,5 @@ ChromeOS Files will NOT WORK! Use VT2 or Crostini USB passthrough if you only ha
 - [Synaptic](https://github.com/Synaptic-1234) - Emotional Support
 - [Simon](https://github.com/simpansoftware) - [IRS] Brainstormed how to do wifi, helped with determining wireless interface
 - [kraeb](https://github.com/DyingHynixMLC) - [IRS] QoL improvements and initial idea
+- [kxtz](https://github.com/kxtzownsu) - Misc. README changes
 - [Evie](https://github.com/AC3GT) - Literally nothing
