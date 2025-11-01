@@ -84,7 +84,7 @@ ChromeOS Files will NOT WORK! Use VT2 or Crostini USB passthrough if you only ha
 - [xmb9](https://github.com/xmb9) - [PRIISM] Made Priism, Giving Aurora the ability to Boot Shims & Use Reco Images
 - [EpicDevices](https://github.com/epic-devices) - Inspired the `wifidevice` variable and also is very epic
 - [Synaptic](https://github.com/Synaptic-1234) - Emotional Support
-- [Simon](https://github.com/simpansoftware) - [IRS] Brainstormed how to do wifi, helped with determining wireless interface
 - [kraeb](https://github.com/DyingHynixMLC) - [IRS] QoL improvements and initial idea
+- [Simon](https://github.com/simpansoftware) - [IRS] Brainstormed how to do wifi, helped with determining wireless interface
 - [kxtz](https://github.com/kxtzownsu) - Misc. README changes
 - [Evie](https://github.com/AC3GT) - Literally nothing
