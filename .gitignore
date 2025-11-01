@@ -1,7 +1,7 @@
 *.bin
 *.Zone:*
-build/rootfs
-build/auroraboot
-build/alpine-minirootfs*
+alpine-minirootfs.tar.gz
 *yamlmaker.sh
 testdir
+linux-firmware
+*-firmware.tar.zst

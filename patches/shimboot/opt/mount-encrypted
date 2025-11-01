@@ -1,2 +1,0 @@
-#!/bin/bash
-/tmp/mount-encrypted.real "$@" --unsafe 2>&1 | tee -a /tmp/mount-encrypted.log

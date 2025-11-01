@@ -1,7 +1,8 @@
-#!/bin/bash
-dev_partition=$(blkid | grep 'LABEL="Aurora"' | awk -F: '{print $1}')
-dev=$(echo "$dev_partition" | sed -E 's/p?[0-9]+$//')
-parted -fs $dev align-check opt 4
-growpart $dev 4
-e2fsck -fy $dev_partition
-resize2fs -p $dev_partition
+#!/bin/sh
+
+set -x
+dev=$(printf '%s' "$dev_partition" | sed 's/[0-9]*$//' | sed 's/p$//')
+parted -fs "$dev" align-check opt 4
+parted -s "$dev" resizepart 4 100%
+e2fsck -fy "$dev_partition"
+resize2fs -p "$dev_partition"

@@ -6,6 +6,17 @@ on:
       tag:
         description: 'Release tag'
         required: true
+        default: 'shrimp'
+        type: string
+      branch:
+        description: 'Git branch'
+        required: true
+        default: '2.0'
+        type: string
+      ranch:
+        description: 'Ranch'
+        required: true
+        default: 'Hidden Valley'
         type: string
         
 permissions:
@@ -14,6 +25,7 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    continue-on-error: true
     strategy:
       matrix:
         board:
@@ -29,7 +41,6 @@ jobs:
           - edgar
           - elm
           - enguarde
-          - fizz
           - glimmer
           - grunt
           - hana
@@ -65,6 +76,7 @@ jobs:
       with:
         submodules: recursive
         token: ${{ secrets.GITHUB_TOKEN }}
+        ref: ${{ inputs.branch }} 
 
     - name: Build Aurora
       run: |
@@ -72,7 +84,7 @@ jobs:
         chmod +x Aurora
         sudo apt update
         sudo apt install -y bc wget curl bash e2fsprogs gdisk cgpt rsync qemu-user-static binfmt-support
-        sudo ./Aurora -b "${{ matrix.board }}"
+        sudo ./Aurora -b "${{ matrix.board }}" -t
 
     - name: Upload built shim
       uses: softprops/action-gh-release@v2

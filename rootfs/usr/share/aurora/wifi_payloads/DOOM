@@ -32,7 +32,6 @@ alsactl init 2>/dev/null || true
 amixer sset Master unmute 2>/dev/null || true
 amixer sset Master 80% 2>/dev/null || true
 openbox &
-hsetroot -cover /usr/share/aurora/assets/bg.png &
 while true; do
     gzdoom -iwad ~/.config/gzdoom/doom1.wad -fullscreen
     sleep 1

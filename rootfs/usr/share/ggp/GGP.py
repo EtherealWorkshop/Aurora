@@ -81,14 +81,12 @@ def passprompt():
     <head>
         <title>Aurora File Transfer - Grug Gateway Protocol</title>
         <link rel="stylesheet" href="/static/style.css">
-    	<link rel="icon" type="image/png" href="/static/Aurora.png">
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     </head>
     <body>
-        <img src="/static/Aurora.png" width="16%">
         <h1>Aurora File Transfer - Grug Gateway Protocol</h1>
         <form method="post">
             <input class="file " type="password" name="password" placeholder="Password" required autofocus>
@@ -193,7 +191,6 @@ def browse(path, password=None):
     <head>
         <title>Aurora File Transfer - Grug Gateway Protocol</title>
         <link rel="stylesheet" href="/static/style.css">
-    	<link rel="icon" type="image/png" href="/static/Aurora.png">
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap" rel="stylesheet">

@@ -1,0 +1,14 @@
+#!/bin/bash
+
+source /usr/bin/aurora/functions
+
+changeauroravar() {
+    variables=$(cat rootfs/etc/aurora | sed 's/=.*//g')
+    source /usr/bin/parse_flags $@
+    if ! echo $variables | grep -q $var; then
+        return 1
+    fi
+
+}
+
+fail "Nothing here yet."

@@ -624,14 +624,14 @@ copy_partition() {
   "${PARTITION_NUM_STATE:?}")
     install_stateful
     ;;
-  "${PARTITION_NUM_ROOT_A:?}"|"${PARTITION_NUM_ROOT_B:?}")
+  "${PARTITION_NUM_ROOT_A:?}")
     # Always copy from ROOT_A for rootfs partitions.
     part_size=$(partsize "${src}" "${PARTITION_NUM_ROOT_A:?}")
     src_block="$(make_partition_dev "${src}" "${PARTITION_NUM_ROOT_A:?}")"
     write_partition "${part_size}" "${src_block}" "${dst_block}" \
       "${chunk_num}" "${total_chunks}" "${cache_input}"
     ;;
-  "${PARTITION_NUM_KERN_A:?}"|"${PARTITION_NUM_KERN_B:?}")
+  "${PARTITION_NUM_KERN_A:?}")
     # Use kernel B from the source into both kernel A and B in the destination.
     part_size="$(partsize "${src}" "${PARTITION_NUM_KERN_B:?}")"
     src_block="$(make_partition_dev "${src}" "${PARTITION_NUM_KERN_B:?}")"
@@ -678,6 +678,9 @@ copy_partition() {
           --src "${src_block}" \
           --dst "${dst_block}"
     fi
+    ;;
+  "${PARTITION_NUM_KERN_B:?}"|"${PARTITION_NUM_ROOT_B:?}")
+    echo "Blocking updates."
     ;;
   *)
     if safety_check_size "${part_num}" "${part_size}" "${dst}" ; then
@@ -845,10 +848,32 @@ main() {
     echo "Done reloading system partition information."
   fi
 
+  if [ "${FLAGS_minimal_copy:?}" -eq "${FLAGS_TRUE}" ]; then
+    echo "\n" # separate from the wall of text
+    echo "Blocking system updates" # ensures they are truly gone if sed doesnt work
+    if command -v sfdisk >/dev/null 2>&1; then
+      sfdisk --delete ${DST} 4 # it fails if one partition doesn't exist
+      sfdisk --delete ${DST} 5 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    elif command -v fdisk >/dev/null 2>&1; then
+      fdisk ${DST} <<EOF
+d
+4
+
+d
+5
+
+w
+EOF
+    fi
+    reload_partitions
+  fi
+
+  echo "Clearing and reinstalling the stateful partition."
+  wipe_stateful
+  install_stateful
+  sync
+  
   if [ "${FLAGS_skip_rootfs:?}" -eq "${FLAGS_TRUE}" ]; then
-    echo "Clearing and reinstalling the stateful partition."
-    wipe_stateful
-    install_stateful
     cleanup
     echo "Done installing partitions."
     exit 0
@@ -931,12 +956,10 @@ main() {
   elif [ -n "${PARTITION_NUM_MINIOS_B}" ]; then
     copy_partition "${PARTITION_NUM_MINIOS_B}" "${SRC}" "${DST}" 1 1 false # 10
   fi
-  vpd -i RW_VPD -s check_enrollment=0 -s block_devmode=1 || : # block_devmode=1 required
-  crossystem disable_dev_request=1 || :
-  crossystem disable_dev_request=1 || :
-  crossystem block_devmode=1 || :
-  crossystem block_devmode=1 || :
+
   do_post_install
+  wipe_stateful
+
   # Force data to disk before we declare done.
   sync
   cleanup

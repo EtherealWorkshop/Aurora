@@ -6,10 +6,27 @@ echo_c() {
     local color="${!color_variable}"
     echo -e "${color}${text}${COLOR_RESET}"
 }
+
 debug_msg() {
   if "$verbose"; then
     echo_c $@
   fi
+}
+
+lsbval() {
+  local key="$1" lsbfile="${2:-$rootfs/etc/lsb-release}"
+  echo "$key" | grep -Eq '^[a-zA-Z0-9_]+$' || return 1
+  sed -E -n -e "/^[[:space:]]*${key}[[:space:]]*=/{
+    s:^[^=]+=[[:space:]]*::
+    s:[[:space:]]+$::
+    p
+  }" "$lsbfile"
+}
+
+verify_syntax() {
+    for script in $@; do
+        bash -n "$script" || { echo_c "Syntax error in $script. Please create an issue at https://github.com/AerialiteLabs/Aurora/issues" RED_B; exit 1; }
+    done
 }
 
 if [ "$EUID" -ne 0 ]; then
@@ -17,7 +34,7 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
-. rootfs/usr/bin/parse_flags "k,shrimp,krill,0 v,verbose,0 h,help,0 i,!board,image,shim,1 b,!shim,board,1 m,shimsize,1 s,shims,2 r,recovery,2 p,payloads,2" $@ || exit 1
+. rootfs/usr/bin/parse_flags "t,tree,0 q,qemu,0 k,shrimp,krill,0 v,verbose,0 h,help,0 f,firmware,0 i,!board,image,shim,1 b,!shim,board,1 m,shimsize,1 s,shims,2 r,recovery,2 p,payloads,2" $@ || exit 1
 
 if [ -z "$board" ] && [ -z "$shim" ]; then
     echo "Usage: sudo bash Aurora [-i /path/to/shim.bin]/[-b <board>]"
@@ -80,6 +97,7 @@ if [ -f "$temproot/bin/bash" ]; then
         *aarch64* | *armv8* | *arm*) arch=aarch64 ;;
     esac
 fi
+boardname=$(lsbval CHROMEOS_RELEASE_BOARD $temproot/etc/lsb-release)
 
 umount "$temproot"
 losetup -d $loopdev

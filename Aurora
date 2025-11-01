@@ -19,6 +19,7 @@
 # TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 # THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+
 COLOR_RESET="\033[0m"
 RED_B="\033[1;31m"
 GEEN_B="\033[1;32m"
@@ -28,27 +29,22 @@ MAGENTA_B="\033[1;35m"
 PINK_B="\x1b[1;38;2;235;170;238m"
 CYAN_B="\033[1;36m"
 
-
 cleanup() {
-    for dir in proc sys dev run; do umount -l "$rootfs/$dir"; done
-    rm -rf "$rootfs" "$auroraboot" "$statemount" "$root_amount" "$root_bmount"
-}
-
-lsbval() {
-  local key="$1" lsbfile="${2:-$rootfs/etc/lsb-release}"
-  echo "$key" | grep -Eq '^[a-zA-Z0-9_]+$' || return 1
-  sed -E -n -e "/^[[:space:]]*${key}[[:space:]]*=/{
-    s:^[^=]+=[[:space:]]*::
-    s:[[:space:]]+$::
-    p
-  }" "$lsbfile"
+  umount $auroraboot/etc/resolv.conf -l 2>/dev/null
+  umount $rootfs/etc/resolv.conf -l 2>/dev/null
+  for dir in proc sys dev run; do umount -l "$rootfs/$dir" 2>/dev/null; done
+  umount $rootfs $auroraboot $statemount $root_amount $root_bmount 2>/dev/null
+  rm -rf "$rootfs" "$auroraboot" "$statemount" "$root_amount" "$root_bmount" 2>/dev/null
+  losetup -D $dev
+  exit 1
 }
 
 . checks $@
 
 verbose="${verbose:=false}"
 krill="${krill:=false}"
-
+tree="${tree:=false}"
+$verbose && set -x
 auroraboot=$(mktemp -d)
 rootfs=$(mktemp -d)
 rm -rf "$rootfs" "$auroraboot"
@@ -58,45 +54,16 @@ mkdir -p "$rootfs" "$auroraboot"
 if findmnt -T "$rootfs" -o OPTIONS -n | grep -qE 'noexec|nodev'; then
     mount -o remount,dev,exec "$(findmnt -T "$rootfs" -o TARGET -n)"
 fi
-
+verify_syntax auroraboot/opt/setup_auroraboot.sh auroraboot/sbin/init auroraboot/resize
+verify_syntax rootfs/etc/profile rootfs/opt/setup_rootfs.sh rootfs/sbin/init rootfs/sbin/init $(ls rootfs/usr/bin/*) rootfs/usr/share/aurora/aurora.sh rootfs/usr/share/aurora/functions
 rm -f "$aurorashim"
 
-if [ -z "$shims" ] && [ -z "$recovery" ] && [ -z "$shimsize" ]; then
-  echo_c "Creating shim with size 694200KB" GEEN_B
-  truncate -s 694200K "$aurorashim" # haha 69
-elif [ -n "$shims" ] || [ -n "$recovery" ] && [ $(df --output=avail / | tail -1) -gt $((15*1024*1024)) ]; then
-  shimsize=694200
-  recovery=${recovery:=""}
-  shims=${shims:=""}
-  for image in $shims $recovery; do
-    [ -e "$image" ] || {
-      echo_c "$image not found. Skipping..." RED_B
-      continue
-    }
-    image_kilobytes=$(du -sk $image | awk '{print $1}')
-    shimsize=$((shimsize+image_kilobytes+4096))
-  done
-  echo_c "Building Aurora with size $(echo "scale=1; $shimsize/1024/1024" | bc)GB" GEEN_B
-  debug_msg "[${shimsize}KB]" RED_B
-  echo_c "Recovery Images: ${recovery:="None"}" GEEN_B
-  echo_c "Shims: ${shims:="None"}" GEEN_B
-  echo_c "Extra payloads: ${payloads:="None"}" GEEN_B
-  truncate -s ${shimsize}K "$aurorashim"
-elif [ -n "$shimsize" ] && [ "$shimsize" -gt "694200" ] && [ $(df --output=avail / | tail -1) -gt $shimsize ]; then
-  echo_c "Creating shim with size $(echo "scale=1; $shimsize/1024/1024" | bc)GB" GEEN_B
-  truncate -s ${shimsize}K "$aurorashim"
-else
-  echo_c "Not enough free space on disk. Available:$(df -h --output=avail / | tail -1)" RED_B
-  exit 1
-fi
-
-echo_c "\nBootstrapping Alpine" BLUE_B
-wget -q --show-progress "https://dl-cdn.alpinelinux.org/alpine/v3.22/releases/$arch/alpine-minirootfs-3.22.0-$arch.tar.gz" -O alpine-minirootfs.tar.gz 
+echo_c "Bootstrapping Alpine" BLUE_B
+[ ! -f alpine-minirootfs.tar.gz ] && wget -q --show-progress "https://dl-cdn.alpinelinux.org/alpine/v3.22/releases/$arch/alpine-minirootfs-3.22.0-$arch.tar.gz" -O alpine-minirootfs.tar.gz 
 
 tar -xf alpine-minirootfs.tar.gz -C "$rootfs"
-rm -f "$rootfs/sbin/init" "alpine-minirootfs.tar.gz"
+rm -f "$rootfs/sbin/init"
 
-echo "nameserver 1.1.1.1" > "$rootfs/etc/resolv.conf"
 
 if [ "$hostarch" != "$arch" ]; then
     echo_c "Done. Rootfs: $(du -sh $rootfs | awk '{print $1}')\n\n${BLUE_B}Setting up QEMU " GEEN_B
@@ -109,33 +76,50 @@ if [ "$hostarch" != "$arch" ]; then
 fi
 
 trap cleanup EXIT
+trap cleanup ERR
 
+rm -f $rootfs/etc/resolv.conf
+touch $rootfs/etc/resolv.conf
 cp -Lar "$rootfs/." "$auroraboot/"
+if grep -q "nameserver" /etc/resolv.conf; then
+  mount --bind /etc/resolv.conf $auroraboot/etc/resolv.conf
+  mount --bind /etc/resolv.conf $rootfs/etc/resolv.conf
+else
+  echo "nameserver 8.8.8.8" > $auroraboot/etc/resolv.conf
+  echo "nameserver 8.8.8.8" > $rootfs/etc/resolv.conf
+fi
 cp -r auroraboot/. "$auroraboot/"
-cp -r patches/shimboot/. "$auroraboot/"
 echo_c "Done. Rootfs: $(du -sh $rootfs | awk '{print $1}')\n\n${BLUE_B}Installing Bootloader Packages" GEEN_B
 chroot "$auroraboot" /bin/sh -c "export PATH=/sbin:/bin:/usr/sbin:/usr/bin && chmod +x /opt/setup_auroraboot.sh && /opt/setup_auroraboot.sh $arch"
 rm -f $auroraboot/opt/setup_auroraboot.sh
 echo_c "Done. Auroraboot: $(du -sh $auroraboot | awk '{print $1}')\n\n${BLUE_B}Installing Rootfs Packages" GEEN_B
 cp -r rootfs/. "$rootfs/"
-mkdir -p "$rootfs/usr/share/patches/sh1mmer"
-cp -r patches/sh1mmer/. "$rootfs/usr/share/patches/sh1mmer/"
 chroot "$rootfs" /bin/sh -c "export PATH=/sbin:/bin:/usr/sbin:/usr/bin && chmod +x /opt/setup_rootfs.sh && /opt/setup_rootfs.sh $arch"
 $krill && sed -i 's/shrimp=0/shrimp=1/' $rootfs/etc/aurora
-sed -i "s/origin=alpine/origin=$(git branch --show-current)/" $rootfs/etc/aurora
+sed -i "s/origin=alpine/origin=$(git branch --show-current)/" $rootfs/etc/aurora && debug_msg $(echo "/etc/aurora:" && cat $rootfs/etc/aurora && echo)
+sed -i "s/setup=0/setup=1/" $rootfs/etc/aurora
 rm -f $rootfs/opt/setup_rootfs.sh
 echo_c "Done. Rootfs: $(du -sh $rootfs | awk '{print $1}')\n\n${BLUE_B}Downloading firmware..." GEEN_B
-git clone --depth=1 https://chromium.googlesource.com/chromiumos/third_party/linux-firmware $rootfs/lib/firmware/
+[ ! -d linux-firmware ] && git clone --depth=1 https://chromium.googlesource.com/chromiumos/third_party/linux-firmware
+cp -r linux-firmware/* $rootfs/lib/firmware/
 find "$rootfs/lib/firmware" -type f -not \( -path "*wifi*" -o -path "*rt*" -o -path "*ath*" -o -path "*mediatek*" \) -exec rm -rf {} + >/dev/null 2>&1
+touch "$rootfs/lib/firmware/.exists"
+echo_c "Done. Rootfs: $(du -sh $rootfs | awk '{print $1}')\n\n${BLUE_B}Compressing firmware..." GEEN_B
+if [ -f $boardname-firmware.tar.zst ]; then
+  cp ./$boardname-firmware.tar.zst "$rootfs/root/firmware.tar.zst"
+else
+  tar -C "$(dirname "$rootfs/lib/firmware")" -cf - "$(basename "$rootfs/lib/firmware")" | zstd -T0 --ultra -22 > "$rootfs/root/firmware.tar.zst"
+fi
+$firmware && cp $rootfs/root/firmware.tar.zst ./$boardname-firmware.tar.zst
+rm -rf "$rootfs/lib/firmware"
+mkdir -p "$rootfs/lib/firmware"
 cp "./lib/$arch/frecon-lite" $rootfs/usr/bin/frecon-lite
 
-trap - EXIT
 echo_c "Done. Rootfs: $(du -sh $rootfs | awk '{print $1}')\n\n${BLUE_B}Building shim..." GEEN_B
 
 mkdir -p "$auroraboot"
 
 shimdev=$(losetup -Pf --show "$shim")
-dev=$(losetup -Pf --show "$aurorashim")
 copyfromcros() {
   for path in $@; do
     cp -a ${tempmount}${path} $rootfs/.crosenv/usr/bin/
@@ -150,22 +134,23 @@ if [ -d "$tempmount/lib/modules" ]; then
   cp -ar "$tempmount/lib/modules" $rootfs/lib/
   cp -ar "$tempmount/etc/lsb-release" $rootfs/etc/lsb-release
   boardname=$(lsbval CHROMEOS_RELEASE_BOARD)
-  
-  mkdir -p $rootfs/.crosenv/usr/bin $rootfs/.crosenv/lib64
-  cp "$tempmount/usr/lib64/libpcre2-8.so*" $rootfs/.crosenv/lib64 2>/dev/null
-  cp "$tempmount/usr/lib64/libreadline.so"* $rootfs/.crosenv/lib64 2>/dev/null
-  cp -r "$tempmount/lib64"/* $rootfs/.crosenv/lib64 2>/dev/null
-  copyfromcros /usr/bin/tpmc /bin/bash
-  cp "./lib/$arch/busybox" $rootfs/.crosenv/usr/bin/busybox
-  chmod +x $rootfs/.crosenv/usr/bin/*
+  mkdir -p $rootfs/.crosenv/usr/bin $rootfs/.crosenv/lib64 $rootfs/.crosenv/lib
+  cp -ar "$tempmount/lib/"* $rootfs/.crosenv/lib/
+  rm -rf "$rootfs/.crosenv/lib/firmware" "$rootfs/.crosenv/lib/modules"
+  cp "$tempmount/usr/lib64/libpcre2-8.so*" $rootfs/.crosenv/lib64 2>/dev/null || :
+  cp "$tempmount/usr/lib64/libreadline.so"* $rootfs/.crosenv/lib64 2>/dev/null || :
+  cp -r "$tempmount/lib64"/* $rootfs/.crosenv/lib64 2>/dev/null || :
+  copyfromcros /usr/bin/tpmc /bin/bash || :
+  cp "./lib/$arch/busybox" $rootfs/.crosenv/usr/bin/busybox || :
+  chmod +x $rootfs/.crosenv/usr/bin/* || :
   umount "$tempmount"
 else
   echo_c "Please run on a raw shim." RED_B
   exit
 fi
 
-rm -f $rootfs/usr/bin/qemu-$arch-static
-rm -f $auroraboot/usr/bin/qemu-$arch-static
+! $qemu && rm -f $rootfs/usr/bin/qemu-$arch-static
+! $qemu && rm -f $auroraboot/usr/bin/qemu-$arch-static
 
 echo_c "Done. Rootfs: $(du -sh $rootfs | awk '{print $1}')\n\n${BLUE_B}Copying Recovery Images, Shims, and Payloads..." GEEN_B
 for shim in $shims; do
@@ -180,24 +165,115 @@ for payload in $payloads; do
   mkdir -p $rootfs/usr/share/aurora/payloads
   [ -e "$payload" ] && cp $payload $rootfs/usr/share/aurora/payloads/
 done
-echo_c "Done. Rootfs: $(du -sh $rootfs | awk '{print $1}')\n\n${BLUE_B}Partitioning shim..." "GEEN_B"
-sgdisk --zap-all "$dev"
-sgdisk -n 1:2048:10239 -c 1:"STATE" "$dev"
-sgdisk -n 2:10240:75775 "$dev"
-sgdisk -n 3:75776:178175 -c 3:"AuroraBoot" "$dev"
-sgdisk -n 4:178176:0 -c 4:"Aurora" "$dev"
-sgdisk -t 3:3CB8E202-3B7E-47DD-8A3C-7FF2A13CFCEC "$dev"
-sgdisk -t 4:8300 "$dev"
-sgdisk -p "$dev"
 
+sbytes=$((4*1024*1024*(11/10)))
+kbytes=$((32*1024*1024*(11/10)))
+abytes=$(du -s --block-size=1 $auroraboot | awk '{print $1}')
+rbytes=$(du -s --block-size=1 $rootfs | awk '{print $1}')
+
+tempfile=$(mktemp)
+tempmnt=$(mktemp -d)
+truncate -s 1G $tempfile
+tempdev=$(losetup -Pf --show $tempfile)
+sgdisk --zap-all "$tempdev" >/dev/null 2>&1
+
+afree=1
+p3_end=$((abytes/512))
+
+until [ "$afree" -gt "$abytes" ] && cp -r "$auroraboot"/* "$tempmnt"; do
+  umount "$tempmnt" -f 2>/dev/null || :
+  [ -b "${tempdev}p1" ] && sgdisk -d 1 "$tempdev" >/dev/null 2>&1 && p3_end=$((p3_end+512))
+  sgdisk -n 1:2048:${p3_end} -c 1:"AuroraBoot"  "$tempdev" >/dev/null 2>&1
+  sgdisk -t 1:3CB8E202-3B7E-47DD-8A3C-7FF2A13CFCEC "$tempdev" >/dev/null 2>&1
+  mkfs.ext4 -F "${tempdev}p1" >/dev/null 2>&1
+  mount "${tempdev}p1" "$tempmnt"
+  afree=$(df --output=avail --block-size=1 $tempmnt | tail -1)
+  echo_c "Required: $abytes bytes, Free: $afree bytes. Resizing..." BLUE_B
+  p3_end=$((p3_end+(abytes-afree)/512))
+done
+df -h $tempmnt
+umount "$tempmnt" -f 2>/dev/null || :
+sgdisk -p "$tempdev"
+abytes=$afree
+
+sgdisk --zap-all "$tempdev"
+
+rfree=1
+p4_end=$((rbytes/512))
+
+until [ "$rfree" -gt "$rbytes" ] && cp -r "$rootfs"/* "$tempmnt"; do
+  umount "$tempmnt" -f 2>/dev/null || :
+  [ -b "${tempdev}p1" ] && sgdisk -d 1 "$tempdev" >/dev/null 2>&1 && p4_end=$((p4_end+512))
+  sgdisk -n 1:2048:${p4_end} -c 1:"Aurora"  "$tempdev" >/dev/null 2>&1
+  sgdisk -t 1:8300 "$tempdev" >/dev/null 2>&1
+  mkfs.ext4 -F "${tempdev}p1" >/dev/null 2>&1
+  mount "${tempdev}p1" "$tempmnt"
+  rfree=$(df --output=avail --block-size=1 $tempmnt | tail -1)
+  echo_c "Required: $rbytes bytes, Free: $rfree bytes. Resizing..." BLUE_B
+  p4_end=$((p4_end+((rbytes/512)-(rfree/512))))
+done
+df -h $tempmnt
+umount "$tempmnt" -f 2>/dev/null || :
+sgdisk -p "$tempdev"
+rbytes=$rfree
+
+bytes=$((abytes+rbytes))
+echo $bytes
+bytes=$((sbytes+kbytes+bytes))
+
+losetup -D
+rm -f "$aurorashim" "$tempfile"
+if [ -z "$shims" ] && [ -z "$recovery" ]; then
+  echo_c "Done. Rootfs: $(du -sh $rootfs | awk '{print $1}')\n\n${BLUE_B}Creating shim..." "GEEN_B"
+  truncate -s 1G "$aurorashim"
+elif [ -n "$shims" ] || [ -n "$recovery" ] && [ $(df --output=avail / | tail -1) -gt $((512*1024*1024)) ]; then
+  shimsize=1G
+  recovery=${recovery:=""}
+  shims=${shims:=""}
+  for image in $shims $recovery; do
+    [ -e "$image" ] || {
+      echo_c "$image not found. Skipping..." RED_B
+      continue
+    }
+    image_b=$(du -s --block-size=1 $image | awk '{print $1}')
+    shimsize=$((shimsize+image_b+4096))
+  done
+  echo_c "Building Aurora with size $(echo "scale=1; $shimsize/1024/1024" | bc)GB" GEEN_B
+  debug_msg "[${shimsize}kb]" RED_B
+  echo_c "Recovery Images: ${recovery:="None"}" GEEN_B
+  echo_c "Shims: ${shims:="None"}" GEEN_B
+  echo_c "Extra payloads: ${payloads:="None"}" GEEN_B
+  truncate -s ${shimsize} "$aurorashim"
+else
+  echo_c "Not enough free space on disk. Available:$(df -h --output=avail / | tail -1)" RED_B
+  exit 1
+fi
+
+dev=$(losetup -Pf --show "$aurorashim")
+
+p3_end=$((p3_end + 75776))
+p4_start=$((p3_end + 1))
+p4_end=$((p4_start + p4_end))
+echo_c "Done. Sectors: $((bytes/512))\n\n${BLUE_B}Partitioning shim..." "GEEN_B"
+sgdisk --zap-all "$dev" >/dev/null 2>&1
+sgdisk -n 1:2048:10239 -c 1:"STATE" "$dev" >/dev/null 2>&1
+sgdisk -n 2:10240:75775 "$dev" >/dev/null 2>&1
+sgdisk -n 3:75776:${p3_end} -c 3:"AuroraBoot" "$dev" >/dev/null 2>&1
+sgdisk -n 4:${p4_start}:${p4_end} -c 4:"Aurora" "$dev" >/dev/null 2>&1
+sgdisk -t 3:3CB8E202-3B7E-47DD-8A3C-7FF2A13CFCEC "$dev" >/dev/null 2>&1
+sgdisk -t 4:8300 "$dev" >/dev/null 2>&1
+
+shimdev=$(losetup -Pf --show "$shim")
 kernelpartition="${dev}p2"
-skpart=$(cgpt find -l KERN-A "$shimdev" | head -n 1)
-skpartnum="${skpart##*p}"
-sgdisk -i "$skpartnum" "$shimdev"
+skpart="${shimdev}p2"
+skpartnum="2"
+sgdisk -i "$skpartnum" "$shimdev" >/dev/null 2>&1
 dd if="$skpart" of="$kernelpartition" status=none
 
-sgdisk --partition-guid=2:B5BAF579-07EF-A747-858B-87C0E507CD29 "$dev"
+sgdisk --partition-guid=2:B5BAF579-07EF-A747-858B-87C0E507CD29 "$dev" >/dev/null 2>&1
 cgpt add -i 2 -t "$(cgpt show -i "$skpartnum" -t "$shimdev")" -l "$(cgpt show -i "$skpartnum" -l "$shimdev")" -P 15 -T 15 -S 1 "$dev" >/dev/null
+
+sgdisk -p "$dev"
 
 state="${dev}p1"
 root_a="${dev}p3"
@@ -218,41 +294,53 @@ touch "$statemount/dev_image/etc/lsb-factory"
 mount "$root_a" "$root_amount"
 mount "$root_b" "$root_bmount"
 
-echo_c "Done. Rootfs: $(du -sh $rootfs | awk '{print $1}')\n\n${BLUE_B}Copying rootfs to shim" "GEEN_B"
-rm -f "$rootfs/sbin/init"
-cp -ar rootfs/. "$rootfs"
-if $verbose; then
-    rsync -avH --info=progress2 --delete "$rootfs/." "$root_bmount" || { echo "failed to copy all files"; exit 1; }
-    sleep 10
-else
-    rsync -avH --info=progress2 --delete "$rootfs/." "$root_bmount" >/dev/null || { echo "failed to copy all files"; exit 1; }
-
-fi
-echo_c "Done. Rootfs: $(du -sh $rootfs | awk '{print $1}')\n\n${BLUE_B}Copying auroraboot to shim" "GEEN_B"
+echo_c "Done. Rootfs: $(du -sh $rootfs | awk '{print $1}')\n\n${BLUE_B}Copying auroraboot [$auroraboot] to shim" "GEEN_B"
 rm -f "$auroraboot/bin/init"
 cp -ar auroraboot/. "$auroraboot"
+trap - ERR
 if $verbose; then
-    rsync -avH --info=progress2 --delete "$auroraboot/." "$root_amount" || { echo "failed to copy all files"; exit 1; }
-    sleep 10
+  rsync -avH --info=progress2 --delete "$auroraboot/." "$root_amount" 2>&1
+  [ $? -ne 0 ] && echo_c "rsync to AuroraBoot failed." RED_B && df -h $root_amount && cleanup
+  sleep 10
 else
-    rsync -avH --info=progress2 --delete "$auroraboot/." "$root_amount" >/dev/null || { echo "failed to copy all files"; exit 1; }
-
+  rsync -avH --info=progress2 --delete "$auroraboot/." "$root_amount" >/dev/null 2>&1
+  [ $? -ne 0 ] && echo_c "rsync to AuroraBoot failed." RED_B && df -h $root_amount && cleanup
 fi
-chmod +x "$root_amount/init" "$root_amount/sbin/init" "$root_amount/bootstrap.sh" 2>/dev/null
-chmod +x "$root_bmount/sbin/init" "$root_bmount/usr/bin/"* "$root_bmount/usr/share/aurora/"* 2>/dev/null
+echo_c "Done. auroraboot: $(du -sh $auroraboot | awk '{print $1}')\n\n${BLUE_B}Copying rootfs [$rootfs] to shim" "GEEN_B"
+if $verbose; then
+  rsync -avH --info=progress2 --delete "$rootfs/." "$root_bmount" 2>&1
+  [ $? -ne 0 ] && echo_c "rsync to Rootfs failed." RED_B && df -h $root_bmount && cleanup
+  sleep 10
+else
+  rsync -avH --info=progress2 --delete "$rootfs/." "$root_bmount" >/dev/null 2>&1
+  [ $? -ne 0 ] && echo_c "rsync to Rootfs failed." RED_B && df -h $root_bmount && cleanup
+fi
+chmod +x "$root_amount/init" "$root_amount/sbin/init" "$root_amount/bootstrap.sh" 2>/dev/null || :
+chmod +x "$root_bmount/sbin/init" "$root_bmount/usr/bin/"* "$root_bmount/usr/share/aurora/"* 2>/dev/null || :
 sync
 
-echo_c "Done. auroraboot: $(du -sh $auroraboot | awk '{print $1}')\n\n${BLUE_B}Cleaning up...\n" "GEEN_B"
+echo_c "Done. Rootfs: $(du -sh $rootfs | awk '{print $1}')\n\n${BLUE_B}Cleaning up...\n" "GEEN_B"
 
+trap - EXIT
+
+umount $auroraboot/etc/resolv.conf -l 2>/dev/null
+umount $rootfs/etc/resolv.conf -l 2>/dev/null
+$tree && clear
+$tree && tree -L 3 -a -h -C "$root_amount"
+$tree && tree -L 3 -a -h -C "$root_bmount"
 umount "$statemount" "$root_amount" "$root_bmount"
 umount "$statemount" -l 2>/dev/null
 umount "$root_amount" -l 2>/dev/null
 umount "$root_bmount" -l 2>/dev/null
 
+newsize=$(( $(parted "$dev" unit KB print | grep -w "Aurora" | awk '{print $3}' | sed 's/kB//') + 1024 ))
 losetup -D
 rm -rf "$rootfs" "$auroraboot" "$statemount" "$root_amount" "$root_bmount"
-mv "$aurorashim" "${boardname}-aurora.bin" 2>/dev/null
 finalshim="${boardname}-aurora.bin"
+mv "$aurorashim" "$finalshim" 2>/dev/null
+truncate -s ${newsize}K "$finalshim"
+sgdisk -e "$finalshim" >/dev/null 2>&1
+partprobe
 
 echo -e "${MAGENTA_B}Credits"
 echo -e "${PINK_B}Sophia${COLOR_RESET}: Lead developer of Aurora, Got Wifi"
@@ -262,4 +350,4 @@ echo -e "${YELLOW_B}Synaptic${COLOR_RESET}: Emotional Support"
 echo -e "${CYAN_B}Simon${COLOR_RESET}: ${BLUE_B}[IRS]${COLOR_RESET} Brainstormed how to do wifi, helped with dhcpcd"
 echo -e "${BLUE_B}kraeb${COLOR_RESET}: ${BLUE_B}[IRS]${COLOR_RESET} QoL improvements and initial idea"
 echo -e "${MAGENTA_B}AC3${COLOR_RESET}: Literally nothing"
-echo_c "Done!" GEEN_B
+echo_c "Done! Image: $(du -sh $finalshim | awk '{print $1}')" GEEN_B

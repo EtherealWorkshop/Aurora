@@ -38,6 +38,12 @@ debug_run() {
     fi
 }
 
+debug_msg() {
+  if $debug; then
+    echo_c $@
+  fi
+}
+
 get_largest_cros_blockdev() {
 	local largest size dev_name tmp_size remo
 	size=0
@@ -93,12 +99,16 @@ echo_c() {
     echo -e "${color}${text}${COLOR_RESET}"
 }
 
-errormessage() {
-    if [ -n "$errormsg" ]; then 
+announcement() {
+    if [ -n "$errormsg" ]; then
         echo -en "${RED_B}"
         echo "Error: ${errormsg}" | center
+        echo -e "${COLOR_RESET}"
+    elif [ -e "/etc/aurorannouncement" ]; then
+        echo -en "${GEEN_B}"
+        cat /etc/aurorannouncement 2>/dev/null | center
+        echo -e "${COLOR_RESET}"
     fi
-    echo -e "${COLOR_RESET}"
 }
 
 center() {
@@ -227,6 +237,7 @@ fail() {
 term_login() {
     clear
     cat /etc/motd
+    echo
     for attempt in 1 2 3; do
         stty intr '' erase '^H'
         read -p "$(hostname) login: " username
@@ -308,11 +319,7 @@ menu() {
 }
 
 splash() {
-    if [ "$rogged" -eq 69 ] && [ "$(lsbval shrimp /etc/aurora)" == "0" ]; then
-        doug
-        printf "\033[H"
-        clear
-    elif [ "$(lsbval shrimp /etc/aurora)" == "1" ]; then
+    if [ "$(lsbval shrimp /etc/aurora)" == "1" ]; then
         shrimp
         printf "\033[H"
         clear
@@ -447,7 +454,7 @@ export_args() {
     local key=
     local val=
     local acceptable_set='[A-Za-z0-9]_'
-    echo "Exporting kernel argument..." | center
+    echo "Exporting kernel argument..."
     for arg in "$@"; do
         key=$(echo "${arg%%=*}" | busybox tr 'a-z' 'A-Z' | busybox tr -dc "$acceptable_set" '_')
         val="${arg#*=}"
@@ -457,26 +464,94 @@ export_args() {
     echo ""
 }
 
-copy_lsb() {
-    echo "Copying lsb..." | center
-    local src_path="/stateful/dev_image/etc/lsb-factory"
-    local dest_path="/newroot/etc/lsb-factory"
+is_good_rootfs_partition() {
+    local root_dev="$1"
+    local sector_count
+    sector_count="$(cat "/sys/class/block/$(basename "${root_dev}")/size")"
+    local sector_count_threshold=1
+    [ "${sector_count}" -gt "${sector_count_threshold}" ]
+}
 
-    mkdir -p "$(dirname "${dest_path}")"
+strip_partition() {
+    local dev="${1%p[0-9]*}"
+    echo "$dev"
+}
 
-    if [ -f "${src_path}" ]; then
-        echo "Found ${src_path}." | center
-        cp "${src_path}" "${dest_path}" || fail "failed with $?"
-        if cgpt find -l SH1MMER "${loop}" | head -n 1 | grep --color=never -q /dev/; then
-            export specialshim="sh1mmer"
-            echo "STATEFUL_DEV=${loop}p1" >> "${dest_path}"
+wait_for_gpt_root() {
+    [ -z "$KERN_ARG_KERN_GUID" ] && return 1
+    local try kern_dev kern_num
+    local root_dev root_num
+    for try in $(seq 20); do
+        kern_dev="$(cgpt find -l KERN-A ${USB_DEV})" || kern_dev="${USB_DEV}p2"
+        kern_num=${kern_dev##[/a-z]*[/a-z]}
+        for offset in 1 -1; do
+        root_num=$(( kern_num + ${offset} ))
+        root_dev="${kern_dev%${kern_num}}${root_num}"
+        if [ -b "${root_dev}" ] && is_good_rootfs_partition "${root_dev}"; then
+            USB_DEV="${root_dev}"
+            return 0
         fi
-        echo "REAL_USB_DEV=${loop}p3" >> "${dest_path}"
-        echo "KERN_ARG_KERN_GUID=$(echo "${KERN_ARG_KERN_GUID}" | tr '[:lower:]' '[:upper:]')" >> "${dest_path}"
-        echo "Copied lsb-factory to ${dest_path}" | center
-    else
-        fail "Missing ${src_path}!"
+        done
+        sleep 1
+    done
+    return 1
+}
+
+mount_rootfs() {
+    local usb_dev
+    local kernel_command_line="$(cat /proc/cmdline)"
+    usb_dev="${USB_DEV}"
+    for try in $(seq 20); do
+        if mount -n -o ro "$usb_dev" "$USB_MNT"; then
+        return 0
+        fi
+        sleep 1
+    done
+    return 1
+}
+
+patch_new_root() {
+  local bootstrap="${NEWROOT_MNT}/usr/sbin/factory_bootstrap.sh"
+  local flag="/tmp/bootstrap.failed"
+  if [ -x "${bootstrap}" ]; then
+    rm -f "${flag}"
+    "${bootstrap}" "${NEWROOT_MNT}" "${REAL_USB_DEV}"
+    if [ -e "${flag}" ]; then
+      return 1
     fi
+  fi
+}
+
+find_official_root() {
+    set -x
+    wait_for_gpt_root
+    cgpt find -t rootfs "$(strip_partition "$USB_DEV")" || fail "An error has occured."
+    REAL_USB_DEV="$USB_DEV"
+    LOG_DEV="${USB_DEV%p[0-9]*}p1"
+    mount_rootfs
+}
+
+copy_lsb() {
+    echo "Copying lsb..."
+
+    local lsb_file="dev_image/etc/lsb-factory"
+    local dest_path="/newroot/mnt/stateful_partition/${lsb_file}"
+    local src_path="/stateful/${lsb_file}"
+    
+    mkdir -p "$(dirname "${dest_path}")"
+    
+    local ret=0
+    if [ -f "${src_path}" ]; then
+        local kern_guid=$(echo "${KERN_ARG_KERN_GUID}" | tr '[:lower:]' '[:upper:]')
+        echo "Found ${src_path}"
+        cp -a "${src_path}" "${dest_path}"
+        echo "REAL_USB_DEV=${loop}p3" >>"${dest_path}"
+        echo "KERN_ARG_KERN_GUID=${kern_guid}" >>"${dest_path}"
+    else
+        echo "Failed to find ${src_path}!!"
+        ret=1
+    fi
+    return "${ret}"
 }
 
 pv_dircopy() {
@@ -484,7 +559,7 @@ pv_dircopy() {
 	local apparent_bytes
 	apparent_bytes=$(du -sb "$1" | cut -f 1)
 	mkdir -p "$2"
-	tar -C /shimroot -cf - . | tar -C /newroot -xf -
+	tar -cf - -C "$1" . | pv -f -s "${apparent_bytes:-0}" | tar -xf - -C "$2"
 }
 
 setupuser() {

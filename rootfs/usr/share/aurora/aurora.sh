@@ -90,7 +90,18 @@ installcros() {
         mount -n --bind "${d}" "./${d}"
         mount --make-slave "./${d}"
     done
-    chroot ./ /usr/sbin/chromeos-install --payload_image="${loop}" --yes || fail "Failed during chroot!" --fatal
+    read_center -d "Block ChromeOS and Kernel Updates? (Y/n): " block
+    case $block in
+        n|N) chroot ./ /usr/sbin/chromeos-install --payload_image="${loop}" --yes || fail "Failed during chroot!" --fatal ;;
+        *) echo_c "Blocking Updates" GEEN_B | center
+           cp ./usr/sbin/write_gpt.sh /usr/share/aurora/assets/write_gpt.sh
+           sed -i -E "s/.*add -i (4|5|6|7).*target\}//" /usr/share/aurora/assets/write_gpt.sh
+           mount -n --bind /usr/share/aurora/assets/write_gpt.sh ./usr/sbin/write_gpt.sh
+           mount -n --bind /usr/share/aurora/assets/chromeos-install.sh ./usr/sbin/chromeos-install.sh || mount -n --bind /usr/share/aurora/assets/chromeos-install ./usr/sbin/chromeos-install
+           debug_run chroot ./ /usr/sbin/chromeos-install --payload_image="${loop}" --yes --minimal_copy || fail "Failed during chroot!" --fatal 
+           umount ./usr/sbin/chromeos-install.sh
+           ;;
+    esac # see, "case" spelled backwards is "esac", which is funny because until i've had my "case", i don't give "esac" about anything.
     get_partitions
     cgpt add -i 2 $cros_root_a -P 15 -T 15 -S 1 -R 1 || echo -e "${YELLOW_B}Failed to set kernel priority! Continuing anyway${COLOR_RESET}"
     clear
@@ -132,119 +143,39 @@ shimboot() {
         done
 	fi
 
+    clear
     mkdir -p $shimroot
-    echo -e "Searching for ROOT-A on shim" | center
     loop=$(losetup -Pf --show $shim)
-    loop_root="$(cgpt find -l ROOT-A "$loop" | head -n1)"
-    if [ -z "$loop_root" ]; then
-            loop_root="$(cgpt find -t rootfs "$loop" | head -n1)"
-    fi
-    if [ -z "$loop_root" ]; then
-        loop_root="${loop}p3"
-    fi
-    echo $loop_root
-    if mount "${loop_root}" $shimroot; then
-        echo_c "ROOT-A found successfully and mounted." GEEN_B | center
-    else
-        fail "Failed to mount ROOT-A"
-    fi
-    skipshimboot=0
-    if ! stateful="$(cgpt find -l STATE ${loop} | head -n 1 | grep --color=never /dev/)"; then
-        if ! stateful="$(cgpt find -l SH1MMER ${loop} | head -n 1 | grep --color=never /dev/)"; then
-            for dev in "$loop"*; do
-                [[ -b "$dev" ]] || continue
-                parttype=$(udevadm info --query=property --name="$dev" 2>$TTY4 | grep '^ID_PART_ENTRY_TYPE=' | cut -d= -f2)
-                if [ "$parttype" = "0fc63daf-8483-4772-8e79-3d69d8477de4" ]; then
-                    stateful="$dev"
-                    break
-                fi
-            done
-        fi
-    fi
-    if [[ -z "${stateful// }" ]]; then
-        stateful="${loop}p1"
-    fi
-    echo_c "Found Stateful at $stateful" GEEN_B | center
-    if (( $skipshimboot == 0 )); then
-        mkdir -p /stateful
-        mkdir -p /newroot
-        mount -t tmpfs tmpfs /newroot -o "size=1024M" || fail "Failed to allocate 1GB to /newroot"
-        mount $stateful /stateful || fail "Failed to mount stateful!"
-        sh1mmerfile="/stateful/root/noarch/usr/sbin/sh1mmer_main.sh"
-        version="legacy"
-        if [ -f /stateful/root/noarch/usr/sbin/sh1mmer_gui.sh ]; then
-            version="bw"
-        fi
-        if lsblk -o PARTLABEL $loop | grep "SH1MMER"; then
-            if ! grep -q "rm -f /etc/resolv.conf" "$sh1mmerfile"; then
-                sed -i '/^#!\/bin\/bash$/a export PATH="/bin:/sbin:/usr/bin:/usr/sbin"\nrm -f /etc/resolv.conf\necho "nameserver 1.1.1.1" > /etc/resolv.conf' "$sh1mmerfile"
-            fi
-            cp /usr/share/patches/sh1mmer/$version/bootstrap/noarch/init_sh1mmer.sh /stateful/bootstrap/noarch/init_sh1mmer.sh && echo "Successfully patched bootstrap"
-            cp /usr/share/patches/sh1mmer/$version/root/noarch/* -r /stateful/root/noarch/ && echo "Successfully patched root"
-            chmod +x /stateful/bootstrap/noarch/init_sh1mmer.sh
-            for file in /usr/share/patches/payloads/*; do
-                [ -e "$file" ] || continue
-                filename=${file##*/}
-                rm /stateful/root/noarch/payloads/$filename
-                cp /usr/share/patches/payloads/$filename /stateful/root/noarch/payloads/$filename
-            done
-            rm /stateful/root/noarch/payloads/autoupdate.sh
-            cp /usr/share/patches/payloads/autoupdate.sh /stateful/root/noarch/payloads/autoupdate.sh
-            canwifi rm /stateful/root/noarch/payloads/mrchromebox.sh
-            canwifi curl -sLk https://mrchromebox.tech/firmware-util.sh -o /stateful/root/noarch/payloads/mrchromebox.sh
-            sync
-            chmod +x $sh1mmerfile
-        fi
+    export TTY="$TTY1" INFO_TTY="$TTY2" LOG_TTY="$TTY3" DEBUG_TTY="$TTY4" USB_DEV="$loop" NEWROOT_MNT="/newroot" USB_MNT="/usb"
+    echo "...:::||| Bootstrapping ChromeOS Factory Shim |||:::..."
+    echo "TTY: ${TTY}, LOG: ${LOG_TTY}, INFO: ${INFO_TTY}, DEBUG: ${DEBUG_TTY}"
+    export_args $(cat /proc/cmdline | sed -e 's/"[^"]*"/DROPPED/g')
+    echo "Kernel messages available in ${INFO_TTY}."
+    mkdir -p $USB_MNT
+    find_official_root
 
-        copy_lsb
-        
-        echo "Copying rootfs to ram..." | center
-        pv_dircopy "$shimroot" /newroot
-
-        mkdir -p /newroot/dev/pts /newroot/proc /newroot/sys /newroot/tmp /newroot/run
-        mount -t tmpfs -o mode=1777 none /newroot/tmp
-        mount -t tmpfs -o mode=0555 run /newroot/run
-        mkdir -p -m 0755 /newroot/run/lock
-
-        for mnt in /dev /proc /sys; do
-            mount --move "$mnt" "/newroot$mnt" || fail "Failed to mount $mnt"
-        done
-
-        if ! mountpoint -q /newroot/dev/pts; then
-            mount -t devpts devpts /newroot/dev/pts
-        fi
-
-        echo "Done" | center
-        echo "About to switch root. If your screen goes black and the device reboots, please make a GitHub issue if you're sure your shim isn't corrupted" | center
-        echo "Switching root" | center
-        clear
-
-        mkdir -p /newroot/tmp/aurora
-        if [ -n "$specialshim" ]; then
-            rm -f /newroot/sbin/init
-            cp /usr/share/patches/sh1mmer/bootstrap/noarch/sbin/init /newroot/sbin/init
-            chmod +x /newroot/sbin/init
-        fi
-        if [ -f "/newroot/bin/kvs" ]; then  
-            chmod +x /newroot/bin/kvs
-            cat <<EOF > /newroot/sbin/init
-#!/bin/bash
-/bin/kvs
-EOF
-        fi
-        chmod +x /newroot/sbin/init
-        stty echo
-        tput cnorm
-        debug_run pivot_root /newroot /newroot/tmp/aurora
-        echo "Successfully switched root. Starting init..."
-        exec /sbin/init || {
-            echo "Failed to start init"
-            echo "Bailing out, you are on your own. Good luck."
-            echo "This shell has PID 1. Exit = panic"
-            echo $(/tmp/aurora/bin/uname -a)
-            exec /tmp/aurora/bin/sh
-        }
-    fi
+    mount -n -t tmpfs tmpfs "$NEWROOT_MNT" -o "size=2048M"
+    tar -cf - -C "${USB_MNT}" . | pv -f 2>"${TTY}" | tar -xf - -C "${NEWROOT_MNT}"
+    patch_new_root
+    for mnt in /sys /proc /dev; do
+        mkdir -p "$NEWROOT_MNT$mnt"
+        mount -n -o move "$mnt" "$NEWROOT_MNT$mnt"
+    done
+    chmod +x $NEWROOT_MNT/sbin/init
+    stty echo
+    tput cnorm
+    set +x
+    mkdir -p $NEWROOT_MNT/tmp/aurora
+    debug_run pivot_root $NEWROOT_MNT $NEWROOT_MNT/tmp/aurora || fail --fatal
+    echo "Successfully switched root. Starting init..."
+    [ -f /bin/kvs ] && exec /bin/kvs
+    exec /sbin/init || {
+        echo "Failed to start init"
+        echo "Bailing out, you are on your own. Good luck."
+        echo "This shell has PID 1. Exit = panic"
+        echo $(/tmp/aurora/bin/uname -a)
+        exec /tmp/aurora/bin/sh
+    }
 }
 
 ##################
@@ -308,10 +239,12 @@ downloadreco() {
     wget -q --show-progress "$FINAL_URL" -O "$aroot/images/recovery/$chromeVersion.zip" || {
         fail "Failed to download ChromeOS recovery image."
     }
-    FINAL_FILENAME=$(unzip -Z1 "$aroot/images/recovery/$chromeVersion.zip")
-    file "$aroot/images/recovery/$chromeVersion.zip" | grep -iq "zip" || {
-        fail "ChromeOS recovery archive corrupted."
-    }
+    FINAL_FILENAME=$(unzip -Z1 "$aroot/images/recovery/$chromeVersion.zip" 2>/dev/null || true)
+    if ! unzip -Z1 "$aroot/images/recovery/$chromeVersion.zip" >/dev/null 2>&1; then
+        if ! head -c4 "$aroot/images/recovery/$chromeVersion.zip" | od -An -t x1 | tr -d ' \n' | grep -iq '^504b0304$'; then
+            fail "ChromeOS recovery archive corrupted."
+        fi
+    fi
     unzip "$aroot/images/recovery/$chromeVersion.zip" -d "$aroot/images/recovery/" || {
         fail "Failed to unzip ChromeOS recovery archive."
     }
@@ -334,7 +267,6 @@ downloadshim() {
     else
         options_download+=(
             "Sh1mmer Legacy - AerialiteLabs/Sh1mmer/releases"
-            "Shimboot - AerialiteLabs/shimboot/releases"
             "Br0ker - ading2210/sh1mmer/releases"
             "Custom Shim from URL"
         )
@@ -347,8 +279,7 @@ downloadshim() {
         case "$download_choice" in
             0) FINALSHIM_URL="https://github.com/AerialiteLabs/sh67mmer/releases/download/v67/sh67mmer-${board_name}.bin" ;;
             1) FINALSHIM_URL="https://github.com/AerialiteLabs/sh1mmer/releases/download/v2.0.0/${board_name}.bin" ;;
-            2) FINALSHIM_URL="https://github.com/ading2210/shimboot/releases/download/v1.3.0/shimboot_${board_name}.zip" ;;
-            3) FINALSHIM_URL="https://gh-releases.ading2210.workers.dev/ading2210/sh1mmer/releases/download/2025.9.19/sh1mmer_${board_name}_broker.zip" ;;
+            2) FINALSHIM_URL="https://gh-releases.ading2210.workers.dev/ading2210/sh1mmer/releases/download/2025.9.19/sh1mmer_${board_name}_broker.zip" ;;
             *) tput cnorm
             stty echo
             read_center -d "Enter Shim URL: " FINALSHIM_URL ;;
@@ -356,8 +287,7 @@ downloadshim() {
     else
         case "$download_choice" in
             0) FINALSHIM_URL="https://github.com/AerialiteLabs/sh1mmer/releases/download/v2.0.0/${board_name}.bin" ;;
-            1) FINALSHIM_URL="https://github.com/ading2210/shimboot/releases/download/v1.3.0/shimboot_${board_name}.zip" ;;
-            2) FINALSHIM_URL="https://gh-releases.ading2210.workers.dev/ading2210/sh1mmer/releases/download/2025.9.19/sh1mmer_${board_name}_broker.zip" ;;
+            1) FINALSHIM_URL="https://gh-releases.ading2210.workers.dev/ading2210/sh1mmer/releases/download/2025.9.19/sh1mmer_${board_name}_broker.zip" ;;
             *) tput cnorm
             stty echo
             read_center -d "Enter Shim URL: " FINALSHIM_URL ;;
@@ -378,10 +308,12 @@ downloadshim() {
         fail "File does not exist."
     fi
     if [ "$shimtype" = "zip" ]; then
-        FINALSHIM_FILENAME=$(unzip -Z1 "$aroot/images/shims/$shimfile")
-        file "$aroot/images/shims/$shimfile" | grep -iq "zip" || {
-            fail "Shim archive corrupted."
-        }
+        FINALSHIM_FILENAME=$(unzip -Z1 "$aroot/images/shims/$shimfile" 2>/dev/null || true)
+        if ! unzip -Z1 "$aroot/images/shims/$shimfile" >/dev/null 2>&1; then
+            if ! head -c4 "$aroot/images/shims/$shimfile" | od -An -t x1 | tr -d ' \n' | grep -iq '^504b0304$'; then
+                fail "Shim archive corrupted."
+            fi
+        fi
         unzip "$aroot/images/shims/$shimfile" -d "$aroot/images/shims/" || {
             fail "Failed to unzip shim archive."
         }
@@ -432,15 +364,13 @@ updateshim() {
 
     rsync -a --inplace --exclude="sbin/init" --exclude="usr/share/aurora/aurora.sh" --exclude="usr/share/aurora/functions" "$upd_dir/rootfs/" /
     mv -f "$upd_dir/etc.aurora.bak" /etc/aurora
-    rsync -a --delete /root/Aurora/patches/sh1mmer/ /usr/share/patches/sh1mmer/
     chmod +x /usr/share/aurora/* /usr/bin/* /sbin/init
     sync
     aurorabootmnt=$(mktemp -d)
     aurorabootdev=$(lsblk -pro NAME,PARTLABEL,MOUNTPOINT | awk '/AuroraBoot/ {print $1; exit}')
     mount "$aurorabootdev" "$aurorabootmnt"
     rsync -a --inplace /root/Aurora/auroraboot/ "$aurorabootmnt/"
-    rsync -a --inplace /root/Aurora/patches/shimboot/ "$aurorabootmnt/"
-    chmod +x "$aurorabootmnt/bootstrap.sh" "$aurorabootmnt/sbin/init"
+    chmod +x "$aurorabootmnt/sbin/init"
     sync
     umount $aurorabootmnt
     if [ "$updated" = "1" ]; then
@@ -599,7 +529,7 @@ menu1_options=(
 )
 
 menu1_actions=(
-    "clear && script -qfc 'stty sane && stty erase '^H' && exec bash -l || exec busybox sh -l' /dev/null"
+    "clear && bash -c 'stty sane && stty erase '^H' && exec bash -l || exec busybox sh -l'"
     "clear && installcros"
 )
 
@@ -612,7 +542,7 @@ menu1_options+=(
     "$( [ $pid1 = false ] && echo "3" || echo "4" ). Connect to WiFi"
     "$( [ $pid1 = false ] && echo "4" || echo "5" ). Download a ChromeOS recovery image/shim"
     "$( [ $pid1 = false ] && echo "5" || echo "6" ). Update shim"
-    "$( [ $pid1 = false ] && echo "6" || echo "7" ). Payloads"
+    "$( [ $pid1 = false ] && echo "6" || echo "7" ). Settings"
     "$( [ $pid1 = false ] && echo "7" || echo "8" ). Exit and Reboot"
 )
 
@@ -620,18 +550,20 @@ menu1_actions+=(
     "clear && wifi"
     "canwifi clear && download"
     "canwifi updateshim && sync"
-    "clear && payloads"
+    "clear && asettings"
     "reboot -f"
 )
 
 menu2_options=(
     "1. Open Terminal"
-    "2. AFTGGP [Aurora File Transfer]"
-    "3. Build Environment"
-    "4. Set Kernver"
+    "2. Payloads"
+    "3. AFTGGP [Aurora File Transfer]"
+    "4. Build Environment"
+    "5. Set Kernver"
 )
 menu2_actions=(
-    "clear && script -qfc 'stty sane && stty erase '^H' && exec bash -l || exec busybox sh -l' /dev/null"
+    "clear && bash -c 'stty sane && stty erase '^H' && exec bash -l || exec busybox sh -l'"
+    "clear && payloads"
     "canwifi aftggp"
     "clear && canwifi aurorabuildenv"
     "clear && set-kernver"
@@ -718,7 +650,7 @@ fi
 release_board=$(lsbval CHROMEOS_RELEASE_BOARD 2>$TTY4)
 board_name=${release_board%%-*}
 
-for chmod in /usr/bin/aurorabuildenv; do
+for chmod in /usr/bin/aurorabuildenv /usr/bin/asettings; do
     chmod +x $chmod
 done
 clear
@@ -736,7 +668,7 @@ while true; do
     hostname $(cat /etc/hostname)
     export wifidevice=$(ip link 2>$TTY4 | grep -E "^[0-9]+: " | grep -oE '^[0-9]+: [^:]+' | awk '{print $2}' | grep -E '^wl' | head -n1)
     splash
-    errormessage
+    announcement
     export errormsg=""
     export login=""
     declare -n current_actions="menu${page}_actions"
