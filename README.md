@@ -1,18 +1,22 @@
 # Aurora
 A tool similar to Ventoy for ChromeOS RMA shims and recovery images based on Alpine Linux<br><br>
 ![i spend too much time working](https://hackatime-badge.hackclub.com/U085HGVQE9F/Aurora)
+
+> [!WARNING]
+> Aurora is unstable and unmaintained. Please use [Priism](https://github.com/xmb9/Priism) instead.
+> <br>If you really need Wi-Fi, Aurora is still the best option.
 # What works? What doesn't?
 Recovery :white_check_mark:<br>
 Payloads menu :white_check_mark:<br>
 Booting other shims :white_check_mark:<br>
-Wifi :white_check_mark:<br>
+Wi-Fi :white_check_mark:<br>
 Synaptic :x:<br>
 
 # Priorities
-1. Wifi on all possible ARM boards
-2. general improvement
-3. aurora 2.0
-4. docs
+1. Wi-Fi on all possible ARM boards
+2. General improvement
+4. Aurora 2.0
+5. Docs
 
 # Building
 
